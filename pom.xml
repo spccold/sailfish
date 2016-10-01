@@ -1,0 +1,38 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>sailfish</groupId>
+  <artifactId>sailfish</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>sailfish</name>
+  <description>A reliable, scalable, fast remoting module for rapid development of high performance network program</description>
+  <url>https://github.com/spccold/sailfish</url>
+  <inceptionYear>2016.10.01 10:30:00</inceptionYear>
+  <organization>
+  	<name>spccold</name>
+  	<url>https://github.com/spccold</url>
+  </organization>
+  <issueManagement>
+  	<system>GitHub Issue Management</system>
+  	<url>https://github.com/spccold/sailfish/issues</url>
+  </issueManagement>
+  <modules>
+  	<module>sailfish-kernel</module>
+  </modules>
+  
+  <build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.3</version>
+					<configuration>
+						<source>1.7</source>
+						<target>1.7</target>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
