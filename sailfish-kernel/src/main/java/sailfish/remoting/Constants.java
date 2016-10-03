@@ -17,13 +17,11 @@
  */
 package sailfish.remoting;
 
-import sailfish.exceptions.GetEndpointFailedException;
-
 /**
  * 
  * @author spccold
- * @version $Id: EndpointManager.java, v 0.1 2016年10月3日 下午1:52:23 jileng Exp $
+ * @version $Id: Constants.java, v 0.1 2016年10月3日 下午3:52:31 jileng Exp $
  */
-public interface EndpointManager {
-    Endpoint getEndpoint() throws GetEndpointFailedException;
+public class Constants {
+
 }

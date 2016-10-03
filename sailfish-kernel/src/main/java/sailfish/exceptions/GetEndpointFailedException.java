@@ -15,15 +15,27 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
-
-import sailfish.exceptions.GetEndpointFailedException;
+package sailfish.exceptions;
 
 /**
  * 
  * @author spccold
- * @version $Id: EndpointManager.java, v 0.1 2016年10月3日 下午1:52:23 jileng Exp $
+ * @version $Id: GetEndpointFailedException.java, v 0.1 2016年10月3日 下午3:57:57 jileng Exp $
  */
-public interface EndpointManager {
-    Endpoint getEndpoint() throws GetEndpointFailedException;
+public class GetEndpointFailedException extends Exception{
+
+    /**  */
+    private static final long serialVersionUID = 1L;
+
+    public GetEndpointFailedException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public GetEndpointFailedException(String message) {
+        super(message);
+    }
+
+    public GetEndpointFailedException(Throwable cause) {
+        super(cause);
+    }
 }

@@ -17,16 +17,26 @@
  */
 package sailfish.remoting;
 
+import java.util.concurrent.ExecutionException;
+
+import sailfish.exceptions.GetEndpointFailedException;
+
 /**
  * 
  * @author spccold
  * @version $Id: DefaultClientManager.java, v 0.1 2016年10月3日 下午2:05:42 jileng Exp $
  */
 public class DefaultClientManager implements ClientManager{
-
+    public static final DefaultClientManager INSTANCE = new DefaultClientManager();
+    private DefaultClientManager(){}
+    
     @Override
-    public Endpoint getEndpoint() {
-        return null;
+    public Endpoint getEndpoint() throws GetEndpointFailedException{
+        try {
+            return getAsync().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new GetEndpointFailedException("get client fail!", e);
+        }
     }
 
     @Override

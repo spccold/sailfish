@@ -17,6 +17,8 @@
  */
 package sailfish.remoting;
 
+import sailfish.exceptions.GetEndpointFailedException;
+
 /**
  * 
  * @author spccold
@@ -25,7 +27,7 @@ package sailfish.remoting;
 public class DefaultServerManager implements EndpointManager{
 
     @Override
-    public Endpoint getEndpoint() {
+    public Endpoint getEndpoint() throws GetEndpointFailedException{
         return null;
     }
 
