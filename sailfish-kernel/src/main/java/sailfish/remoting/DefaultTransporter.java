@@ -17,11 +17,18 @@
  */
 package sailfish.remoting;
 
+import io.netty.channel.ChannelHandler;
+
 /**
  * 
  * @author spccold
- * @version $Id: Channel.java, v 0.1 2016年10月3日 下午1:23:51 jileng Exp $
+ * @version $Id: DefaultTransporter.java, v 0.1 2016年10月4日 下午8:10:01 jileng Exp $
  */
-public interface Channel{
+public class DefaultTransporter implements Transporter{
+
+    @Override
+    public Channel connect(URL url, ChannelHandler handler) {
+        return new NettyChannel();
+    }
 
 }

@@ -29,7 +29,7 @@ import sailfish.remoting.EndpointManager;
 public class DefaultServerManager implements EndpointManager{
 
     @Override
-    public Endpoint getEndpoint() throws GetEndpointFailedException{
+    public Endpoint getEndpoint(EndpointConfig serverConfig) throws GetEndpointFailedException{
         return null;
     }
 

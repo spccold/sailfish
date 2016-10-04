@@ -25,5 +25,5 @@ import sailfish.remoting.EndpointManager;
  * @version $Id: ClientManager.java, v 0.1 2016年10月3日 下午1:56:48 jileng Exp $
  */
 public interface ClientManager extends EndpointManager{
-    public EndpointFuture getAsync();
+    public EndpointFuture getAsync(ClientConfig clientConfig);
 }

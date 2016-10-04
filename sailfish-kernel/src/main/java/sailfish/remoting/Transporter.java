@@ -26,6 +26,5 @@ import io.netty.channel.ChannelHandler;
  * @version $Id: Transporter.java, v 0.1 2016年10月3日 下午1:06:16 jileng Exp $
  */
 public interface Transporter {
-    public void connect(URL url, ChannelHandler handler);
-    public void transfer(byte[] data);
+    public Channel connect(URL url, ChannelHandler handler);
 }

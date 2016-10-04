@@ -32,16 +32,16 @@ public class DefaultClientManager implements ClientManager{
     private DefaultClientManager(){}
     
     @Override
-    public Endpoint getEndpoint() throws GetEndpointFailedException{
+    public Endpoint getEndpoint(EndpointConfig config) throws GetEndpointFailedException{
         try {
-            return getAsync().get();
+            return getAsync((ClientConfig)config).get();
         } catch (InterruptedException | ExecutionException e) {
             throw new GetEndpointFailedException("get client fail!", e);
         }
     }
 
     @Override
-    public EndpointFuture getAsync() {
+    public EndpointFuture getAsync(ClientConfig clientConfig) {
         return null;
     }
 }
