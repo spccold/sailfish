@@ -15,19 +15,14 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
-
-import sailfish.common.ResponseFuture;
+package sailfish;
 
 /**
- * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
- * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
  * 
  * @author spccold
- * @version $Id: Exchanger.java, v 0.1 2016年10月3日 下午1:04:04 jileng Exp $
+ * @version $Id: ResponseCallback.java, v 0.1 2016年10月4日 下午4:38:13 jileng Exp $
  */
-public interface Exchanger extends Endpoint{
-    void oneway(byte[] data);
-    ResponseFuture request(byte[] data);
-    ResponseFuture request(byte[] data, int timeout);
-}   
+public interface ResponseCallback {
+    void handleResponse(Object response);
+    void onException(Throwable exception);
+}

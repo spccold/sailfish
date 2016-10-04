@@ -18,30 +18,41 @@
 package sailfish;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
-import sailfish.exceptions.GetEndpointFailedException;
 import sailfish.remoting.Endpoint;
 
 /**
  * 
  * @author spccold
- * @version $Id: DefaultClientManager.java, v 0.1 2016年10月3日 下午2:05:42 jileng Exp $
+ * @version $Id: EndpointFuture.java, v 0.1 2016年10月3日 下午2:00:14 jileng Exp $
  */
-public class DefaultClientManager implements ClientManager{
-    public static final DefaultClientManager INSTANCE = new DefaultClientManager();
-    private DefaultClientManager(){}
-    
+public class EndpointFuture implements Future<Endpoint>{
+
     @Override
-    public Endpoint getEndpoint() throws GetEndpointFailedException{
-        try {
-            return getAsync().get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new GetEndpointFailedException("get client fail!", e);
-        }
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        return false;
     }
 
     @Override
-    public EndpointFuture getAsync() {
+    public boolean isCancelled() {
+        return false;
+    }
+
+    @Override
+    public boolean isDone() {
+        return false;
+    }
+
+    @Override
+    public Endpoint get() throws InterruptedException, ExecutionException {
+        return null;
+    }
+
+    @Override
+    public Endpoint get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         return null;
     }
 }

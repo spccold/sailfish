@@ -28,6 +28,7 @@ import java.net.InetSocketAddress;
 public interface Endpoint {
     
     InetSocketAddress getLocalAddress();
+
     /**
      * close current Endpoint
      */

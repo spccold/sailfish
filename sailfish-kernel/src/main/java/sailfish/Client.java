@@ -26,5 +26,23 @@ import sailfish.remoting.Endpoint;
  * @version $Id: Client.java, v 0.1 2016年10月3日 下午12:42:33 jileng Exp $
  */
 public interface Client extends Endpoint{
-
+    /**
+     * one way invoke without response
+     */
+    void oneway(Object request, RequestControl control);
+    
+    /**
+     * synchronous invoke
+     */
+    Object syncInvoke(Object request, RequestControl control);
+    
+    /**
+     * asynchronous invoke in future pattern
+     */
+    ObjectResponseFuture futureInvoke(Object request, RequestControl control);
+    
+    /**
+     * asynchronous invoke in callback pattern
+     */
+    void callBackInvoke(Object request, RequestControl control, ResponseCallback callback);
 }

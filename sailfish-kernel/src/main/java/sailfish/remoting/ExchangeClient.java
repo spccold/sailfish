@@ -15,44 +15,52 @@
  *	limitations under the License.
  *
  */
-package sailfish;
+package sailfish.remoting;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.net.InetSocketAddress;
 
-import sailfish.remoting.Endpoint;
+import sailfish.common.ResponseFuture;
 
 /**
  * 
  * @author spccold
- * @version $Id: ClientFuture.java, v 0.1 2016年10月3日 下午2:00:14 jileng Exp $
+ * @version $Id: ExchangeClient.java, v 0.1 2016年10月4日 下午4:13:49 jileng Exp $
  */
-public class ClientFuture implements Future<Endpoint>{
+public class ExchangeClient implements Exchanger{
 
     @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        return false;
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return false;
-    }
-
-    @Override
-    public boolean isDone() {
-        return false;
-    }
-
-    @Override
-    public Endpoint get() throws InterruptedException, ExecutionException {
+    public InetSocketAddress getLocalAddress() {
         return null;
     }
 
     @Override
-    public Endpoint get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public void close() {
+        
+    }
+
+    @Override
+    public void close(int timeout) {
+        
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
+    }
+
+    @Override
+    public void oneway(byte[] data) {
+        
+    }
+
+    @Override
+    public ResponseFuture request(byte[] data) {
         return null;
     }
+
+    @Override
+    public ResponseFuture request(byte[] data, int timeout) {
+        return null;
+    }
+
 }
