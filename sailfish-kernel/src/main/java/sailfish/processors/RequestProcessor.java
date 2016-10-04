@@ -15,19 +15,16 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.processors;
 
-import sailfish.common.ResponseFuture;
+import java.util.concurrent.Executor;
 
 /**
- * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
- * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
  * 
  * @author spccold
- * @version $Id: Exchanger.java, v 0.1 2016年10月3日 下午1:04:04 jileng Exp $
+ * @version $Id: RequestProcessor.java, v 0.1 2016年10月4日 下午5:03:02 jileng Exp $
  */
-public interface Exchanger extends Endpoint{
-    void oneway(byte[] data);
-    ResponseFuture<byte[]> request(byte[] data);
-    ResponseFuture<byte[]> request(byte[] data, int timeout);
-}   
+public interface RequestProcessor {
+    Executor getExecutor();
+    void handleRequest(Object requestParam);
+}

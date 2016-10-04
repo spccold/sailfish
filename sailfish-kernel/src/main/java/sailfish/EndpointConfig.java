@@ -15,52 +15,34 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish;
 
 import java.net.InetSocketAddress;
+import java.util.List;
 
-import sailfish.common.ResponseFuture;
+import sailfish.processors.RequestProcessor;
 
 /**
- * 
+ * configuration for get server or client
  * @author spccold
- * @version $Id: ExchangeClient.java, v 0.1 2016年10月4日 下午4:13:49 jileng Exp $
+ * @version $Id: EndpointConfig.java, v 0.1 2016年10月4日 下午4:57:45 jileng Exp $
  */
-public class ExchangeClient implements Exchanger{
-
-    @Override
+public class EndpointConfig {
+    protected InetSocketAddress localAddress;
+    protected List<RequestProcessor> processors;
     public InetSocketAddress getLocalAddress() {
-        return null;
+        return localAddress;
     }
 
-    @Override
-    public void close() {
-        
+    public void setLocalAddress(InetSocketAddress localAddress) {
+        this.localAddress = localAddress;
     }
 
-    @Override
-    public void close(int timeout) {
-        
+    public List<RequestProcessor> getProcessors() {
+        return processors;
     }
 
-    @Override
-    public boolean isClosed() {
-        return false;
+    public void setProcessors(List<RequestProcessor> processors) {
+        this.processors = processors;
     }
-
-    @Override
-    public void oneway(byte[] data) {
-        
-    }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
-        return null;
-    }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data, int timeout) {
-        return null;
-    }
-
 }
