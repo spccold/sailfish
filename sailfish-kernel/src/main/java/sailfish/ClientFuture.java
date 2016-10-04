@@ -15,12 +15,14 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import sailfish.remoting.Endpoint;
 
 /**
  * 

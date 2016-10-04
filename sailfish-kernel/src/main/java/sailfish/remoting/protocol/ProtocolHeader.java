@@ -15,14 +15,16 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.protocol;
 
 /**
- * <a href="https://en.wikipedia.org/wiki/Client%E2%80%93server_model">Client–server_model</a>
  * 
  * @author spccold
- * @version $Id: Server.java, v 0.1 2016年10月3日 下午1:02:21 jileng Exp $
+ * @version $Id: ProtocolHeader.java, v 0.1 2016年10月4日 下午2:58:52 jileng Exp $
  */
-public interface Server extends Endpoint{
-
+public interface ProtocolHeader extends Protocol{
+    /**
+     * return current protocol header's version(-128 ~ 127)
+     */
+    byte getVersion(); 
 }

@@ -15,20 +15,33 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish;
+
+import java.util.concurrent.ExecutionException;
 
 import sailfish.exceptions.GetEndpointFailedException;
+import sailfish.remoting.Endpoint;
 
 /**
  * 
  * @author spccold
- * @version $Id: DefaultServerManager.java, v 0.1 2016年10月3日 下午1:59:14 jileng Exp $
+ * @version $Id: DefaultClientManager.java, v 0.1 2016年10月3日 下午2:05:42 jileng Exp $
  */
-public class DefaultServerManager implements EndpointManager{
-
+public class DefaultClientManager implements ClientManager{
+    public static final DefaultClientManager INSTANCE = new DefaultClientManager();
+    private DefaultClientManager(){}
+    
     @Override
     public Endpoint getEndpoint() throws GetEndpointFailedException{
-        return null;
+        try {
+            return getAsync().get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new GetEndpointFailedException("get client fail!", e);
+        }
     }
 
+    @Override
+    public ClientFuture getAsync() {
+        return null;
+    }
 }
