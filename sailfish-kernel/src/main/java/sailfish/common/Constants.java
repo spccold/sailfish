@@ -23,5 +23,10 @@ package sailfish.common;
  * @version $Id: Constants.java, v 0.1 2016年10月3日 下午3:52:31 jileng Exp $
  */
 public class Constants {
-
+    /** exception error code definitions */
+    // deserialize protocol when magic incorrect
+    public static final int BAD_PACKAGE = 1;
+    public static final int IO_EXCEPTION = 1;
+    
+    public static final int GET_ENDPOINT_FAIL = 30;
 }

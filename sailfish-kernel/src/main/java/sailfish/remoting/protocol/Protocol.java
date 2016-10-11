@@ -19,7 +19,8 @@ package sailfish.remoting.protocol;
 
 import java.io.DataInput;
 import java.io.DataOutput;
-import java.io.IOException;
+
+import sailfish.exceptions.ProtocolCodecException;
 
 /**
  * 
@@ -27,6 +28,7 @@ import java.io.IOException;
  * @version $Id: Protocol.java, v 0.1 2016年10月4日 下午3:01:29 jileng Exp $
  */
 public interface Protocol {
-    void serialize(DataOutput output) throws IOException;
-    void deserialize(DataInput input) throws IOException;
+    byte getVersion();
+    void serialize(DataOutput output) throws ProtocolCodecException;
+    void deserialize(DataInput input) throws ProtocolCodecException;
 }

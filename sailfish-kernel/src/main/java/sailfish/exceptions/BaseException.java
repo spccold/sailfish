@@ -20,28 +20,36 @@ package sailfish.exceptions;
 /**
  * 
  * @author spccold
- * @version $Id: GetEndpointFailedException.java, v 0.1 2016年10月3日 下午3:57:57 jileng Exp $
+ * @version $Id: BaseException.java, v 0.1 2016年10月11日 下午10:32:38 jileng Exp $
  */
-public class GetEndpointFailedException extends BaseException{
+public abstract class BaseException extends Exception{
+
     /**  */
     private static final long serialVersionUID = 1L;
-
-    /**
-     * @param errorCode
-     */
-    public GetEndpointFailedException(int errorCode) {
-        super(errorCode);
-    }
-
-    public GetEndpointFailedException(int errorCode, String message) {
-        super(errorCode, message);
-    }
-
-    public GetEndpointFailedException(int errorCode, Throwable cause) {
-        super(errorCode, cause);
+    
+    protected int errorCode;
+    
+    public BaseException(int errorCode){
+        this.errorCode = errorCode;
     }
     
-    public GetEndpointFailedException(int errorCode, String message, Throwable cause) {
-        super(errorCode, message, cause);
+
+    public BaseException(int errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+
+    public BaseException(int errorCode, Throwable cause) {
+        super(cause);
+        this.errorCode = errorCode;
+    }
+
+    public BaseException(int errorCode, String message, Throwable cause) {
+        super(message, cause);
+        this.errorCode = errorCode;
+    }
+
+    public int getErrorCode() {
+        return errorCode;
     }
 }

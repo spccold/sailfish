@@ -17,6 +17,9 @@
  */
 package sailfish.remoting;
 
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+
 /**
  * 
  * @author spccold
@@ -25,4 +28,8 @@ package sailfish.remoting;
 public class RemotingConstants {
     //压缩阀值, KB
     public static final int COMPRESS_THRESHOLD = 4 * 1024;
+    //sailfish binary protocol magic
+    public static final int SAILFISH_MAGIC = ByteBuffer.wrap("SASH".getBytes()).getInt();
+    
+    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 }

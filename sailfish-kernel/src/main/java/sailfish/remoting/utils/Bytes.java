@@ -15,29 +15,13 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.protocol;
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
+package sailfish.remoting.utils;
 
 /**
  * 
  * @author spccold
- * @version $Id: DefaultRemotingProtocol.java, v 0.1 2016年10月9日 下午9:47:20 jileng Exp $
+ * @version $Id: Bytes.java, v 0.1 2016年10月11日 上午11:48:36 jileng Exp $
  */
-public class DefaultRemotingProtocol implements Protocol{
-    private ProtocolHeader header;
-    private byte[] body;
-    
-    @Override
-    public void serialize(DataOutput output) throws IOException {
-        header.serialize(output);
-        output.write(body);
-    }
-
-    @Override
-    public void deserialize(DataInput input) throws IOException {
-        header.deserialize(input);
-    }
+public class Bytes {
+   
 }

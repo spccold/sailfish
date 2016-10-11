@@ -19,6 +19,7 @@ package sailfish;
 
 import java.util.concurrent.ExecutionException;
 
+import sailfish.common.Constants;
 import sailfish.exceptions.GetEndpointFailedException;
 import sailfish.remoting.Endpoint;
 
@@ -36,7 +37,7 @@ public class DefaultClientManager implements ClientManager{
         try {
             return getAsync((ClientConfig)config).get();
         } catch (InterruptedException | ExecutionException e) {
-            throw new GetEndpointFailedException("get client fail!", e);
+            throw new GetEndpointFailedException(Constants.GET_ENDPOINT_FAIL, "get client fail!", e);
         }
     }
 

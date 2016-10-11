@@ -15,16 +15,19 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.protocol;
+package sailfish;
+
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * 
  * @author spccold
- * @version $Id: ProtocolHeader.java, v 0.1 2016年10月4日 下午2:58:52 jileng Exp $
+ * @version $Id: Test.java, v 0.1 2016年10月11日 下午10:53:45 jileng Exp $
  */
-public interface ProtocolHeader extends Protocol{
-    /**
-     * return current protocol header's version(-128 ~ 127)
-     */
-    byte getVersion(); 
+public class T {
+    @Test
+    public void test(){
+        Assert.assertEquals(1, 1);
+    }
 }

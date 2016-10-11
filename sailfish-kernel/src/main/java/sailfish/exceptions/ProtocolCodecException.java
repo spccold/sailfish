@@ -20,28 +20,26 @@ package sailfish.exceptions;
 /**
  * 
  * @author spccold
- * @version $Id: GetEndpointFailedException.java, v 0.1 2016年10月3日 下午3:57:57 jileng Exp $
+ * @version $Id: ProtocolCodecException.java, v 0.1 2016年10月11日 下午10:31:02 jileng Exp $
  */
-public class GetEndpointFailedException extends BaseException{
+public class ProtocolCodecException extends BaseException{
+
     /**  */
     private static final long serialVersionUID = 1L;
 
-    /**
-     * @param errorCode
-     */
-    public GetEndpointFailedException(int errorCode) {
+    public ProtocolCodecException(int errorCode) {
         super(errorCode);
     }
 
-    public GetEndpointFailedException(int errorCode, String message) {
+    public ProtocolCodecException(int errorCode, String message) {
         super(errorCode, message);
     }
 
-    public GetEndpointFailedException(int errorCode, Throwable cause) {
+    public ProtocolCodecException(int errorCode, Throwable cause) {
         super(errorCode, cause);
     }
-    
-    public GetEndpointFailedException(int errorCode, String message, Throwable cause) {
+
+    public ProtocolCodecException(int errorCode, String message, Throwable cause) {
         super(errorCode, message, cause);
     }
 }
