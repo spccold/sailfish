@@ -20,7 +20,6 @@ package sailfish.remoting.protocol;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 
 import sailfish.common.Constants;
 import sailfish.exceptions.ProtocolCodecException;
@@ -32,10 +31,9 @@ import sailfish.remoting.RemotingConstants;
  * @version $Id: DefaultRequestProtocol.java, v 0.1 2016年10月11日 下午8:44:48 jileng Exp $
  */
 public class DefaultRequestProtocol implements Protocol{
-    private static final int HEADER_LENGTH = 17;
+    private static final int HEADER_LENGTH = 18;
     private static final int PROTOCOL_VERSION = 1;
-    //magic number(4 bytes)
-    private int magic = RemotingConstants.SAILFISH_MAGIC;
+    private byte direction = RemotingConstants.DIRECTION_REQUEST;
     //packageId (8 bytes)
     private long packageId;
     //是否oneway调用 (1 byte)
@@ -58,7 +56,8 @@ public class DefaultRequestProtocol implements Protocol{
             //write package length(not contain current length field(4 bytes))
             output.writeInt(HEADER_LENGTH + bodyLength());
             // magic for package validation
-            output.writeInt(this.magic);
+            output.writeInt(RemotingConstants.SAILFISH_MAGIC);
+            output.writeByte(this.direction);
             output.writeLong(this.packageId);
             output.writeBoolean(this.oneway);
             output.writeByte(this.serializeType);
@@ -75,14 +74,8 @@ public class DefaultRequestProtocol implements Protocol{
     }
 
     @Override
-    public void deserialize(DataInput input) throws ProtocolCodecException {
+    public void deserialize(DataInput input, int totalLength) throws ProtocolCodecException {
         try{
-            int totalLength = input.readInt();
-            int magic = input.readInt();
-            if(magic != this.magic){
-                throw new ProtocolCodecException(Constants.BAD_PACKAGE, 
-                    "bad package, expected magic:"+this.magic+"but actual:"+magic+", current channel will be closed!");
-            }
             this.packageId = input.readLong();
             this.oneway = input.readBoolean();
             this.serializeType = input.readByte();
@@ -95,14 +88,6 @@ public class DefaultRequestProtocol implements Protocol{
         }catch(IOException cause){
             throw new ProtocolCodecException(Constants.IO_EXCEPTION, cause);
         }
-    }
-    
-    public int getMagic() {
-        return magic;
-    }
-
-    public void setMagic(int magic) {
-        this.magic = magic;
     }
 
     public long getPackageId() {
@@ -171,12 +156,5 @@ public class DefaultRequestProtocol implements Protocol{
     @Override
     public byte getVersion() {
         return PROTOCOL_VERSION;
-    }
-
-    @Override
-    public String toString() {
-        return "DefaultRequestProtocol [magic=" + magic + ", packageId=" + packageId + ", oneway=" + oneway
-               + ", serializeType=" + serializeType + ", compressed=" + compressed + ", compressType=" + compressType
-               + ", langType=" + langType + ", body=" + Arrays.toString(body) + "]";
     }
 }

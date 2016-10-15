@@ -32,10 +32,9 @@ import sailfish.utils.StrUtils;
  * @version $Id: DefaultResponseProtocol.java, v 0.1 2016年10月11日 下午9:48:43 jileng Exp $
  */
 public class DefaultResponseProtocol implements Protocol{
-    private static final int HEADER_LENGTH = 17;
+    private static final int HEADER_LENGTH = 18;
     private static final int PROTOCOL_VERSION = 1;
-    // 4 bytes
-    private int magic = RemotingConstants.SAILFISH_MAGIC;
+    private byte direction = RemotingConstants.DIRECTION_RESPONSE;
     // 8 bytes
     private long packageId;
     // 1 byte
@@ -52,7 +51,8 @@ public class DefaultResponseProtocol implements Protocol{
         try{
             //write total length
             output.writeInt(HEADER_LENGTH + errorStackLength + bodyLength());
-            output.writeInt(magic);
+            output.writeInt(RemotingConstants.SAILFISH_MAGIC);
+            output.writeByte(direction);
             output.writeLong(packageId);
             output.writeByte(result);
             output.writeInt(errorStackLength);
@@ -66,14 +66,8 @@ public class DefaultResponseProtocol implements Protocol{
     }
 
     @Override
-    public void deserialize(DataInput input) throws ProtocolCodecException {
+    public void deserialize(DataInput input, int totalLength) throws ProtocolCodecException {
         try{
-            int totalLength = input.readInt();
-            int magic = input.readInt();
-            if(magic != this.magic){
-                throw new ProtocolCodecException(Constants.BAD_PACKAGE, 
-                    "bad package, expected magic:"+this.magic+"but actual:"+magic+", current channel will be closed!");
-            }
             this.packageId = input.readLong();
             this.result = input.readByte();
             this.errorStackLength = input.readInt();
@@ -123,14 +117,6 @@ public class DefaultResponseProtocol implements Protocol{
 
     public void setBody(byte[] body) {
         this.body = body;
-    }
-    
-    public int getMagic() {
-        return magic;
-    }
-
-    public void setMagic(int magic) {
-        this.magic = magic;
     }
 
     public int getErrorStackLength() {

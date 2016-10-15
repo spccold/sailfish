@@ -27,9 +27,15 @@ import java.nio.charset.Charset;
  */
 public class RemotingConstants {
     //压缩阀值, KB
-    public static final int COMPRESS_THRESHOLD = 4 * 1024;
+    public static final int     COMPRESS_THRESHOLD = 4 * 1024;
     //sailfish binary protocol magic
-    public static final int SAILFISH_MAGIC = ByteBuffer.wrap("SASH".getBytes()).getInt();
+    public static final int     SAILFISH_MAGIC     = ByteBuffer.wrap("SASH".getBytes()).getInt();
+
+    public static final Charset DEFAULT_CHARSET    = Charset.forName("UTF-8");
+
+    //max frame size, 8MB
+    public static final int     DEFAULT_PAYLOAD    = 8 * 1024 * 1024;
     
-    public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+    public static final byte    DIRECTION_REQUEST  = 1;
+    public static final byte    DIRECTION_RESPONSE = 2;
 }

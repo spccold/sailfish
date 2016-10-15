@@ -15,20 +15,18 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.protocol;
+package sailfish.remoting.codec;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-
+import io.netty.buffer.ByteBuf;
 import sailfish.exceptions.ProtocolCodecException;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
  * @author spccold
- * @version $Id: Protocol.java, v 0.1 2016年10月4日 下午3:01:29 jileng Exp $
+ * @version $Id: RemotingCodec.java, v 0.1 2016年10月15日 下午4:45:54 jileng Exp $
  */
-public interface Protocol {
-    byte getVersion();
-    void serialize(DataOutput output) throws ProtocolCodecException;
-    void deserialize(DataInput input, int totalLength) throws ProtocolCodecException;
+public interface RemotingCodec {
+    public void encode(Protocol protocol, ByteBuf buffer) throws ProtocolCodecException;
+    public Protocol decode(ByteBuf buffer) throws ProtocolCodecException;
 }
