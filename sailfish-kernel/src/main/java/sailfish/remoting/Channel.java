@@ -23,5 +23,5 @@ package sailfish.remoting;
  * @version $Id: Channel.java, v 0.1 2016年10月3日 下午1:23:51 jileng Exp $
  */
 public interface Channel{
-
+    void addChannel(io.netty.channel.Channel channel);
 }

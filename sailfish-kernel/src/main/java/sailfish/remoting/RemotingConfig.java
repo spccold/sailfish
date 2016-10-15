@@ -26,12 +26,70 @@ import java.net.InetSocketAddress;
  */
 public class RemotingConfig {
     private InetSocketAddress remoteAddress;
-
+    private int connections;
+    private int connectTimeout;
+    //enable channels Read/Write Splitting or not when connections greater than one
+    private boolean enableReadWriteSplitting;
+    //read channel ratio when enableReadWriteSplitting is true 
+    private int readRatio;
+    
+    
+    private int ioThreads;
+    private String ioThreadName;
+    
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
     }
 
     public void setRemoteAddress(InetSocketAddress remoteAddress) {
         this.remoteAddress = remoteAddress;
+    }
+
+    public int getConnections() {
+        return connections;
+    }
+
+    public void setConnections(int connections) {
+        this.connections = connections;
+    }
+
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
+    }
+
+    public boolean isEnableReadWriteSplitting() {
+        return enableReadWriteSplitting;
+    }
+
+    public void setEnableReadWriteSplitting(boolean enableReadWriteSplitting) {
+        this.enableReadWriteSplitting = enableReadWriteSplitting;
+    }
+
+    public int getReadRatio() {
+        return readRatio;
+    }
+
+    public void setReadRatio(int readRatio) {
+        this.readRatio = readRatio;
+    }
+
+    public int getIoThreads() {
+        return ioThreads;
+    }
+
+    public void setIoThreads(int ioThreads) {
+        this.ioThreads = ioThreads;
+    }
+
+    public String getIoThreadName() {
+        return ioThreadName;
+    }
+
+    public void setIoThreadName(String ioThreadName) {
+        this.ioThreadName = ioThreadName;
     }
 }

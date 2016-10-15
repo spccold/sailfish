@@ -28,13 +28,8 @@ import sailfish.remoting.protocol.Protocol;
  * @version $Id: RemotingEncoder.java, v 0.1 2016年10月9日 下午9:44:43 jileng Exp $
  */
 public class RemotingEncoder extends MessageToByteEncoder<Protocol>{
-    private RemotingCodec codec;
-    public RemotingEncoder(RemotingCodec codec) {
-        this.codec = codec;
-    }
-
     @Override
     protected void encode(ChannelHandlerContext ctx, Protocol msg, ByteBuf out) throws Exception {
-        codec.encode(msg, out);
+        DefaultRemotingCodec.INSTANCE.encode(msg, out);
     }
 }

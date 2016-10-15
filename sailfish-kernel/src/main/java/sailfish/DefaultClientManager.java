@@ -17,32 +17,33 @@
  */
 package sailfish;
 
-import java.util.concurrent.ExecutionException;
-
-import sailfish.common.Constants;
-import sailfish.exceptions.GetEndpointFailedException;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import sailfish.remoting.Endpoint;
+import sailfish.remoting.EndpointManager;
+import sailfish.remoting.protocol.DefaultResponseProtocol;
 
 /**
  * 
  * @author spccold
  * @version $Id: DefaultClientManager.java, v 0.1 2016年10月3日 下午2:05:42 jileng Exp $
  */
-public class DefaultClientManager implements ClientManager{
+public class DefaultClientManager implements EndpointManager{
     public static final DefaultClientManager INSTANCE = new DefaultClientManager();
     private DefaultClientManager(){}
     
     @Override
-    public Endpoint getEndpoint(EndpointConfig config) throws GetEndpointFailedException{
-        try {
-            return getAsync((ClientConfig)config).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new GetEndpointFailedException(Constants.GET_ENDPOINT_FAIL, "get client fail!", e);
-        }
+    public Endpoint getEndpoint(EndpointConfig config){
+        Endpoint client = new DefaultClient((ClientConfig)config, new SimpleChannelInboundHandler<DefaultResponseProtocol>() {
+            @Override
+            protected void channelRead0(ChannelHandlerContext ctx, DefaultResponseProtocol msg) throws Exception {
+                doMessageReceived(msg);
+            }
+        });
+        return client;
     }
-
-    @Override
-    public EndpointFuture getAsync(ClientConfig clientConfig) {
-        return null;
+    
+    private void doMessageReceived(DefaultResponseProtocol response){
+        
     }
 }

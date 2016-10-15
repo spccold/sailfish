@@ -35,11 +35,8 @@ import sailfish.remoting.utils.RemotingUtils;
  */
 public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
     private static final Logger logger = LoggerFactory.getLogger(RemotingDecoder.class);
-    private RemotingCodec       codec;
-
-    public RemotingDecoder(RemotingCodec codec) {
+    public RemotingDecoder() {
         super(RemotingConstants.DEFAULT_PAYLOAD, 0, 4);
-        this.codec = codec;
     }
 
     @Override
@@ -49,7 +46,7 @@ public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
             return null;
         }
         try {
-            return codec.decode(buffer);
+            return DefaultRemotingCodec.INSTANCE.decode(buffer);
         } catch (ProtocolCodecException e) {
             if (e.getErrorCode() == Constants.BAD_PACKAGE) {
                 String log = String.format("packet from remoteAddress [%s] invalid, begin to close channel to [%s], detail: %s",

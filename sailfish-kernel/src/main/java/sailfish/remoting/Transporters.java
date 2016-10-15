@@ -17,13 +17,20 @@
  */
 package sailfish.remoting;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import sailfish.remoting.codec.RemotingDecoder;
+import sailfish.remoting.codec.RemotingEncoder;
 
 /**
  * 
@@ -31,13 +38,18 @@ import io.netty.channel.socket.nio.NioSocketChannel;
  * @version $Id: Transporters.java, v 0.1 2016年10月9日 下午9:03:46 jileng Exp $
  */
 public class Transporters {
+    private static final ConcurrentMap<String /**remote address(ip:prot)*/, Channel> channels = new ConcurrentHashMap<>();
+    
     private static Bootstrap bootstrap;
-    public static Channel connect(RemotingConfig config,ChannelHandler handler){
-        ensureBootstrap();
-        return null;
+    public static Channel connect(RemotingConfig config, ChannelHandler handler){
+        ensureBootstrap(config,handler);
+        NettyChannel nettyChannel = new NettyChannel(config.getConnections());
+        nettyChannel.addChannel(bootstrap.connect(config.getRemoteAddress()).awaitUninterruptibly().channel());
+        channels.putIfAbsent(config.getRemoteAddress().toString(), nettyChannel);
+        return nettyChannel;
     }
     
-    private static void ensureBootstrap(){
+    private static void ensureBootstrap(final RemotingConfig config, final ChannelHandler handler){
         if(null != bootstrap){
             return;
         }
@@ -46,14 +58,18 @@ public class Transporters {
                 return;
             }
             bootstrap = new Bootstrap();
-            NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+            NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(config.getIoThreads(), 
+                new DefaultThreadFactory(config.getIoThreadName()));
             bootstrap.option(ChannelOption.TCP_NODELAY, true);
             bootstrap.option(ChannelOption.SO_KEEPALIVE, true);
-            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
+            bootstrap.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.getConnectTimeout());
             bootstrap.group(eventLoopGroup).channel(NioSocketChannel.class).handler(new ChannelInitializer<SocketChannel>(){
                 @Override
                 protected void initChannel(SocketChannel ch) throws Exception {
-                    
+                    ChannelPipeline pipeline = ch.pipeline();
+                    pipeline.addLast(new RemotingEncoder());
+                    pipeline.addLast(new RemotingDecoder());
+                    pipeline.addLast(handler);
                 }
             });
         }

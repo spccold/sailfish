@@ -33,6 +33,8 @@ import sailfish.remoting.protocol.Protocol;
  * @version $Id: DefaultRemotingCodec.java, v 0.1 2016年10月15日 下午4:52:20 jileng Exp $
  */
 public class DefaultRemotingCodec implements RemotingCodec{
+    public static final DefaultRemotingCodec INSTANCE = new DefaultRemotingCodec();
+    private DefaultRemotingCodec(){}
     @Override
     public void encode(Protocol protocol, ByteBuf buffer) throws ProtocolCodecException {
         protocol.serialize(new ByteBufOutputStream(buffer));

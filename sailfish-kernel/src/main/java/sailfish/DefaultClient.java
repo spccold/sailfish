@@ -15,23 +15,28 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish;
 
 import java.net.InetSocketAddress;
 
 import io.netty.channel.ChannelHandler;
-import sailfish.common.ResponseFuture;
+import sailfish.remoting.ExchangeClient;
+import sailfish.remoting.RemotingConfig;
 
 /**
  * 
  * @author spccold
- * @version $Id: ExchangeClient.java, v 0.1 2016年10月4日 下午4:13:49 jileng Exp $
+ * @version $Id: DefaultClient.java, v 0.1 2016年10月15日 下午11:34:59 jileng Exp $
  */
-public class ExchangeClient implements Exchanger{
-    private Channel channel;
-
-    public ExchangeClient(RemotingConfig config, ChannelHandler handler) {
-        this.channel = Transporters.connect(config, handler);
+public class DefaultClient implements Client{
+    private ExchangeClient client;
+    
+    public DefaultClient(ClientConfig config, ChannelHandler handler) {
+        RemotingConfig remotingConfig = new RemotingConfig();
+        remotingConfig.setRemoteAddress(config.getRemoteAddress());
+        remotingConfig.setConnections(config.getConnections());
+        remotingConfig.setConnectTimeout(config.getTimeout());
+        client= new ExchangeClient(remotingConfig, handler);
     }
 
     @Override
@@ -41,7 +46,7 @@ public class ExchangeClient implements Exchanger{
 
     @Override
     public void close() {
-        
+
     }
 
     @Override
@@ -55,18 +60,22 @@ public class ExchangeClient implements Exchanger{
     }
 
     @Override
-    public void oneway(byte[] data) {
+    public void oneway(Object request, RequestControl control) {
         
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
+    public Object syncInvoke(Object request, RequestControl control) {
         return null;
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data, int timeout) {
+    public ObjectResponseFuture futureInvoke(Object request, RequestControl control) {
         return null;
+    }
+
+    @Override
+    public void callBackInvoke(Object request, RequestControl control, ResponseCallback callback) {
     }
 
 }

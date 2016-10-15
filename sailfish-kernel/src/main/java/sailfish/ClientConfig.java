@@ -27,6 +27,7 @@ import java.net.InetSocketAddress;
 public class ClientConfig extends EndpointConfig{
     private InetSocketAddress remoteAddress;
     private int connections;
+    private int connectTimeout;
     private int timeout;
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
@@ -45,5 +46,11 @@ public class ClientConfig extends EndpointConfig{
     }
     public void setTimeout(int timeout) {
         this.timeout = timeout;
+    }
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+    public void setConnectTimeout(int connectTimeout) {
+        this.connectTimeout = connectTimeout;
     }
 }
