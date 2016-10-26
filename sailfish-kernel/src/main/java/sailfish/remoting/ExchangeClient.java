@@ -76,10 +76,4 @@ public class ExchangeClient implements Exchanger{
         Tracer.trace(protocol.getPackageId(), future);
         return future;
     }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data, int timeout) {
-        return null;
-    }
-
 }

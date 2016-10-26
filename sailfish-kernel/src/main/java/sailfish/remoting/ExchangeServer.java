@@ -62,9 +62,4 @@ public class ExchangeServer implements Exchanger{
     public ResponseFuture<byte[]> request(byte[] data) {
         return null;
     }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data, int timeout) {
-        return null;
-    }
 }

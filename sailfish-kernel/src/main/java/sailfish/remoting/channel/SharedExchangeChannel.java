@@ -15,23 +15,19 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.channel;
+
+import sailfish.remoting.ExchangeClient;
 
 /**
- * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
- * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
+ * with only one {@link SimpleExchangeChannel} or {@link LazyConnectionExchangeChannel} 
+ * or {@link MultiConnsExchangeChannel} or {@link ReadWriteSplittingExchangeChannel} 
+ * for multiple {@link ExchangeClient}, {@link MultiConnsExchangeChannel} and 
+ * {@link ReadWriteSplittingExchangeChannel} should be enabled by System Properties
  * 
  * @author spccold
- * @version $Id: Exchanger.java, v 0.1 2016年10月3日 下午1:04:04 jileng Exp $
+ * @version $Id: SharedExchangeChannel.java, v 0.1 2016年10月26日 下午9:21:44 jileng Exp $
  */
-public interface Exchanger extends Endpoint{
-    /**
-     * one-way pattern
-     */
-    void oneway(byte[] data);
-    
-    /**
-     * request–response pattern
-     */
-    ResponseFuture<byte[]> request(byte[] data);
-}   
+public class SharedExchangeChannel implements ExchangeChannel{
+
+}
