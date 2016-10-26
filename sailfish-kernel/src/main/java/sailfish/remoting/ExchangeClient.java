@@ -17,10 +17,12 @@
  */
 package sailfish.remoting;
 
-import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
-import io.netty.channel.ChannelHandler;
 import sailfish.common.ResponseFuture;
+import sailfish.remoting.protocol.DefaultRequestProtocol;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
@@ -29,29 +31,28 @@ import sailfish.common.ResponseFuture;
  */
 public class ExchangeClient implements Exchanger{
     private Channel channel;
-
-    public ExchangeClient(RemotingConfig config, ChannelHandler handler) {
+    private volatile AtomicBoolean closed = new AtomicBoolean(false);
+    private AtomicLong packageIdGenerator = new AtomicLong(0);
+    public ExchangeClient(RemotingConfig config, MsgHandler<Protocol> handler) {
         this.channel = Transporters.connect(config, handler);
     }
-
-    @Override
-    public InetSocketAddress getLocalAddress() {
-        return null;
-    }
-
+  
     @Override
     public void close() {
-        
+        if(closed.compareAndSet(false, true)){
+            channel.close();
+        }
     }
 
     @Override
     public void close(int timeout) {
-        
+        //FIXME need do some special things
+        close();
     }
 
     @Override
     public boolean isClosed() {
-        return false;
+        return closed.get();
     }
 
     @Override
@@ -61,7 +62,14 @@ public class ExchangeClient implements Exchanger{
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data) {
-        return null;
+        DefaultRequestProtocol protocol = new DefaultRequestProtocol();
+        protocol.setOneway(true);
+        protocol.setBody(data);
+        protocol.setPackageId(packageIdGenerator.incrementAndGet());
+        channel.send(protocol);
+        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.getPackageId());
+        Tracer.trace(protocol.getPackageId(), future);
+        return future;
     }
 
     @Override

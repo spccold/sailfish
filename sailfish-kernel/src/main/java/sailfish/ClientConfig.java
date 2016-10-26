@@ -19,6 +19,9 @@ package sailfish;
 
 import java.net.InetSocketAddress;
 
+import sailfish.remoting.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
+
 /**
  * 
  * @author spccold
@@ -29,6 +32,7 @@ public class ClientConfig extends EndpointConfig{
     private int connections;
     private int connectTimeout;
     private int timeout;
+    private MsgHandler<Protocol> handler;
     public InetSocketAddress getRemoteAddress() {
         return remoteAddress;
     }
@@ -52,5 +56,11 @@ public class ClientConfig extends EndpointConfig{
     }
     public void setConnectTimeout(int connectTimeout) {
         this.connectTimeout = connectTimeout;
+    }
+    public MsgHandler<Protocol> getHandler() {
+        return handler;
+    }
+    public void setHandler(MsgHandler<Protocol> handler) {
+        this.handler = handler;
     }
 }

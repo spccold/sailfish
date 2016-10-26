@@ -17,9 +17,6 @@
  */
 package sailfish;
 
-import java.net.InetSocketAddress;
-
-import io.netty.channel.ChannelHandler;
 import sailfish.remoting.ExchangeClient;
 import sailfish.remoting.RemotingConfig;
 
@@ -30,33 +27,29 @@ import sailfish.remoting.RemotingConfig;
  */
 public class DefaultClient implements Client{
     private ExchangeClient client;
-    
-    public DefaultClient(ClientConfig config, ChannelHandler handler) {
+
+    public DefaultClient(ClientConfig config) {
         RemotingConfig remotingConfig = new RemotingConfig();
         remotingConfig.setRemoteAddress(config.getRemoteAddress());
         remotingConfig.setConnections(config.getConnections());
         remotingConfig.setConnectTimeout(config.getTimeout());
-        client= new ExchangeClient(remotingConfig, handler);
-    }
-
-    @Override
-    public InetSocketAddress getLocalAddress() {
-        return null;
+        client= new ExchangeClient(remotingConfig, config.getHandler());
     }
 
     @Override
     public void close() {
-
+        client.close();
     }
 
     @Override
     public void close(int timeout) {
-        
+        //FIXME consider timeout
+        close();
     }
 
     @Override
     public boolean isClosed() {
-        return false;
+        return client.isClosed();
     }
 
     @Override

@@ -31,4 +31,6 @@ public interface Protocol {
     byte getVersion();
     void serialize(DataOutput output) throws ProtocolCodecException;
     void deserialize(DataInput input, int totalLength) throws ProtocolCodecException;
+    boolean request();
+    byte[] body();
 }

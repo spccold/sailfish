@@ -17,8 +17,6 @@
  */
 package sailfish.remoting;
 
-import java.net.InetSocketAddress;
-
 /**
  * <a href="https://en.wikipedia.org/wiki/Endpoint">Endpoint</a>
  * 
@@ -26,9 +24,6 @@ import java.net.InetSocketAddress;
  * @version $Id: Endpoint.java, v 0.1 2016年10月3日 上午11:35:29 jileng Exp $
  */
 public interface Endpoint {
-    
-    InetSocketAddress getLocalAddress();
-
     /**
      * close current Endpoint
      */

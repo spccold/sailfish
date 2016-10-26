@@ -54,4 +54,9 @@ public class ObjectResponseFuture implements ResponseFuture<Object>{
     public Object get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
         return null;
     }
+
+    @Override
+    public void trySuccess(Object data) {
+        
+    }
 }

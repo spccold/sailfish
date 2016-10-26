@@ -134,4 +134,17 @@ public class DefaultResponseProtocol implements Protocol{
     public byte getVersion() {
         return PROTOCOL_VERSION;
     }
+
+    /** 
+     * @see sailfish.remoting.protocol.Protocol#request()
+     */
+    @Override
+    public boolean request() {
+        return false;
+    }
+
+    @Override
+    public byte[] body() {
+        return body;
+    }
 }

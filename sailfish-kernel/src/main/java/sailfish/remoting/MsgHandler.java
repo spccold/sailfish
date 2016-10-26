@@ -15,15 +15,18 @@
  *	limitations under the License.
  *
  */
-package sailfish.common;
+package sailfish.remoting;
 
-import java.util.concurrent.Future;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
  * @author spccold
- * @version $Id: ResponseFuture.java, v 0.1 2016年10月4日 下午3:56:21 jileng Exp $
+ * @version $Id: MsgHandler.java, v 0.1 2016年10月26日 上午11:46:07 jileng Exp $
  */
-public interface ResponseFuture<T> extends Future<T>{
-    void trySuccess(T data);
+public interface MsgHandler<I extends Protocol> {
+    /**
+     * I is request or response
+     */
+    void handle(I msg);
 }

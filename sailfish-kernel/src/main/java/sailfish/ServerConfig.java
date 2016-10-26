@@ -17,11 +17,22 @@
  */
 package sailfish;
 
+import sailfish.remoting.MsgHandler;
+import sailfish.remoting.protocol.DefaultResponseProtocol;
+
 /**
  * 
  * @author spccold
  * @version $Id: ServerConfig.java, v 0.1 2016年10月4日 下午5:01:33 jileng Exp $
  */
 public class ServerConfig extends EndpointConfig{
+    private MsgHandler<DefaultResponseProtocol> handler;
 
+    public MsgHandler<DefaultResponseProtocol> getHandler() {
+        return handler;
+    }
+
+    public void setHandler(MsgHandler<DefaultResponseProtocol> handler) {
+        this.handler = handler;
+    }
 }

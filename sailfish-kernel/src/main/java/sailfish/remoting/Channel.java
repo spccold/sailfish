@@ -17,6 +17,8 @@
  */
 package sailfish.remoting;
 
+import sailfish.remoting.protocol.Protocol;
+
 /**
  * 
  * @author spccold
@@ -24,4 +26,6 @@ package sailfish.remoting;
  */
 public interface Channel{
     void addChannel(io.netty.channel.Channel channel);
+    void close();
+    void send(Protocol protocol);
 }

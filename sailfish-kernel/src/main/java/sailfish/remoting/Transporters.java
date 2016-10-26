@@ -21,16 +21,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
@@ -41,7 +43,7 @@ public class Transporters {
     private static final ConcurrentMap<String /**remote address(ip:prot)*/, Channel> channels = new ConcurrentHashMap<>();
     
     private static Bootstrap bootstrap;
-    public static Channel connect(RemotingConfig config, ChannelHandler handler){
+    public static Channel connect(RemotingConfig config, MsgHandler<Protocol> handler){
         ensureBootstrap(config,handler);
         NettyChannel nettyChannel = new NettyChannel(config.getConnections());
         nettyChannel.addChannel(bootstrap.connect(config.getRemoteAddress()).awaitUninterruptibly().channel());
@@ -49,7 +51,7 @@ public class Transporters {
         return nettyChannel;
     }
     
-    private static void ensureBootstrap(final RemotingConfig config, final ChannelHandler handler){
+    private static void ensureBootstrap(final RemotingConfig config, final MsgHandler<Protocol> handler){
         if(null != bootstrap){
             return;
         }
@@ -69,7 +71,13 @@ public class Transporters {
                     ChannelPipeline pipeline = ch.pipeline();
                     pipeline.addLast(new RemotingEncoder());
                     pipeline.addLast(new RemotingDecoder());
-                    pipeline.addLast(handler);
+                    //need IdleHandler in future
+                    pipeline.addLast(new SimpleChannelInboundHandler<Protocol>() {
+                        @Override
+                        protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
+                            handler.handle(msg);
+                        }
+                    });
                 }
             });
         }

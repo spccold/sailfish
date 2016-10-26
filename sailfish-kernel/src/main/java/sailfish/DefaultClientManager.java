@@ -17,11 +17,8 @@
  */
 package sailfish;
 
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import sailfish.remoting.Endpoint;
 import sailfish.remoting.EndpointManager;
-import sailfish.remoting.protocol.DefaultResponseProtocol;
 
 /**
  * 
@@ -34,16 +31,7 @@ public class DefaultClientManager implements EndpointManager{
     
     @Override
     public Endpoint getEndpoint(EndpointConfig config){
-        Endpoint client = new DefaultClient((ClientConfig)config, new SimpleChannelInboundHandler<DefaultResponseProtocol>() {
-            @Override
-            protected void channelRead0(ChannelHandlerContext ctx, DefaultResponseProtocol msg) throws Exception {
-                doMessageReceived(msg);
-            }
-        });
+        Client client = new DefaultClient((ClientConfig)config);
         return client;
-    }
-    
-    private void doMessageReceived(DefaultResponseProtocol response){
-        
     }
 }

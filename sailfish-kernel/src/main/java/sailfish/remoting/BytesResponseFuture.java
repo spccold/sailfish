@@ -29,30 +29,90 @@ import sailfish.common.ResponseFuture;
  * @version $Id: BytesResponseFuture.java, v 0.1 2016年10月4日 下午3:57:32 jileng Exp $
  */
 public class BytesResponseFuture implements ResponseFuture<byte[]>{
+    private byte[] data;
+    private long packageId;
+    private volatile boolean successed;
+    private volatile boolean done;
+    private volatile boolean canceled;
+
+    public BytesResponseFuture(long packageId) {
+        this.packageId = packageId;
+    }
 
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
-        return false;
+        synchronized (this) {
+            this.done = true;
+            this.canceled = true;
+            Tracer.erase(packageId);
+            notifyAll();
+            return true;
+        }
     }
 
     @Override
     public boolean isCancelled() {
-        return false;
+        return canceled;
     }
 
     @Override
     public boolean isDone() {
-        return false;
+        return done;
     }
 
     @Override
     public byte[] get() throws InterruptedException, ExecutionException {
-        return null;
+        try{
+            synchronized (this) {
+                if(this.done){
+                    return data;
+                }
+                while(!successed){
+                    wait();
+                }
+                return data;
+            }
+        }catch(InterruptedException e){
+            throw e;
+        }finally{
+            this.done = true;
+        }
     }
 
     @Override
     public byte[] get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-        return null;
+        try{
+            synchronized (this) {
+                if(this.done){
+                    return data;
+                }
+                
+                long timeToSleep = unit.toMillis(timeout);
+                long deadline = System.currentTimeMillis() + timeToSleep;
+                while(!successed && timeToSleep > 0){
+                    wait(unit.toMillis(timeToSleep));
+                    timeToSleep = deadline - System.currentTimeMillis();
+                }
+                if(successed){
+                    return data;
+                }
+                String msg = String.format("wait response for packageId[%d] timeout", packageId);
+                throw new TimeoutException(msg);
+            }
+        }catch(InterruptedException | TimeoutException e){
+            throw e;
+        }finally{
+            this.done = true;
+        }
     }
 
+    @Override
+    public void trySuccess(byte[] data) {
+        synchronized (this) {
+            successed = true;
+            this.data = data;
+            this.done = true;
+            notifyAll();
+        }
+    }
 }
