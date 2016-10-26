@@ -18,7 +18,6 @@
 package sailfish;
 
 import sailfish.exceptions.GetEndpointFailedException;
-import sailfish.remoting.Endpoint;
 import sailfish.remoting.EndpointManager;
 
 /**
@@ -26,11 +25,12 @@ import sailfish.remoting.EndpointManager;
  * @author spccold
  * @version $Id: DefaultServerManager.java, v 0.1 2016年10月3日 下午1:59:14 jileng Exp $
  */
-public class DefaultServerManager implements EndpointManager{
-
+public class DefaultServerManager implements EndpointManager<ServerConfig, Server>{
+    public static DefaultServerManager INSTANCE = new DefaultServerManager();
+    private DefaultServerManager(){}
+    
     @Override
-    public Endpoint getEndpoint(EndpointConfig serverConfig) throws GetEndpointFailedException{
-        return null;
+    public Server getEndpoint(ServerConfig config) throws GetEndpointFailedException {
+        return new DefaultServer(config.getLocalAddress(), config.getHandler());
     }
-
 }

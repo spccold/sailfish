@@ -147,4 +147,9 @@ public class DefaultResponseProtocol implements Protocol{
     public byte[] body() {
         return body;
     }
+
+    @Override
+    public long packageId() {
+        return packageId;
+    }
 }

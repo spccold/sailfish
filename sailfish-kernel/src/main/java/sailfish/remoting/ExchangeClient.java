@@ -20,6 +20,7 @@ package sailfish.remoting;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
+import io.netty.channel.ChannelHandlerContext;
 import sailfish.common.ResponseFuture;
 import sailfish.remoting.protocol.DefaultRequestProtocol;
 import sailfish.remoting.protocol.Protocol;
@@ -33,8 +34,13 @@ public class ExchangeClient implements Exchanger{
     private Channel channel;
     private volatile AtomicBoolean closed = new AtomicBoolean(false);
     private AtomicLong packageIdGenerator = new AtomicLong(0);
-    public ExchangeClient(RemotingConfig config, MsgHandler<Protocol> handler) {
-        this.channel = Transporters.connect(config, handler);
+    public ExchangeClient(RemotingConfig config) {
+        this.channel = Transporters.connect(config, new MsgHandler<Protocol>() {
+            @Override
+            public void handle(ChannelHandlerContext context, Protocol msg) {
+                Tracer.erase(msg.packageId(), msg);
+            }
+        });
     }
   
     @Override

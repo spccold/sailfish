@@ -17,7 +17,6 @@
  */
 package sailfish.remoting;
 
-import sailfish.EndpointConfig;
 import sailfish.exceptions.GetEndpointFailedException;
 
 /**
@@ -25,6 +24,6 @@ import sailfish.exceptions.GetEndpointFailedException;
  * @author spccold
  * @version $Id: EndpointManager.java, v 0.1 2016年10月3日 下午1:52:23 jileng Exp $
  */
-public interface EndpointManager {
-    Endpoint getEndpoint(EndpointConfig config) throws GetEndpointFailedException;
+public interface EndpointManager<I,O> {
+    O getEndpoint(I config) throws GetEndpointFailedException;
 }

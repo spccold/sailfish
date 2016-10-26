@@ -33,4 +33,5 @@ public interface Protocol {
     void deserialize(DataInput input, int totalLength) throws ProtocolCodecException;
     boolean request();
     byte[] body();
+    long packageId();
 }

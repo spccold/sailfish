@@ -15,19 +15,39 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish;
 
-import io.netty.channel.ChannelHandlerContext;
+import java.net.InetSocketAddress;
+
+import sailfish.remoting.ExchangeServer;
+import sailfish.remoting.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
  * @author spccold
- * @version $Id: MsgHandler.java, v 0.1 2016年10月26日 上午11:46:07 jileng Exp $
+ * @version $Id: DefaultServer.java, v 0.1 2016年10月26日 下午4:18:30 jileng Exp $
  */
-public interface MsgHandler<I extends Protocol> {
-    /**
-     * I is request or response
-     */
-    void handle(ChannelHandlerContext ctx, I msg);
+public class DefaultServer implements Server{
+    private ExchangeServer exchangeServer;
+    
+    public DefaultServer(InetSocketAddress localAddress, MsgHandler<Protocol> handler) {
+        exchangeServer= new ExchangeServer(localAddress, handler);
+    }
+    
+    @Override
+    public void close() {
+        
+    }
+
+    @Override
+    public void close(int timeout) {
+        
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
+    }
+
 }

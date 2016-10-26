@@ -33,7 +33,7 @@ public class DefaultClient implements Client{
         remotingConfig.setRemoteAddress(config.getRemoteAddress());
         remotingConfig.setConnections(config.getConnections());
         remotingConfig.setConnectTimeout(config.getTimeout());
-        client= new ExchangeClient(remotingConfig, config.getHandler());
+        client= new ExchangeClient(remotingConfig);
     }
 
     @Override

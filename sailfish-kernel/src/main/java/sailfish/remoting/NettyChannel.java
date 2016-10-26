@@ -13,7 +13,7 @@ public class NettyChannel implements Channel {
 
     @Override
     public void addChannel(io.netty.channel.Channel channel) {
-        channels[++channelIndex] = channel;
+        channels[channelIndex++] = channel;
     }
 
     @Override
