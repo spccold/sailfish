@@ -21,10 +21,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import sailfish.common.Constants;
-import sailfish.exceptions.ProtocolCodecException;
+import sailfish.remoting.Constants;
 import sailfish.remoting.RemotingConstants;
-import sailfish.utils.StrUtils;
+import sailfish.remoting.exceptions.ProtocolCodecException;
+import sailfish.remoting.utils.StrUtils;
 
 /**
  * 

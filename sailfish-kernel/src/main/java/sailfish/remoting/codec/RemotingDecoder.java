@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import sailfish.common.Constants;
-import sailfish.exceptions.ProtocolCodecException;
+import sailfish.remoting.Constants;
 import sailfish.remoting.RemotingConstants;
+import sailfish.remoting.exceptions.ProtocolCodecException;
 import sailfish.remoting.utils.RemotingUtils;
 
 /**

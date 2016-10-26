@@ -17,8 +17,6 @@
  */
 package sailfish.remoting;
 
-import sailfish.common.ResponseFuture;
-
 /**
  * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
  * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>

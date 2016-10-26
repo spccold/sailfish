@@ -15,7 +15,7 @@
  *	limitations under the License.
  *
  */
-package sailfish.utils;
+package sailfish.remoting.utils;
 
 /**
  * 

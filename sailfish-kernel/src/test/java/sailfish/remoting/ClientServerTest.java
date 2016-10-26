@@ -25,8 +25,6 @@ import org.junit.Test;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.CharsetUtil;
-import sailfish.common.ResponseFuture;
-import sailfish.exceptions.GetEndpointFailedException;
 import sailfish.remoting.protocol.DefaultRequestProtocol;
 import sailfish.remoting.protocol.DefaultResponseProtocol;
 import sailfish.remoting.protocol.Protocol;
@@ -39,7 +37,7 @@ import sailfish.remoting.protocol.Protocol;
 public class ClientServerTest {
 
     @Test
-    public void testSendAndReceive() throws GetEndpointFailedException, InterruptedException, ExecutionException{
+    public void testSendAndReceive() throws InterruptedException, ExecutionException{
         final byte data[] = "hello sailfish!".getBytes(CharsetUtil.UTF_8);
         ExchangeServer server = new ExchangeServer(new InetSocketAddress("localhost", 13141), new MsgHandler<Protocol>() {
             @Override

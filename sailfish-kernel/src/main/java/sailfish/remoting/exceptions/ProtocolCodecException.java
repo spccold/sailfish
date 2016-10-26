@@ -15,7 +15,7 @@
  *	limitations under the License.
  *
  */
-package sailfish.exceptions;
+package sailfish.remoting.exceptions;
 
 /**
  * 

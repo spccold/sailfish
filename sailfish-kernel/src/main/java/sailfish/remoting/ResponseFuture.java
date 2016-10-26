@@ -15,7 +15,7 @@
  *	limitations under the License.
  *
  */
-package sailfish.common;
+package sailfish.remoting;
 
 import java.util.concurrent.Future;
 

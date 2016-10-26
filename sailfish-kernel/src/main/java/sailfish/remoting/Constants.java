@@ -15,14 +15,18 @@
  *	limitations under the License.
  *
  */
-package sailfish;
+package sailfish.remoting;
 
 /**
  * 
  * @author spccold
- * @version $Id: ResponseCallback.java, v 0.1 2016年10月4日 下午4:38:13 jileng Exp $
+ * @version $Id: Constants.java, v 0.1 2016年10月3日 下午3:52:31 jileng Exp $
  */
-public interface ResponseCallback {
-    void handleResponse(Object response);
-    void onException(Throwable exception);
+public class Constants {
+    /** exception error code definitions */
+    // deserialize protocol when magic incorrect
+    public static final int BAD_PACKAGE = 1;
+    public static final int IO_EXCEPTION = 1;
+    
+    public static final int GET_ENDPOINT_FAIL = 30;
 }

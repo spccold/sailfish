@@ -19,7 +19,6 @@ package sailfish.remoting;
 
 import java.net.InetSocketAddress;
 
-import sailfish.common.ResponseFuture;
 import sailfish.remoting.protocol.Protocol;
 
 /**

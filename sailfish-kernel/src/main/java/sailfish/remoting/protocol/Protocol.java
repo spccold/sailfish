@@ -20,7 +20,7 @@ package sailfish.remoting.protocol;
 import java.io.DataInput;
 import java.io.DataOutput;
 
-import sailfish.exceptions.ProtocolCodecException;
+import sailfish.remoting.exceptions.ProtocolCodecException;
 
 /**
  * 
