@@ -21,9 +21,8 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import sailfish.remoting.Constants;
 import sailfish.remoting.RemotingConstants;
-import sailfish.remoting.exceptions.ProtocolCodecException;
+import sailfish.remoting.exceptions.RemotingException;
 
 /**
  * 
@@ -51,7 +50,7 @@ public class DefaultRequestProtocol implements Protocol{
     private byte[] body;
     
     @Override
-    public void serialize(DataOutput output) throws ProtocolCodecException {
+    public void serialize(DataOutput output) throws RemotingException {
         try{
             //write package length(not contain current length field(4 bytes))
             output.writeInt(HEADER_LENGTH + bodyLength());
@@ -69,12 +68,12 @@ public class DefaultRequestProtocol implements Protocol{
                 output.write(this.body);
             }
         }catch(IOException cause){
-            throw new ProtocolCodecException(Constants.IO_EXCEPTION, cause);
+            throw new RemotingException(cause);
         }
     }
 
     @Override
-    public void deserialize(DataInput input, int totalLength) throws ProtocolCodecException {
+    public void deserialize(DataInput input, int totalLength) throws RemotingException {
         try{
             this.packageId = input.readLong();
             this.oneway = input.readBoolean();
@@ -86,7 +85,7 @@ public class DefaultRequestProtocol implements Protocol{
             this.body = new byte[totalLength - HEADER_LENGTH];
             input.readFully(this.body);
         }catch(IOException cause){
-            throw new ProtocolCodecException(Constants.IO_EXCEPTION, cause);
+            throw new RemotingException(cause);
         }
     }
 
@@ -158,9 +157,6 @@ public class DefaultRequestProtocol implements Protocol{
         return PROTOCOL_VERSION;
     }
 
-    /** 
-     * @see sailfish.remoting.protocol.Protocol#request()
-     */
     @Override
     public boolean request() {
         return true;

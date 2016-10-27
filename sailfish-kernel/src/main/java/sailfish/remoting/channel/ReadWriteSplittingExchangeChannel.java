@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.channel;
 
+import sailfish.remoting.ResponseFuture;
+
 /**
  * similar to {@link MultiConnsExchangeChannel}, but support read write splitting, this means some connections used for write only
  * and other connections used to read only
@@ -25,5 +27,25 @@ package sailfish.remoting.channel;
  * @version $Id: ReadWriteSplittingExchangeChannel.java, v 0.1 2016年10月26日 下午9:29:17 jileng Exp $
  */
 public class ReadWriteSplittingExchangeChannel implements ExchangeChannel{
+
+    @Override
+    public void oneway(byte[] data) {
+        
+    }
+
+    @Override
+    public ResponseFuture<byte[]> request(byte[] data) {
+        return null;
+    }
+
+    @Override
+    public void close() {
+        
+    }
+
+    @Override
+    public void close(int timeout) {
+        
+    }
 
 }

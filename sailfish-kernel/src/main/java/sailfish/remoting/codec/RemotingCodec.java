@@ -18,7 +18,7 @@
 package sailfish.remoting.codec;
 
 import io.netty.buffer.ByteBuf;
-import sailfish.remoting.exceptions.ProtocolCodecException;
+import sailfish.remoting.exceptions.RemotingException;
 import sailfish.remoting.protocol.Protocol;
 
 /**
@@ -27,6 +27,6 @@ import sailfish.remoting.protocol.Protocol;
  * @version $Id: RemotingCodec.java, v 0.1 2016年10月15日 下午4:45:54 jileng Exp $
  */
 public interface RemotingCodec {
-    public void encode(Protocol protocol, ByteBuf buffer) throws ProtocolCodecException;
-    public Protocol decode(ByteBuf buffer) throws ProtocolCodecException;
+    public void encode(Protocol protocol, ByteBuf buffer) throws RemotingException;
+    public Protocol decode(ByteBuf buffer) throws RemotingException;
 }

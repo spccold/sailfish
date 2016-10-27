@@ -17,7 +17,6 @@
  */
 package sailfish.remoting;
 
-import java.net.InetSocketAddress;
 import java.util.concurrent.ExecutionException;
 
 import org.junit.Assert;
@@ -25,6 +24,9 @@ import org.junit.Test;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.CharsetUtil;
+import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.configuration.ExchangeServerConfig;
+import sailfish.remoting.exceptions.RemotingException;
 import sailfish.remoting.protocol.DefaultRequestProtocol;
 import sailfish.remoting.protocol.DefaultResponseProtocol;
 import sailfish.remoting.protocol.Protocol;
@@ -37,9 +39,11 @@ import sailfish.remoting.protocol.Protocol;
 public class ClientServerTest {
 
     @Test
-    public void testSendAndReceive() throws InterruptedException, ExecutionException{
+    public void testSendAndReceive() throws InterruptedException, ExecutionException, RemotingException{
         final byte data[] = "hello sailfish!".getBytes(CharsetUtil.UTF_8);
-        ExchangeServer server = new ExchangeServer(new InetSocketAddress("localhost", 13141), new MsgHandler<Protocol>() {
+        ExchangeServerConfig serverConfig = new ExchangeServerConfig();
+        serverConfig.address(new Address("localhost", 13141));
+        ExchangeServer server = Exchanger.bind(serverConfig, new MsgHandler<Protocol>() {
             @Override
             public void handle(ChannelHandlerContext ctx, Protocol msg) {
                 if(msg.request()){
@@ -58,12 +62,9 @@ public class ClientServerTest {
         });
         server.start();
         
-        RemotingConfig config = new RemotingConfig();
-        config.setConnections(1);
-        config.setRemoteAddress(new InetSocketAddress("localhost", 13141));
-        config.setIoThreads(Runtime.getRuntime().availableProcessors());
-        config.setIoThreadName("sailfish-io-client");
-        ExchangeClient client = new ExchangeClient(config);
+        ExchangeClientConfig clientConfig = new ExchangeClientConfig();
+        clientConfig.address(new Address("localhost", 13141));
+        ExchangeClient client = new ExchangeClient(clientConfig);
         ResponseFuture<byte[]> future = client.request(data);
         byte[] result = future.get();
         Assert.assertNotNull(result);

@@ -15,18 +15,18 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.utils;
+
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 
  * @author spccold
- * @version $Id: Constants.java, v 0.1 2016年10月3日 下午3:52:31 jileng Exp $
+ * @version $Id: PacketIdGenerator.java, v 0.1 2016年10月26日 下午10:47:17 jileng Exp $
  */
-public class Constants {
-    /** exception error code definitions */
-    // deserialize protocol when magic incorrect
-    public static final int BAD_PACKAGE = 1;
-    public static final int IO_EXCEPTION = 1;
-    
-    public static final int GET_ENDPOINT_FAIL = 30;
+public class PacketIdGenerator {
+    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
+    public static Long nextId(){
+        return ID_GENERATOR.incrementAndGet();
+    }
 }

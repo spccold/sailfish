@@ -23,9 +23,9 @@ import org.slf4j.LoggerFactory;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import sailfish.remoting.Constants;
 import sailfish.remoting.RemotingConstants;
-import sailfish.remoting.exceptions.ProtocolCodecException;
+import sailfish.remoting.exceptions.ExceptionCode;
+import sailfish.remoting.exceptions.RemotingException;
 import sailfish.remoting.utils.RemotingUtils;
 
 /**
@@ -38,7 +38,8 @@ public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
     public RemotingDecoder() {
         super(RemotingConstants.DEFAULT_PAYLOAD, 0, 4);
     }
-
+    
+    //all read exceptions will be fired by exceptionCaught()
     @Override
     protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
         ByteBuf buffer = (ByteBuf) super.decode(ctx, in);
@@ -47,8 +48,8 @@ public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
         }
         try {
             return DefaultRemotingCodec.INSTANCE.decode(buffer);
-        } catch (ProtocolCodecException e) {
-            if (e.getErrorCode() == Constants.BAD_PACKAGE) {
+        } catch (RemotingException e) {
+            if (e.code() == ExceptionCode.BAD_PACKAGE) {
                 String log = String.format("packet from remoteAddress [%s] invalid, begin to close channel to [%s], detail: %s",
                     ctx.channel().remoteAddress().toString(), ctx.channel().remoteAddress().toString(), e.getMessage());
                 logger.error(log);

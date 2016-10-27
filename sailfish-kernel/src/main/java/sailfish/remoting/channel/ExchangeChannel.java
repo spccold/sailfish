@@ -17,12 +17,31 @@
  */
 package sailfish.remoting.channel;
 
+import sailfish.remoting.ResponseFuture;
+
 /**
- * communication channel for exchanger
- * 
+ * communication channel for exchange client
+ * <p>
+ *  <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
+ *  <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
+ * </p>
  * @author spccold
  * @version $Id: ExchangeChannel.java, v 0.1 2016年10月26日 下午8:34:37 jileng Exp $
  */
 public interface ExchangeChannel {
+    /**
+     * one-way pattern
+     */
+    void oneway(byte[] data);
     
+    /**
+     * request–response pattern
+     */
+    ResponseFuture<byte[]> request(byte[] data);
+    
+    void close();
+    /**
+     * graceful close
+     */
+    void close(int timeout);
 }

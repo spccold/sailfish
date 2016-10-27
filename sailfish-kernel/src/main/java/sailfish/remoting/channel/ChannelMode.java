@@ -15,17 +15,17 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
-
-import sailfish.remoting.protocol.Protocol;
+package sailfish.remoting.channel;
 
 /**
  * 
  * @author spccold
- * @version $Id: Channel.java, v 0.1 2016年10月3日 下午1:23:51 jileng Exp $
+ * @version $Id: ChannelMode.java, v 0.1 2016年10月27日 上午11:09:58 jileng Exp $
  */
-public interface Channel{
-    void addChannel(io.netty.channel.Channel channel);
-    void close();
-    void send(Protocol protocol);
+public enum ChannelMode {
+    simple,
+    lazy,
+    multiconns,
+    readwrite,
+    ;
 }

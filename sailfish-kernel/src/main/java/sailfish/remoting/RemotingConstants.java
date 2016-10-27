@@ -38,4 +38,7 @@ public class RemotingConstants {
     
     public static final byte    DIRECTION_REQUEST  = 1;
     public static final byte    DIRECTION_RESPONSE = 2;
+    
+    //ms
+    public static final int DEFAULT_CONNECT_TIMEOUT = 2000;
 }

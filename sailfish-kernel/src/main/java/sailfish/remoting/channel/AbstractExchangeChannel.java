@@ -15,41 +15,30 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.channel;
 
-import sailfish.remoting.channel.ExchangeChannel;
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.RemotingException;
 
 /**
  * 
  * @author spccold
- * @version $Id: ExchangeClient.java, v 0.1 2016年10月27日 下午5:35:32 jileng Exp $
+ * @version $Id: AbstractExchangeChannel.java, v 0.1 2016年10月27日 上午11:42:58 jileng Exp $
  */
-public class ExchangeClient implements ExchangeChannel{
-    private ExchangeChannel exchanger;
+public abstract class AbstractExchangeChannel {
+
+    protected Bootstrap newBootstrap(){
+        Bootstrap boot = new Bootstrap();
+        boot.channel(NioSocketChannel.class);
+        boot.option(ChannelOption.TCP_NODELAY, true);
+        //replace by heart beat
+        boot.option(ChannelOption.SO_KEEPALIVE, false);
+        return boot;
+    }
     
-    public ExchangeClient(ExchangeClientConfig config) throws RemotingException{
-        this.exchanger = Exchanger.connect(config);
-    }
-    
-    @Override
-    public void oneway(byte[] data) {
-        
-    }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
-        return exchanger.request(data);
-    }
-
-    @Override
-    public void close() {
-        this.exchanger.close();
-    }
-
-    @Override
-    public void close(int timeout) {
-        this.exchanger.close(timeout);
-    }
+    protected abstract Channel doConnect(ExchangeClientConfig config) throws RemotingException;
 }

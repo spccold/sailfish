@@ -18,6 +18,7 @@
 package sailfish.remoting.channel;
 
 import sailfish.remoting.ExchangeClient;
+import sailfish.remoting.ResponseFuture;
 
 /**
  * with multiple {@link SimpleExchangeChannel} or {@link LazyConnectionExchangeChannel} for one or more {@link ExchangeClient}
@@ -27,4 +28,20 @@ import sailfish.remoting.ExchangeClient;
  */
 public class MultiConnsExchangeChannel implements ExchangeChannel{
 
+    @Override
+    public void oneway(byte[] data) {
+    }
+
+    @Override
+    public ResponseFuture<byte[]> request(byte[] data) {
+        return null;
+    }
+
+    @Override
+    public void close() {
+    }
+
+    @Override
+    public void close(int timeout) {
+    }
 }

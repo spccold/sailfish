@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.channel;
 
+import sailfish.remoting.ResponseFuture;
+
 /**
  * with only one connection and the connection need to be initialized lazily
  * 
@@ -24,5 +26,25 @@ package sailfish.remoting.channel;
  * @version $Id: LazyConnectionExchangeChannel.java, v 0.1 2016年10月26日 下午9:12:43 jileng Exp $
  */
 public class LazyConnectionExchangeChannel implements ExchangeChannel{
+
+    @Override
+    public void oneway(byte[] data) {
+        
+    }
+
+    @Override
+    public ResponseFuture<byte[]> request(byte[] data) {
+        return null;
+    }
+
+    @Override
+    public void close() {
+        
+    }
+
+    @Override
+    public void close(int timeout) {
+
+    }
 
 }

@@ -17,21 +17,48 @@
  */
 package sailfish.remoting;
 
+import sailfish.remoting.channel.ExchangeChannel;
+import sailfish.remoting.channel.LazyConnectionExchangeChannel;
+import sailfish.remoting.channel.MultiConnsExchangeChannel;
+import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
+import sailfish.remoting.channel.SimpleExchangeChannel;
+import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.configuration.ExchangeServerConfig;
+import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.utils.ParameterChecker;
+
 /**
- * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
- * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
  * 
  * @author spccold
- * @version $Id: Exchanger.java, v 0.1 2016年10月3日 下午1:04:04 jileng Exp $
+ * @version $Id: Exchanger.java, v 0.1 2016年10月26日 下午11:40:38 jileng Exp $
  */
-public interface Exchanger extends Endpoint{
-    /**
-     * one-way pattern
-     */
-    void oneway(byte[] data);
-    
-    /**
-     * request–response pattern
-     */
-    ResponseFuture<byte[]> request(byte[] data);
-}   
+public class Exchanger {
+    public static ExchangeChannel connect(ExchangeClientConfig config) throws RemotingException {
+        ParameterChecker.checkNotNull(config, "ExchangeClientConfig");
+        config.check();
+        ExchangeChannel channel = null;
+        switch (config.mode()) {
+            case simple:
+                channel = new SimpleExchangeChannel(config);
+                break;
+            case lazy:
+                channel = new LazyConnectionExchangeChannel();
+                break;
+            case multiconns:
+                channel = new MultiConnsExchangeChannel();
+                break;
+            case readwrite:
+                channel = new ReadWriteSplittingExchangeChannel();
+                break;
+            default:
+                throw new RemotingException(new IllegalArgumentException("invalid channel mode"));
+        }
+        return channel;
+    }
+
+    public static ExchangeServer bind(ExchangeServerConfig config, MsgHandler<Protocol> handler) throws RemotingException{
+        config.check();
+        return new ExchangeServer(config, handler);
+    }
+}

@@ -15,19 +15,14 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.channel;
-
-import sailfish.remoting.ExchangeClient;
+package sailfish.remoting.exceptions;
 
 /**
- * with only one {@link SimpleExchangeChannel} or {@link LazyConnectionExchangeChannel} 
- * or {@link MultiConnsExchangeChannel} or {@link ReadWriteSplittingExchangeChannel} 
- * for multiple {@link ExchangeClient}, {@link MultiConnsExchangeChannel} and 
- * {@link ReadWriteSplittingExchangeChannel} should be enabled by System Properties
  * 
  * @author spccold
- * @version $Id: SharedExchangeChannel.java, v 0.1 2016年10月26日 下午9:21:44 jileng Exp $
+ * @version $Id: ExceptionCode.java, v 0.1 2016年10月27日 下午4:25:28 jileng Exp $
  */
-public class SharedExchangeChannel implements ExchangeChannel{
-
+public enum ExceptionCode {
+    BAD_PACKAGE,
+    ;
 }

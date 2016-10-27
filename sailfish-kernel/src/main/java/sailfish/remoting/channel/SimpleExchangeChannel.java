@@ -17,12 +17,113 @@
  */
 package sailfish.remoting.channel;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.EventExecutorGroup;
+import sailfish.remoting.BytesResponseFuture;
+import sailfish.remoting.MsgHandler;
+import sailfish.remoting.ResponseFuture;
+import sailfish.remoting.Tracer;
+import sailfish.remoting.codec.RemotingDecoder;
+import sailfish.remoting.codec.RemotingEncoder;
+import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.protocol.DefaultRequestProtocol;
+import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.utils.PacketIdGenerator;
+import sailfish.remoting.utils.RemotingUtils;
+
 /**
  * with only one connection and the connection need to be initialized immediately
  * 
  * @author spccold
  * @version $Id: SimpleExchangeChannel.java, v 0.1 2016年10月26日 下午9:08:24 jileng Exp $
  */
-public class SimpleExchangeChannel implements ExchangeChannel{
+public class SimpleExchangeChannel extends AbstractExchangeChannel implements ExchangeChannel{
+    private Channel nettyChannel;
 
+    public SimpleExchangeChannel(ExchangeClientConfig config) throws RemotingException{
+        this.nettyChannel = doConnect(config);
+    }
+
+    @Override
+    public void oneway(byte[] data) {
+        
+    }
+
+    @Override
+    public ResponseFuture<byte[]> request(byte[] data) {
+        DefaultRequestProtocol protocol = new DefaultRequestProtocol();
+        protocol.setOneway(true);
+        protocol.setBody(data);
+        protocol.setPackageId(PacketIdGenerator.nextId());
+        nettyChannel.writeAndFlush(protocol);
+        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.getPackageId());
+        Tracer.trace(protocol.getPackageId(), future);
+        return future;
+    }
+
+    @Override
+    public void close() {
+        RemotingUtils.closeChannel(nettyChannel);
+    }
+
+    @Override
+    public void close(int timeout) {
+        RemotingUtils.closeChannel(nettyChannel);
+    }
+
+    @Override
+    protected Channel doConnect(final ExchangeClientConfig config) throws RemotingException{
+        MsgHandler<Protocol> handler= new MsgHandler<Protocol>() {
+            @Override
+            public void handle(ChannelHandlerContext context, Protocol msg) {
+                Tracer.erase(msg.packageId(), msg);
+            }
+        };
+        Bootstrap boot = configureBoostrap(config, handler);
+        try{
+            return boot.connect().syncUninterruptibly().channel();
+        }catch(Throwable cause){
+            throw new RemotingException(cause);
+        }
+    }
+    
+    private Bootstrap configureBoostrap(final ExchangeClientConfig config, final MsgHandler<Protocol> handler){
+        Bootstrap boot = newBootstrap();
+        boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.Connecttimeout());
+        if(null != config.localAddress()){
+            boot.localAddress(config.localAddress().host(), config.localAddress().port());
+        }
+        boot.remoteAddress(config.address().host(), config.address().port());
+        NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
+        boot.group(eventLoopGroup);
+
+        final EventExecutorGroup executorGroup = new DefaultEventExecutorGroup(config.codecThreads(),
+            new DefaultThreadFactory(config.codecThreadName()));
+        boot.handler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                pipeline.addLast(executorGroup, new RemotingEncoder());
+                pipeline.addLast(executorGroup, new RemotingDecoder());
+                pipeline.addLast(executorGroup, new SimpleChannelInboundHandler<Protocol>() {
+                    @Override
+                    protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
+                        handler.handle(ctx, msg);
+                    }
+                });
+            }
+        });
+        return boot;
+    }
 }

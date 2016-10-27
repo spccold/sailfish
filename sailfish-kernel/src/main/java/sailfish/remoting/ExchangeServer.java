@@ -17,49 +17,76 @@
  */
 package sailfish.remoting;
 
-import java.net.InetSocketAddress;
-
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.EventExecutorGroup;
+import sailfish.remoting.codec.RemotingDecoder;
+import sailfish.remoting.codec.RemotingEncoder;
+import sailfish.remoting.configuration.ExchangeServerConfig;
+import sailfish.remoting.exceptions.RemotingException;
 import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.utils.ParameterChecker;
 
 /**
  * 
  * @author spccold
  * @version $Id: ExchangeServer.java, v 0.1 2016年10月26日 下午3:52:19 jileng Exp $
  */
-public class ExchangeServer implements Exchanger{
-    private InetSocketAddress localAddress;
+public class ExchangeServer {
+    private ExchangeServerConfig config;
     private MsgHandler<Protocol> handler;
-    public ExchangeServer(InetSocketAddress localAddress, MsgHandler<Protocol> handler){
-        this.localAddress = localAddress;
-        this.handler = handler;
+    
+    public ExchangeServer(ExchangeServerConfig config, MsgHandler<Protocol> handler){
+        this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
+        this.handler = ParameterChecker.checkNotNull(handler, "handler");
     }
     
-    public void start(){
-        Transporters.bind(localAddress, handler);
+    public void start() throws RemotingException{
+        ServerBootstrap boot = newServerBootstrap();
+        NioEventLoopGroup boss = new NioEventLoopGroup(config.bossThreads(), new DefaultThreadFactory(config.bossThreadName()));
+        NioEventLoopGroup io = new NioEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
+        final EventExecutorGroup executor = new DefaultEventExecutorGroup(config.codecThreads(), new DefaultThreadFactory(config.codecThreadName()));
+        boot.group(boss, io);
+        boot.localAddress(config.address().host(), config.address().port());
+        boot.childHandler(new ChannelInitializer<SocketChannel>() {
+            @Override
+            protected void initChannel(SocketChannel ch) throws Exception {
+                ChannelPipeline pipeline = ch.pipeline();
+                pipeline.addLast(executor, new RemotingDecoder());
+                pipeline.addLast(executor, new RemotingEncoder());
+                pipeline.addLast(executor, new SimpleChannelInboundHandler<Protocol>() {
+                    @Override
+                    protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
+                        handler.handle(ctx, msg);
+                    }
+                });
+            }
+        });
+        try{
+            boot.bind().syncUninterruptibly();
+        }catch(Throwable cause){
+            throw new RemotingException(cause);
+        }
     }
     
-    @Override
-    public void close() {
-        
-    }
-
-    @Override
-    public void close(int timeout) {
-        
-    }
-
-    @Override
-    public boolean isClosed() {
-        return false;
-    }
-
-    @Override
-    public void oneway(byte[] data) {
-        
-    }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
-        return null;
+    private ServerBootstrap newServerBootstrap(){
+        ServerBootstrap serverBoot = new ServerBootstrap();
+        serverBoot.channel(NioServerSocketChannel.class);
+        // connections wait for accept
+        serverBoot.option(ChannelOption.SO_BACKLOG, 1024);
+        serverBoot.option(ChannelOption.SO_REUSEADDR, true);
+        //replace by heart beat
+        serverBoot.option(ChannelOption.SO_KEEPALIVE, false);
+        serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
+        return serverBoot;
     }
 }
