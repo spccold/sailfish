@@ -34,4 +34,5 @@ public interface Protocol {
     boolean request();
     byte[] body();
     long packageId();
+    int result();
 }

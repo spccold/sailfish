@@ -10,36 +10,10 @@
 	<name>sailfish-kernel</name>
 	<description>sailfish microkernel</description>
 
-	<properties>
-		<netty.version>4.0.28.Final</netty.version>
-		<logback.version>1.1.2</logback.version>
-		<junit.version>4.11</junit.version>
-	</properties>
 	<dependencies>
 		<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
-			<version>${netty.version}</version>
-		</dependency>
-		
-		<!-- only for test -->
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-core</artifactId>
-			<version>${logback.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>ch.qos.logback</groupId>
-			<artifactId>logback-classic</artifactId>
-			<version>${logback.version}</version>
-			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>

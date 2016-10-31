@@ -46,7 +46,7 @@ public class DefaultRemotingCodec implements RemotingCodec{
         int magic = buffer.readInt();
         if(RemotingConstants.SAILFISH_MAGIC != magic){
             throw new SailfishException(ExceptionCode.BAD_PACKAGE,  
-                "bad package, expected magic:"+RemotingConstants.SAILFISH_MAGIC+"but actual:"+magic+", current channel will be closed!");
+                "bad package, expected magic:"+RemotingConstants.SAILFISH_MAGIC+", but actual:"+magic+", current channel will be closed!");
         }
         byte direction = buffer.readByte();
         Protocol protocol;

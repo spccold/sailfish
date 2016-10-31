@@ -171,4 +171,9 @@ public class DefaultRequestProtocol implements Protocol{
     public long packageId() {
         return packageId;
     }
+
+    @Override
+    public int result() {
+        return 0;
+    }
 }

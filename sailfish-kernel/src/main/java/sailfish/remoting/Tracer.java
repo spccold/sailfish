@@ -45,6 +45,6 @@ public class Tracer {
             logger.info("future no exist for packageId[{}]", packageId);
             return;
         }
-        future.trySuccess(protocol.body());
+        future.setResponse(protocol.body(), protocol.result());
     }
 }

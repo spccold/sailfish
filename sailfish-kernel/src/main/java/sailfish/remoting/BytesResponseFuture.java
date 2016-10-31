@@ -22,6 +22,7 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import io.netty.util.CharsetUtil;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 
@@ -35,6 +36,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     private byte[] data;
     private long packageId;
     private volatile boolean done;
+    private volatile boolean successed;
     private ResponseCallback<byte[]> callback;
     private TimerTask task;
     public BytesResponseFuture(long packageId) {
@@ -43,22 +45,25 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
 
     @Override
     public boolean isDone() {
-        return done;
+        return this.done;
     }
 
     @Override
-    public byte[] get() throws InterruptedException {
+    public byte[] get() throws SailfishException, InterruptedException {
         try{
             synchronized (this) {
-                if(this.done){
+                if(this.done && this.successed){
                     return data;
                 }
                 while(!this.done){
                     wait();
                 }
+                if(!this.successed){
+                    throw new SailfishException(new String(data,CharsetUtil.UTF_8)).toRemoteException();
+                }
                 return data;
             }
-        }catch(InterruptedException cause){
+        }catch(SailfishException | InterruptedException cause){
             throw cause;
         }finally{
             this.done = true;
@@ -66,10 +71,10 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     }
 
     @Override
-    public byte[] get(long timeout, TimeUnit unit) throws SailfishException,InterruptedException {
+    public byte[] get(long timeout, TimeUnit unit) throws SailfishException, TimeoutException ,InterruptedException {
         try{
             synchronized (this) {
-                if(this.done){
+                if(this.done && this.successed){
                     return data;
                 }
                 
@@ -79,32 +84,48 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
                     wait(unit.toMillis(timeToSleep));
                     timeToSleep = deadline - System.currentTimeMillis();
                 }
-                if(this.done){
+                if(this.done && this.successed){
                     return data;
                 }
-                String msg = String.format("wait response for packageId[%d] timeout", packageId);
-                throw new TimeoutException(msg);
+                if(!this.done){
+                    String msg = String.format("wait response for packageId[%d] timeout", packageId);
+                    throw new TimeoutException(msg);
+                }
+                if(!this.successed){
+                    throw new SailfishException(new String(data, CharsetUtil.UTF_8)).toRemoteException();
+                }
+
+                return data;
             }
-        }catch(TimeoutException cause){
-            throw new SailfishException(ExceptionCode.TIMEOUT, "wait for response timeout, packageId: "+packageId,cause);
+        }catch(SailfishException | TimeoutException | InterruptedException cause){
+            throw cause;
         }finally{
             this.done = true;
         }
     }
 
     @Override
-    public void trySuccess(byte[] data) {
+    public void setResponse(byte[] data, int result) {
         synchronized (this) {
-            this.data = data;
             this.done = true;
-            if(null != this.callback && null != this.task){
-                this.callback.handleResponse(data);
-                this.task.cancel();
+            this.data = data;
+            if(0 == result){
+                this.successed = true;
+                if(null != this.callback && null != this.task){
+                    this.callback.handleResponse(data);
+                    this.task.cancel();
+                }
+            }else{
+                this.successed = false;
+                if(null != this.callback && null != this.task){
+                    this.callback.handleException(new SailfishException(new String(this.data, CharsetUtil.UTF_8)).toRemoteException());
+                    this.task.cancel();
+                }
             }
             notifyAll();
         }
     }
-
+    
     @Override
     public void setCallback(final ResponseCallback<byte[]> callback, final int timeout) {
         this.callback = callback;

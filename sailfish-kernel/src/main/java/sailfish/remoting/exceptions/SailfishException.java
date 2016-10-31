@@ -58,16 +58,16 @@ public class SailfishException extends Exception {
         return errorCode;
     }
 
-    public RemoteRemotingException toRemoteException() {
-        return new RemoteRemotingException(errorCode, getMessage(), getCause());
+    public RemoteSailfishException toRemoteException() {
+        return new RemoteSailfishException(errorCode, getMessage(), getCause());
     }
     
     /**
      * exception for remote peer
      */
-    class RemoteRemotingException extends SailfishException{
+    class RemoteSailfishException extends SailfishException{
         private static final long serialVersionUID = 1L;
-        public RemoteRemotingException(ExceptionCode errorCode, String message, Throwable cause) {
+        public RemoteSailfishException(ExceptionCode errorCode, String message, Throwable cause) {
             super(errorCode, message, cause);
         }
     }

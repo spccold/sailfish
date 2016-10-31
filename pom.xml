@@ -1,26 +1,70 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>sailfish</groupId>
-  <artifactId>sailfish</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging>
-  <name>sailfish</name>
-  <description>A reliable, scalable, fast remoting module for rapid development of high performance network program</description>
-  <url>https://github.com/spccold/sailfish</url>
-  <inceptionYear>2016.10.01 10:30:00</inceptionYear>
-  <organization>
-  	<name>spccold</name>
-  	<url>https://github.com/spccold</url>
-  </organization>
-  <issueManagement>
-  	<system>GitHub Issue Management</system>
-  	<url>https://github.com/spccold/sailfish/issues</url>
-  </issueManagement>
-  <modules>
-  	<module>sailfish-kernel</module>
-  </modules>
-  
-  <build>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>sailfish</groupId>
+	<artifactId>sailfish</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>sailfish</name>
+	<description>A reliable, scalable, fast remoting module for rapid development of high performance network program</description>
+	<url>https://github.com/spccold/sailfish</url>
+	<inceptionYear>2016.10.01 10:30:00</inceptionYear>
+	<organization>
+		<name>spccold</name>
+		<url>https://github.com/spccold</url>
+	</organization>
+	<issueManagement>
+		<system>GitHub Issue Management</system>
+		<url>https://github.com/spccold/sailfish/issues</url>
+	</issueManagement>
+	<modules>
+		<module>sailfish-kernel</module>
+		<module>sailfish-protocol-default</module>
+	</modules>
+
+	<properties>
+		<netty.version>4.0.28.Final</netty.version>
+		<slf4j.version>1.7.6</slf4j.version>
+		<logback.version>1.1.2</logback.version>
+		<junit.version>4.11</junit.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>${logback.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-all</artifactId>
+				<version>${netty.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	<build>
 		<pluginManagement>
 			<plugins>
 				<plugin>
@@ -35,9 +79,9 @@
 			</plugins>
 		</pluginManagement>
 	</build>
-  <scm>
-  	<url>https://github.com/spccold/sailfish</url>
-  	<connection>scm:git:https://github.com/spccold/sailfish</connection>
-  	<developerConnection>scm:git:https://github.com/spccold/sailfish</developerConnection>
-  </scm>
+	<scm>
+		<url>https://github.com/spccold/sailfish</url>
+		<connection>scm:git:https://github.com/spccold/sailfish</connection>
+		<developerConnection>scm:git:https://github.com/spccold/sailfish</developerConnection>
+	</scm>
 </project>

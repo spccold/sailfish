@@ -148,4 +148,9 @@ public class DefaultResponseProtocol implements Protocol{
     public long packageId() {
         return packageId;
     }
+
+    @Override
+    public int result() {
+        return 0;
+    }
 }
