@@ -22,7 +22,7 @@ import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
 import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.protocol.DefaultRequestProtocol;
 import sailfish.remoting.protocol.DefaultResponseProtocol;
 import sailfish.remoting.protocol.Protocol;
@@ -36,16 +36,16 @@ public class DefaultRemotingCodec implements RemotingCodec{
     public static final DefaultRemotingCodec INSTANCE = new DefaultRemotingCodec();
     private DefaultRemotingCodec(){}
     @Override
-    public void encode(Protocol protocol, ByteBuf buffer) throws RemotingException {
+    public void encode(Protocol protocol, ByteBuf buffer) throws SailfishException {
         protocol.serialize(new ByteBufOutputStream(buffer));
     }
 
     @Override
-    public Protocol decode(ByteBuf buffer) throws RemotingException {
+    public Protocol decode(ByteBuf buffer) throws SailfishException {
         int totalLength = buffer.readInt();
         int magic = buffer.readInt();
         if(RemotingConstants.SAILFISH_MAGIC != magic){
-            throw new RemotingException(ExceptionCode.BAD_PACKAGE,  
+            throw new SailfishException(ExceptionCode.BAD_PACKAGE,  
                 "bad package, expected magic:"+RemotingConstants.SAILFISH_MAGIC+"but actual:"+magic+", current channel will be closed!");
         }
         byte direction = buffer.readByte();

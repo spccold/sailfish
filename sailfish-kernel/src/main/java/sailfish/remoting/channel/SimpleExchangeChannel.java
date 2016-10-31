@@ -36,7 +36,7 @@ import sailfish.remoting.Tracer;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.protocol.DefaultRequestProtocol;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.PacketIdGenerator;
@@ -51,7 +51,7 @@ import sailfish.remoting.utils.RemotingUtils;
 public class SimpleExchangeChannel extends AbstractExchangeChannel implements ExchangeChannel{
     private Channel nettyChannel;
 
-    public SimpleExchangeChannel(ExchangeClientConfig config) throws RemotingException{
+    public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException{
         this.nettyChannel = doConnect(config);
     }
 
@@ -63,7 +63,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     @Override
     public ResponseFuture<byte[]> request(byte[] data) {
         DefaultRequestProtocol protocol = new DefaultRequestProtocol();
-        protocol.setOneway(true);
+        protocol.setOneway(false);
         protocol.setBody(data);
         protocol.setPackageId(PacketIdGenerator.nextId());
         nettyChannel.writeAndFlush(protocol);
@@ -73,17 +73,17 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public void close() {
+    public void close() throws InterruptedException{
         RemotingUtils.closeChannel(nettyChannel);
     }
 
     @Override
-    public void close(int timeout) {
+    public void close(int timeout) throws InterruptedException{
         RemotingUtils.closeChannel(nettyChannel);
     }
 
     @Override
-    protected Channel doConnect(final ExchangeClientConfig config) throws RemotingException{
+    protected Channel doConnect(final ExchangeClientConfig config) throws SailfishException{
         MsgHandler<Protocol> handler= new MsgHandler<Protocol>() {
             @Override
             public void handle(ChannelHandlerContext context, Protocol msg) {
@@ -94,7 +94,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         try{
             return boot.connect().syncUninterruptibly().channel();
         }catch(Throwable cause){
-            throw new RemotingException(cause);
+            throw new SailfishException(cause);
         }
     }
     
@@ -125,5 +125,10 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
             }
         });
         return boot;
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
     }
 }

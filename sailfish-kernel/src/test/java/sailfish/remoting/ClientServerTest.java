@@ -17,7 +17,8 @@
  */
 package sailfish.remoting;
 
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,7 +27,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.CharsetUtil;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.ExceptionCode;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.protocol.DefaultRequestProtocol;
 import sailfish.remoting.protocol.DefaultResponseProtocol;
 import sailfish.remoting.protocol.Protocol;
@@ -37,12 +39,12 @@ import sailfish.remoting.protocol.Protocol;
  * @version $Id: ClientServerTest.java, v 0.1 2016年10月26日 下午4:36:23 jileng Exp $
  */
 public class ClientServerTest {
-
     @Test
-    public void testSendAndReceive() throws InterruptedException, ExecutionException, RemotingException{
+    public void testSendAndReceive() throws Exception{
+        int port= 13141;
         final byte data[] = "hello sailfish!".getBytes(CharsetUtil.UTF_8);
         ExchangeServerConfig serverConfig = new ExchangeServerConfig();
-        serverConfig.address(new Address("localhost", 13141));
+        serverConfig.address(new Address("localhost", port));
         ExchangeServer server = Exchanger.bind(serverConfig, new MsgHandler<Protocol>() {
             @Override
             public void handle(ChannelHandlerContext ctx, Protocol msg) {
@@ -63,12 +65,82 @@ public class ClientServerTest {
         server.start();
         
         ExchangeClientConfig clientConfig = new ExchangeClientConfig();
-        clientConfig.address(new Address("localhost", 13141));
-        ExchangeClient client = new ExchangeClient(clientConfig);
+        clientConfig.address(new Address("localhost", port));
+        ExchangeClient client = new DefaultExchangeClient(clientConfig);
+        //test request-response
         ResponseFuture<byte[]> future = client.request(data);
         byte[] result = future.get();
         Assert.assertNotNull(result);
         Assert.assertTrue(result.length > 0);
         Assert.assertArrayEquals(data, result);
+        
+        //test callback
+        final CountDownLatch latch = new CountDownLatch(1);
+        client.request(data, new ResponseCallback<byte[]>() {
+            @Override
+            public void handleResponse(byte[] resp) {
+                Assert.assertNotNull(resp);
+                Assert.assertTrue(resp.length > 0);
+                Assert.assertArrayEquals(data, resp);
+                latch.countDown();
+            }
+            
+            @Override
+            public void handleException(Exception cause) {
+                Assert.assertFalse(true);
+            }
+        }, 2000);
+        
+        latch.await(2000, TimeUnit.MILLISECONDS);
+        Assert.assertTrue(latch.getCount() == 0);
+        
+        server.close();
+    }
+    
+    @Test
+    public void testTimeout() throws Exception{
+        int port = 13142;
+        ExchangeServerConfig serverConfig = new ExchangeServerConfig();
+        serverConfig.address(new Address("localhost", port));
+        ExchangeServer server = Exchanger.bind(serverConfig, new MsgHandler<Protocol>() {
+            @Override
+            public void handle(ChannelHandlerContext ctx, Protocol msg) {
+                //do nothing
+            }
+        });
+        server.start();
+
+        byte[] requestData = "".getBytes(CharsetUtil.UTF_8);
+        ExchangeClientConfig clientConfig = new ExchangeClientConfig();
+        clientConfig.address(new Address("localhost", port));
+        ExchangeClient client = new DefaultExchangeClient(clientConfig);
+        //test request-response
+        ResponseFuture<byte[]> future = client.request(requestData);
+        try{
+            future.get(2000, TimeUnit.MILLISECONDS);
+        }catch(Throwable cause){
+            Assert.assertTrue(cause instanceof SailfishException);
+            Assert.assertEquals(ExceptionCode.TIMEOUT, ((SailfishException)cause).code());
+        }
+        
+        //test callback
+        final CountDownLatch latch = new CountDownLatch(1);
+        client.request(requestData, new ResponseCallback<byte[]>() {
+            @Override
+            public void handleResponse(byte[] resp) {
+            }
+            
+            @Override
+            public void handleException(Exception cause) {
+                Assert.assertTrue(cause instanceof SailfishException);
+                Assert.assertEquals(ExceptionCode.TIMEOUT, ((SailfishException)cause).code());
+                latch.countDown();
+            }
+        }, 2000);
+        
+        latch.await(2500, TimeUnit.MILLISECONDS);
+        Assert.assertTrue(latch.getCount() == 0);
+
+        server.close();
     }
 }

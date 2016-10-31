@@ -24,7 +24,7 @@ import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
 import sailfish.remoting.channel.SimpleExchangeChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -34,7 +34,7 @@ import sailfish.remoting.utils.ParameterChecker;
  * @version $Id: Exchanger.java, v 0.1 2016年10月26日 下午11:40:38 jileng Exp $
  */
 public class Exchanger {
-    public static ExchangeChannel connect(ExchangeClientConfig config) throws RemotingException {
+    public static ExchangeChannel connect(ExchangeClientConfig config) throws SailfishException {
         ParameterChecker.checkNotNull(config, "ExchangeClientConfig");
         config.check();
         ExchangeChannel channel = null;
@@ -52,12 +52,12 @@ public class Exchanger {
                 channel = new ReadWriteSplittingExchangeChannel();
                 break;
             default:
-                throw new RemotingException(new IllegalArgumentException("invalid channel mode"));
+                throw new SailfishException(new IllegalArgumentException("invalid channel mode"));
         }
         return channel;
     }
 
-    public static ExchangeServer bind(ExchangeServerConfig config, MsgHandler<Protocol> handler) throws RemotingException{
+    public static ExchangeServer bind(ExchangeServerConfig config, MsgHandler<Protocol> handler) throws SailfishException{
         config.check();
         return new ExchangeServer(config, handler);
     }

@@ -22,7 +22,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import sailfish.remoting.RemotingConstants;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -50,7 +50,7 @@ public class DefaultRequestProtocol implements Protocol{
     private byte[] body;
     
     @Override
-    public void serialize(DataOutput output) throws RemotingException {
+    public void serialize(DataOutput output) throws SailfishException {
         try{
             //write package length(not contain current length field(4 bytes))
             output.writeInt(HEADER_LENGTH + bodyLength());
@@ -68,12 +68,12 @@ public class DefaultRequestProtocol implements Protocol{
                 output.write(this.body);
             }
         }catch(IOException cause){
-            throw new RemotingException(cause);
+            throw new SailfishException(cause);
         }
     }
 
     @Override
-    public void deserialize(DataInput input, int totalLength) throws RemotingException {
+    public void deserialize(DataInput input, int totalLength) throws SailfishException {
         try{
             this.packageId = input.readLong();
             this.oneway = input.readBoolean();
@@ -85,7 +85,7 @@ public class DefaultRequestProtocol implements Protocol{
             this.body = new byte[totalLength - HEADER_LENGTH];
             input.readFully(this.body);
         }catch(IOException cause){
-            throw new RemotingException(cause);
+            throw new SailfishException(cause);
         }
     }
 

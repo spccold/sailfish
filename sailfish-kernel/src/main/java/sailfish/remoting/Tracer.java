@@ -47,8 +47,4 @@ public class Tracer {
         }
         future.trySuccess(protocol.body());
     }
-    
-    public static void erase(long packageId){
-        TRACES.remove(packageId);
-    }
 }

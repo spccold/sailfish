@@ -22,7 +22,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -40,5 +40,5 @@ public abstract class AbstractExchangeChannel {
         return boot;
     }
     
-    protected abstract Channel doConnect(ExchangeClientConfig config) throws RemotingException;
+    protected abstract Channel doConnect(ExchangeClientConfig config) throws SailfishException;
 }

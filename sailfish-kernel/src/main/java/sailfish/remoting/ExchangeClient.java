@@ -18,38 +18,12 @@
 package sailfish.remoting;
 
 import sailfish.remoting.channel.ExchangeChannel;
-import sailfish.remoting.configuration.ExchangeClientConfig;
-import sailfish.remoting.exceptions.RemotingException;
 
 /**
  * 
  * @author spccold
  * @version $Id: ExchangeClient.java, v 0.1 2016年10月27日 下午5:35:32 jileng Exp $
  */
-public class ExchangeClient implements ExchangeChannel{
-    private ExchangeChannel exchanger;
-    
-    public ExchangeClient(ExchangeClientConfig config) throws RemotingException{
-        this.exchanger = Exchanger.connect(config);
-    }
-    
-    @Override
-    public void oneway(byte[] data) {
-        
-    }
-
-    @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
-        return exchanger.request(data);
-    }
-
-    @Override
-    public void close() {
-        this.exchanger.close();
-    }
-
-    @Override
-    public void close(int timeout) {
-        this.exchanger.close(timeout);
-    }
+public interface ExchangeClient extends ExchangeChannel{
+    void request(byte[] data, ResponseCallback<byte[]> callback, int timeout);
 }

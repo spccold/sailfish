@@ -22,30 +22,30 @@ package sailfish.remoting.exceptions;
  * @author spccold
  * @version $Id: RemotingException.java, v 0.1 2016年10月27日 下午3:44:04 jileng Exp $
  */
-public class RemotingException extends Exception {
+public class SailfishException extends Exception {
 
     /**  */
     private static final long serialVersionUID = 1L;
     private ExceptionCode     errorCode;
 
-    public RemotingException(String message) {
+    public SailfishException(String message) {
         super(message);
     }
     
-    public RemotingException(Throwable cause){
+    public SailfishException(Throwable cause){
         super(cause);
     }
 
-    public RemotingException(ExceptionCode errorCode, String message) {
+    public SailfishException(ExceptionCode errorCode, String message) {
         super(prefix(errorCode.toString()) + message);
         this.errorCode = errorCode;
     }
 
-    public RemotingException(String message, Throwable cause) {
+    public SailfishException(String message, Throwable cause) {
         super(message, cause);
     }
 
-    public RemotingException(ExceptionCode errorCode, String message, Throwable cause) {
+    public SailfishException(ExceptionCode errorCode, String message, Throwable cause) {
         super(prefix(errorCode.toString()) + message, cause);
         this.errorCode = errorCode;
     }
@@ -65,7 +65,7 @@ public class RemotingException extends Exception {
     /**
      * exception for remote peer
      */
-    class RemoteRemotingException extends RemotingException{
+    class RemoteRemotingException extends SailfishException{
         private static final long serialVersionUID = 1L;
         public RemoteRemotingException(ExceptionCode errorCode, String message, Throwable cause) {
             super(errorCode, message, cause);

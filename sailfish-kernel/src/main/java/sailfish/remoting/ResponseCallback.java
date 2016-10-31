@@ -15,18 +15,14 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.codec;
-
-import io.netty.buffer.ByteBuf;
-import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.protocol.Protocol;
+package sailfish.remoting;
 
 /**
  * 
  * @author spccold
- * @version $Id: RemotingCodec.java, v 0.1 2016年10月15日 下午4:45:54 jileng Exp $
+ * @version $Id: ResponseCallback.java, v 0.1 2016年10月31日 上午10:09:15 jileng Exp $
  */
-public interface RemotingCodec {
-    public void encode(Protocol protocol, ByteBuf buffer) throws SailfishException;
-    public Protocol decode(ByteBuf buffer) throws SailfishException;
-}
+public interface ResponseCallback<T> {
+    void handleResponse(T resp);
+    void handleException(Exception cause);
+}   

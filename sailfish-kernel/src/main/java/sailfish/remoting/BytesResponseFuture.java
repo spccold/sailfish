@@ -17,9 +17,13 @@
  */
 package sailfish.remoting;
 
-import java.util.concurrent.ExecutionException;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import sailfish.remoting.exceptions.ExceptionCode;
+import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -27,30 +31,14 @@ import java.util.concurrent.TimeoutException;
  * @version $Id: BytesResponseFuture.java, v 0.1 2016年10月4日 下午3:57:32 jileng Exp $
  */
 public class BytesResponseFuture implements ResponseFuture<byte[]>{
+    private static final Timer TIMER = new Timer("sailfish-callback-timeout-checker", true);
     private byte[] data;
     private long packageId;
-    private volatile boolean successed;
     private volatile boolean done;
-    private volatile boolean canceled;
-
+    private ResponseCallback<byte[]> callback;
+    private TimerTask task;
     public BytesResponseFuture(long packageId) {
         this.packageId = packageId;
-    }
-
-    @Override
-    public boolean cancel(boolean mayInterruptIfRunning) {
-        synchronized (this) {
-            this.done = true;
-            this.canceled = true;
-            Tracer.erase(packageId);
-            notifyAll();
-            return true;
-        }
-    }
-
-    @Override
-    public boolean isCancelled() {
-        return canceled;
     }
 
     @Override
@@ -59,26 +47,26 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     }
 
     @Override
-    public byte[] get() throws InterruptedException, ExecutionException {
+    public byte[] get() throws InterruptedException {
         try{
             synchronized (this) {
                 if(this.done){
                     return data;
                 }
-                while(!successed){
+                while(!this.done){
                     wait();
                 }
                 return data;
             }
-        }catch(InterruptedException e){
-            throw e;
+        }catch(InterruptedException cause){
+            throw cause;
         }finally{
             this.done = true;
         }
     }
 
     @Override
-    public byte[] get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public byte[] get(long timeout, TimeUnit unit) throws SailfishException,InterruptedException {
         try{
             synchronized (this) {
                 if(this.done){
@@ -87,18 +75,18 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
                 
                 long timeToSleep = unit.toMillis(timeout);
                 long deadline = System.currentTimeMillis() + timeToSleep;
-                while(!successed && timeToSleep > 0){
+                while(!this.done && timeToSleep > 0){
                     wait(unit.toMillis(timeToSleep));
                     timeToSleep = deadline - System.currentTimeMillis();
                 }
-                if(successed){
+                if(this.done){
                     return data;
                 }
                 String msg = String.format("wait response for packageId[%d] timeout", packageId);
                 throw new TimeoutException(msg);
             }
-        }catch(InterruptedException | TimeoutException e){
-            throw e;
+        }catch(TimeoutException cause){
+            throw new SailfishException(ExceptionCode.TIMEOUT, "wait for response timeout, packageId: "+packageId,cause);
         }finally{
             this.done = true;
         }
@@ -107,10 +95,31 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     @Override
     public void trySuccess(byte[] data) {
         synchronized (this) {
-            successed = true;
             this.data = data;
             this.done = true;
+            if(null != this.callback && null != this.task){
+                this.callback.handleResponse(data);
+                this.task.cancel();
+            }
             notifyAll();
         }
+    }
+
+    @Override
+    public void setCallback(final ResponseCallback<byte[]> callback, final int timeout) {
+        this.callback = callback;
+        this.task = new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (BytesResponseFuture.this) {
+                    if(BytesResponseFuture.this.done){
+                        return;
+                    }
+                    callback.handleException(new SailfishException(ExceptionCode.TIMEOUT, 
+                        "wait for response timeout, packageId: "+packageId));
+                }
+            }
+        };
+        TIMER.schedule(task, timeout);
     }
 }

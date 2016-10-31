@@ -17,6 +17,7 @@
  */
 package sailfish.remoting.channel;
 
+import sailfish.remoting.Endpoint;
 import sailfish.remoting.ResponseFuture;
 
 /**
@@ -28,7 +29,7 @@ import sailfish.remoting.ResponseFuture;
  * @author spccold
  * @version $Id: ExchangeChannel.java, v 0.1 2016年10月26日 下午8:34:37 jileng Exp $
  */
-public interface ExchangeChannel {
+public interface ExchangeChannel extends Endpoint{
     /**
      * one-way pattern
      */
@@ -38,10 +39,4 @@ public interface ExchangeChannel {
      * request–response pattern
      */
     ResponseFuture<byte[]> request(byte[] data);
-    
-    void close();
-    /**
-     * graceful close
-     */
-    void close(int timeout);
 }

@@ -27,12 +27,12 @@ public interface Endpoint {
     /**
      * close current Endpoint
      */
-    void close();
+    void close() throws InterruptedException;
     /**
      * graceful close current Endpoint
      * @param timeout millisecond
      */
-    void close(int timeout);
+    void close(int timeout) throws InterruptedException;
     
     boolean isClosed();
 }

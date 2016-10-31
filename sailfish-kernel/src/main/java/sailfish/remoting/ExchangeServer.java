@@ -32,7 +32,7 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeServerConfig;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -41,16 +41,17 @@ import sailfish.remoting.utils.ParameterChecker;
  * @author spccold
  * @version $Id: ExchangeServer.java, v 0.1 2016年10月26日 下午3:52:19 jileng Exp $
  */
-public class ExchangeServer {
+public class ExchangeServer implements Endpoint{
+    private volatile boolean isClosed = false;
     private ExchangeServerConfig config;
     private MsgHandler<Protocol> handler;
-    
+    private ServerBootstrap boot;
     public ExchangeServer(ExchangeServerConfig config, MsgHandler<Protocol> handler){
         this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
         this.handler = ParameterChecker.checkNotNull(handler, "handler");
     }
     
-    public void start() throws RemotingException{
+    public void start() throws SailfishException{
         ServerBootstrap boot = newServerBootstrap();
         NioEventLoopGroup boss = new NioEventLoopGroup(config.bossThreads(), new DefaultThreadFactory(config.bossThreadName()));
         NioEventLoopGroup io = new NioEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
@@ -74,8 +75,9 @@ public class ExchangeServer {
         try{
             boot.bind().syncUninterruptibly();
         }catch(Throwable cause){
-            throw new RemotingException(cause);
+            throw new SailfishException(cause);
         }
+        this.boot = boot;
     }
     
     private ServerBootstrap newServerBootstrap(){
@@ -88,5 +90,27 @@ public class ExchangeServer {
         serverBoot.option(ChannelOption.SO_KEEPALIVE, false);
         serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
         return serverBoot;
+    }
+
+    @Override
+    public void close() throws InterruptedException{
+        close(0);
+    }
+
+    @Override
+    public void close(int timeout) throws InterruptedException{
+        synchronized (this) {
+            if(isClosed)
+                return;
+            if(null != boot){
+                boot.group().shutdownGracefully().await(timeout);
+                boot.childGroup().shutdownGracefully().await(timeout);;
+            }
+        }
+    }
+
+    @Override
+    public boolean isClosed() {
+        return this.isClosed;
     }
 }

@@ -25,7 +25,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
-import sailfish.remoting.exceptions.RemotingException;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.RemotingUtils;
 
 /**
@@ -48,7 +48,7 @@ public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
         }
         try {
             return DefaultRemotingCodec.INSTANCE.decode(buffer);
-        } catch (RemotingException e) {
+        } catch (SailfishException e) {
             if (e.code() == ExceptionCode.BAD_PACKAGE) {
                 String log = String.format("packet from remoteAddress [%s] invalid, begin to close channel to [%s], detail: %s",
                     ctx.channel().remoteAddress().toString(), ctx.channel().remoteAddress().toString(), e.getMessage());

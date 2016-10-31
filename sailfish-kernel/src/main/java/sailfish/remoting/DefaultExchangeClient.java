@@ -15,38 +15,52 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.channel;
+package sailfish.remoting;
 
-import sailfish.remoting.ExchangeClient;
-import sailfish.remoting.ResponseFuture;
+import sailfish.remoting.channel.ExchangeChannel;
+import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.exceptions.SailfishException;
 
 /**
- * with multiple {@link SimpleExchangeChannel} or {@link LazyConnectionExchangeChannel} for one or more {@link ExchangeClient}
  * 
  * @author spccold
- * @version $Id: MultiConnsExchangeChannel.java, v 0.1 2016年10月26日 下午9:25:00 jileng Exp $
+ * @version $Id: DefaultExchangeClient.java, v 0.1 2016年10月31日 上午10:47:17 jileng Exp $
  */
-public class MultiConnsExchangeChannel implements ExchangeChannel{
+public class DefaultExchangeClient implements ExchangeClient{
 
+    private ExchangeChannel exchanger;
+    
+    public DefaultExchangeClient(ExchangeClientConfig config) throws SailfishException{
+        this.exchanger = Exchanger.connect(config);
+    }
+    
     @Override
     public void oneway(byte[] data) {
+        exchanger.oneway(data);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data) {
-        return null;
+        return exchanger.request(data);
     }
 
     @Override
     public void close() throws InterruptedException{
+        this.exchanger.close();
     }
 
     @Override
     public void close(int timeout) throws InterruptedException{
+        this.exchanger.close(timeout);
+    }
+
+    @Override
+    public void request(byte[] data, ResponseCallback<byte[]> callback, int timeout) {
+        exchanger.request(data).setCallback(callback, timeout);
     }
 
     @Override
     public boolean isClosed() {
-        return false;
+        return exchanger.isClosed();
     }
 }
