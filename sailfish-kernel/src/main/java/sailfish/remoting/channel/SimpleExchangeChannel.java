@@ -23,22 +23,23 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.BytesResponseFuture;
-import sailfish.remoting.MsgHandler;
+import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseFuture;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.protocol.DefaultRequestProtocol;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.utils.PacketIdGenerator;
 import sailfish.remoting.utils.RemotingUtils;
 
@@ -61,8 +62,8 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
-        DefaultRequestProtocol protocol = new DefaultRequestProtocol();
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
+        RequestProtocol protocol = new RequestProtocol();
         protocol.setOneway(false);
         protocol.setBody(data);
         protocol.setPackageId(PacketIdGenerator.nextId());
@@ -116,12 +117,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
                 ChannelPipeline pipeline = ch.pipeline();
                 pipeline.addLast(executorGroup, new RemotingEncoder());
                 pipeline.addLast(executorGroup, new RemotingDecoder());
-                pipeline.addLast(executorGroup, new SimpleChannelInboundHandler<Protocol>() {
-                    @Override
-                    protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
-                        handler.handle(ctx, msg);
-                    }
-                });
+                pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler));
             }
         });
         return boot;

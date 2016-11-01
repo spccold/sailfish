@@ -17,6 +17,7 @@
  */
 package sailfish.remoting.channel;
 
+import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseFuture;
 
 /**
@@ -34,7 +35,7 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel{
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
         return null;
     }
 

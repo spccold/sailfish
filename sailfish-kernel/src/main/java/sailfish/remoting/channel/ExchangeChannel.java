@@ -18,6 +18,7 @@
 package sailfish.remoting.channel;
 
 import sailfish.remoting.Endpoint;
+import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseFuture;
 
 /**
@@ -38,5 +39,5 @@ public interface ExchangeChannel extends Endpoint{
     /**
      * request–response pattern
      */
-    ResponseFuture<byte[]> request(byte[] data);
+    ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl);
 }

@@ -21,8 +21,8 @@ import io.netty.buffer.ByteBuf;
 import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.protocol.DefaultRequestProtocol;
-import sailfish.remoting.protocol.DefaultResponseProtocol;
+import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.protocol.Protocol;
 
 /**
@@ -50,9 +50,9 @@ public class DefaultRemotingCodec implements RemotingCodec{
         Protocol protocol;
         //FIXME may be replaced with RecycleProtocol in the future
         if(RemotingConstants.DIRECTION_REQUEST == direction){//request
-            protocol = new DefaultRequestProtocol();
+            protocol = new RequestProtocol();
         }else{//response
-            protocol = new DefaultResponseProtocol();
+            protocol = new ResponseProtocol();
         }
         //FIXME need create ByteBufOutputStream every time, ugly design
         protocol.deserialize(buffer, totalLength);

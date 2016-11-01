@@ -40,8 +40,8 @@ public class DefaultExchangeClient implements ExchangeClient{
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
-        return exchanger.request(data);
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
+        return exchanger.request(data, requestControl);
     }
 
     @Override
@@ -55,8 +55,8 @@ public class DefaultExchangeClient implements ExchangeClient{
     }
 
     @Override
-    public void request(byte[] data, ResponseCallback<byte[]> callback, int timeout) {
-        exchanger.request(data).setCallback(callback, timeout);
+    public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) {
+        exchanger.request(data, requestControl).setCallback(callback, requestControl.timeout());
     }
 
     @Override

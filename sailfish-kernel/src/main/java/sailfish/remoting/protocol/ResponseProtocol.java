@@ -25,9 +25,9 @@ import sailfish.remoting.utils.StrUtils;
 /**
  * 
  * @author spccold
- * @version $Id: DefaultResponseProtocol.java, v 0.1 2016年10月11日 下午9:48:43 jileng Exp $
+ * @version $Id: ResponseProtocol.java, v 0.1 2016年10月11日 下午9:48:43 jileng Exp $
  */
-public class DefaultResponseProtocol implements Protocol{
+public class ResponseProtocol implements Protocol{
     private static final int HEADER_LENGTH = 18;
     private static final int PROTOCOL_VERSION = 1;
     private byte direction = RemotingConstants.DIRECTION_RESPONSE;

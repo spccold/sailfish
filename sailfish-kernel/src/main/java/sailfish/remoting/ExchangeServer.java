@@ -18,11 +18,9 @@
 package sailfish.remoting;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -33,6 +31,8 @@ import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -64,12 +64,7 @@ public class ExchangeServer implements Endpoint{
                 ChannelPipeline pipeline = ch.pipeline();
                 pipeline.addLast(executor, new RemotingDecoder());
                 pipeline.addLast(executor, new RemotingEncoder());
-                pipeline.addLast(executor, new SimpleChannelInboundHandler<Protocol>() {
-                    @Override
-                    protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
-                        handler.handle(ctx, msg);
-                    }
-                });
+                pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler));
             }
         });
         try{

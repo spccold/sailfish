@@ -29,8 +29,9 @@ import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.protocol.DefaultRequestProtocol;
-import sailfish.remoting.protocol.DefaultResponseProtocol;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.protocol.Protocol;
 
 /**
@@ -49,12 +50,12 @@ public class ClientServerTest {
             @Override
             public void handle(ChannelHandlerContext ctx, Protocol msg) {
                 if(msg.request()){
-                    DefaultRequestProtocol requestProtocol = (DefaultRequestProtocol)msg;
+                    RequestProtocol requestProtocol = (RequestProtocol)msg;
                     Assert.assertNotNull(requestProtocol.body());
                     Assert.assertTrue(requestProtocol.body().length > 0);
                     Assert.assertArrayEquals(data, requestProtocol.body());
                     
-                    DefaultResponseProtocol responseProtocol = new DefaultResponseProtocol();
+                    ResponseProtocol responseProtocol = new ResponseProtocol();
                     responseProtocol.setBody(data);
                     responseProtocol.setPackageId(requestProtocol.packageId());
                     responseProtocol.setResult((byte)1);
@@ -68,13 +69,15 @@ public class ClientServerTest {
         clientConfig.address(new Address("localhost", port));
         ExchangeClient client = new DefaultExchangeClient(clientConfig);
         //test request-response
-        ResponseFuture<byte[]> future = client.request(data);
+        RequestControl control = new RequestControl();
+        ResponseFuture<byte[]> future = client.request(data, control);
         byte[] result = future.get();
         Assert.assertNotNull(result);
         Assert.assertTrue(result.length > 0);
         Assert.assertArrayEquals(data, result);
         
         //test callback
+        control.timeout(2000);
         final CountDownLatch latch = new CountDownLatch(1);
         client.request(data, new ResponseCallback<byte[]>() {
             @Override
@@ -89,7 +92,7 @@ public class ClientServerTest {
             public void handleException(Exception cause) {
                 Assert.assertFalse(true);
             }
-        }, 2000);
+        }, control);
         
         latch.await(2000, TimeUnit.MILLISECONDS);
         Assert.assertTrue(latch.getCount() == 0);
@@ -115,7 +118,8 @@ public class ClientServerTest {
         clientConfig.address(new Address("localhost", port));
         ExchangeClient client = new DefaultExchangeClient(clientConfig);
         //test request-response
-        ResponseFuture<byte[]> future = client.request(requestData);
+        RequestControl control = new RequestControl();
+        ResponseFuture<byte[]> future = client.request(requestData, control);
         try{
             future.get(2000, TimeUnit.MILLISECONDS);
         }catch(Throwable cause){
@@ -125,6 +129,7 @@ public class ClientServerTest {
         
         //test callback
         final CountDownLatch latch = new CountDownLatch(1);
+        control.timeout(2000);
         client.request(requestData, new ResponseCallback<byte[]>() {
             @Override
             public void handleResponse(byte[] resp) {
@@ -136,7 +141,7 @@ public class ClientServerTest {
                 Assert.assertEquals(ExceptionCode.TIMEOUT, ((SailfishException)cause).code());
                 latch.countDown();
             }
-        }, 2000);
+        }, control);
         
         latch.await(2500, TimeUnit.MILLISECONDS);
         Assert.assertTrue(latch.getCount() == 0);

@@ -18,6 +18,7 @@
 package sailfish.remoting.channel;
 
 import sailfish.remoting.ExchangeClient;
+import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseFuture;
 
 /**
@@ -33,7 +34,7 @@ public class MultiConnsExchangeChannel implements ExchangeChannel{
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data) {
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
         return null;
     }
 

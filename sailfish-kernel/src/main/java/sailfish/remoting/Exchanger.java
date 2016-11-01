@@ -25,6 +25,7 @@ import sailfish.remoting.channel.SimpleExchangeChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
 

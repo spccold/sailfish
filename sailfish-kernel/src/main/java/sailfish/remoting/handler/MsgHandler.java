@@ -15,7 +15,7 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import sailfish.remoting.protocol.Protocol;

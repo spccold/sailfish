@@ -24,9 +24,9 @@ import sailfish.remoting.exceptions.SailfishException;
 /**
  * 
  * @author spccold
- * @version $Id: DefaultRequestProtocol.java, v 0.1 2016年10月11日 下午8:44:48 jileng Exp $
+ * @version $Id: RequestProtocol.java, v 0.1 2016年10月11日 下午8:44:48 jileng Exp $
  */
-public class DefaultRequestProtocol implements Protocol{
+public class RequestProtocol implements Protocol{
     private static final int HEADER_LENGTH = 18;
     private static final int PROTOCOL_VERSION = 1;
     private byte direction = RemotingConstants.DIRECTION_REQUEST;

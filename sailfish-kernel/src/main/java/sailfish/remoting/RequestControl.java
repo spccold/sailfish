@@ -17,13 +17,19 @@
  */
 package sailfish.remoting;
 
-import sailfish.remoting.channel.ExchangeChannel;
-
 /**
  * 
  * @author spccold
- * @version $Id: ExchangeClient.java, v 0.1 2016年10月27日 下午5:35:32 jileng Exp $
+ * @version $Id: RequestControl.java, v 0.1 2016年11月1日 下午2:24:47 jileng Exp $
  */
-public interface ExchangeClient extends ExchangeChannel{
-    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl);
+public class RequestControl {
+    //request timeout in milliseconds
+    private int timeout;
+
+    public int timeout() {
+        return timeout;
+    }
+    public void timeout(int timeout) {
+        this.timeout = timeout;
+    }
 }
