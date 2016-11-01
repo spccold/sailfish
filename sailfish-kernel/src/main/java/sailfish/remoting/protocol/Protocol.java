@@ -17,9 +17,7 @@
  */
 package sailfish.remoting.protocol;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-
+import io.netty.buffer.ByteBuf;
 import sailfish.remoting.exceptions.SailfishException;
 
 /**
@@ -29,8 +27,8 @@ import sailfish.remoting.exceptions.SailfishException;
  */
 public interface Protocol {
     byte getVersion();
-    void serialize(DataOutput output) throws SailfishException;
-    void deserialize(DataInput input, int totalLength) throws SailfishException;
+    void serialize(ByteBuf output) throws SailfishException;
+    void deserialize(ByteBuf input, int totalLength) throws SailfishException;
     boolean request();
     byte[] body();
     long packageId();

@@ -18,8 +18,6 @@
 package sailfish.remoting.codec;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufInputStream;
-import io.netty.buffer.ByteBufOutputStream;
 import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
@@ -37,7 +35,7 @@ public class DefaultRemotingCodec implements RemotingCodec{
     private DefaultRemotingCodec(){}
     @Override
     public void encode(Protocol protocol, ByteBuf buffer) throws SailfishException {
-        protocol.serialize(new ByteBufOutputStream(buffer));
+        protocol.serialize(buffer);
     }
 
     @Override
@@ -56,7 +54,8 @@ public class DefaultRemotingCodec implements RemotingCodec{
         }else{//response
             protocol = new DefaultResponseProtocol();
         }
-        protocol.deserialize(new ByteBufInputStream(buffer), totalLength);
+        //FIXME need create ByteBufOutputStream every time, ugly design
+        protocol.deserialize(buffer, totalLength);
         return protocol;
     }
 }

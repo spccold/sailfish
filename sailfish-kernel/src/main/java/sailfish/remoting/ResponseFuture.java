@@ -18,7 +18,6 @@
 package sailfish.remoting;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import sailfish.remoting.exceptions.SailfishException;
 
@@ -32,5 +31,5 @@ public interface ResponseFuture<T>{
     boolean isDone();
     void setCallback(ResponseCallback<T> callback, int timeout);
     T get() throws SailfishException, InterruptedException;
-    T get(long timeout, TimeUnit unit) throws SailfishException, TimeoutException,InterruptedException;
+    T get(long timeout, TimeUnit unit) throws SailfishException,InterruptedException;
 }

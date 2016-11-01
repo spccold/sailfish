@@ -17,10 +17,7 @@
  */
 package sailfish.remoting.protocol;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
+import io.netty.buffer.ByteBuf;
 import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.StrUtils;
@@ -46,7 +43,7 @@ public class DefaultResponseProtocol implements Protocol{
     private byte[] body;
     
     @Override
-    public void serialize(DataOutput output) throws SailfishException {
+    public void serialize(ByteBuf output) throws SailfishException {
         try{
             //write total length
             output.writeInt(HEADER_LENGTH + errorStackLength + bodyLength());
@@ -56,28 +53,28 @@ public class DefaultResponseProtocol implements Protocol{
             output.writeByte(result);
             output.writeInt(errorStackLength);
             if(StrUtils.isNotBlank(errorStack)){
-                output.write(errorStackBytes);
+                output.writeBytes(errorStackBytes);
             }
-            output.write(body);
-        }catch(IOException cause){
+            output.writeBytes(body);
+        }catch(Throwable cause){
             throw new SailfishException(cause);
         }
     }
 
     @Override
-    public void deserialize(DataInput input, int totalLength) throws SailfishException {
+    public void deserialize(ByteBuf input, int totalLength) throws SailfishException {
         try{
             this.packageId = input.readLong();
             this.result = input.readByte();
             this.errorStackLength = input.readInt();
             if(this.errorStackLength > 0){
                 errorStackBytes = new byte[errorStackLength];
-                input.readFully(errorStackBytes);
+                input.readBytes(errorStackBytes);
                 this.errorStack = new String(errorStackBytes, RemotingConstants.DEFAULT_CHARSET);
             }
             body = new byte[totalLength - HEADER_LENGTH - errorStackLength];
-            input.readFully(body);
-        }catch(IOException cause){
+            input.readBytes(body);
+        }catch(Throwable cause){
             throw new SailfishException(cause);
         }
     }

@@ -17,10 +17,7 @@
  */
 package sailfish.remoting.protocol;
 
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
-
+import io.netty.buffer.ByteBuf;
 import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 
@@ -50,7 +47,7 @@ public class DefaultRequestProtocol implements Protocol{
     private byte[] body;
     
     @Override
-    public void serialize(DataOutput output) throws SailfishException {
+    public void serialize(ByteBuf output) throws SailfishException {
         try{
             //write package length(not contain current length field(4 bytes))
             output.writeInt(HEADER_LENGTH + bodyLength());
@@ -65,15 +62,15 @@ public class DefaultRequestProtocol implements Protocol{
             output.writeByte(this.langType);
             //wirte body data
             if(null != this.body){
-                output.write(this.body);
+                output.writeBytes(this.body);
             }
-        }catch(IOException cause){
+        }catch(Throwable cause){
             throw new SailfishException(cause);
         }
     }
 
     @Override
-    public void deserialize(DataInput input, int totalLength) throws SailfishException {
+    public void deserialize(ByteBuf input, int totalLength) throws SailfishException {
         try{
             this.packageId = input.readLong();
             this.oneway = input.readBoolean();
@@ -83,8 +80,8 @@ public class DefaultRequestProtocol implements Protocol{
             this.langType = input.readByte();
             //read body
             this.body = new byte[totalLength - HEADER_LENGTH];
-            input.readFully(this.body);
-        }catch(IOException cause){
+            input.readBytes(this.body);
+        }catch(Throwable cause){
             throw new SailfishException(cause);
         }
     }

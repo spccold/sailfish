@@ -20,7 +20,6 @@ package sailfish.remoting;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import io.netty.util.CharsetUtil;
 import sailfish.remoting.exceptions.ExceptionCode;
@@ -71,7 +70,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     }
 
     @Override
-    public byte[] get(long timeout, TimeUnit unit) throws SailfishException, TimeoutException ,InterruptedException {
+    public byte[] get(long timeout, TimeUnit unit) throws SailfishException ,InterruptedException {
         try{
             synchronized (this) {
                 if(this.done && this.successed){
@@ -89,7 +88,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
                 }
                 if(!this.done){
                     String msg = String.format("wait response for packageId[%d] timeout", packageId);
-                    throw new TimeoutException(msg);
+                    throw new SailfishException(ExceptionCode.TIMEOUT, msg);
                 }
                 if(!this.successed){
                     throw new SailfishException(new String(data, CharsetUtil.UTF_8)).toRemoteException();
@@ -97,7 +96,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
 
                 return data;
             }
-        }catch(SailfishException | TimeoutException | InterruptedException cause){
+        }catch(SailfishException | InterruptedException cause){
             throw cause;
         }finally{
             this.done = true;
