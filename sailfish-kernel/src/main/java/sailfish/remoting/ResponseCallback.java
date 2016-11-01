@@ -17,12 +17,16 @@
  */
 package sailfish.remoting;
 
+import java.util.concurrent.Executor;
+
 /**
  * 
  * @author spccold
  * @version $Id: ResponseCallback.java, v 0.1 2016年10月31日 上午10:09:15 jileng Exp $
  */
 public interface ResponseCallback<T> {
+    Executor getExecutor();
+    
     void handleResponse(T resp);
     void handleException(Exception cause);
 }   

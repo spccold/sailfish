@@ -30,7 +30,6 @@ public class RemotingConstants {
     public static final int     COMPRESS_THRESHOLD = 4 * 1024;
     //sailfish binary protocol magic
     public static final int     SAILFISH_MAGIC     = ByteBuffer.wrap("SASH".getBytes()).getInt();
-
     public static final Charset DEFAULT_CHARSET    = Charset.forName("UTF-8");
 
     //max frame size, 8MB
@@ -39,6 +38,9 @@ public class RemotingConstants {
     public static final byte    DIRECTION_REQUEST  = 1;
     public static final byte    DIRECTION_RESPONSE = 2;
     
-    //ms
+    //milliseconds
     public static final int DEFAULT_CONNECT_TIMEOUT = 2000;
+    
+    public static final int RESULT_SUCCESS = 0;
+    public static final int RESULT_FAIL = 1;
 }

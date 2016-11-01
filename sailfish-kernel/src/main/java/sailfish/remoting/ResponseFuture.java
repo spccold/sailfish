@@ -31,5 +31,5 @@ public interface ResponseFuture<T>{
     boolean isDone();
     void setCallback(ResponseCallback<T> callback, int timeout);
     T get() throws SailfishException, InterruptedException;
-    T get(long timeout, TimeUnit unit) throws SailfishException,InterruptedException;
+    T get(long timeout, TimeUnit unit) throws SailfishException, InterruptedException;
 }

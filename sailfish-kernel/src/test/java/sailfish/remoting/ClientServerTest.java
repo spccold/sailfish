@@ -18,6 +18,7 @@
 package sailfish.remoting;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
@@ -29,6 +30,7 @@ import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.executor.SimpleExecutor;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
@@ -92,6 +94,11 @@ public class ClientServerTest {
             public void handleException(Exception cause) {
                 Assert.assertFalse(true);
             }
+
+            @Override
+            public Executor getExecutor() {
+                return SimpleExecutor.instance();
+            }
         }, control);
         
         latch.await(2000, TimeUnit.MILLISECONDS);
@@ -140,6 +147,11 @@ public class ClientServerTest {
                 Assert.assertTrue(cause instanceof SailfishException);
                 Assert.assertEquals(ExceptionCode.TIMEOUT, ((SailfishException)cause).code());
                 latch.countDown();
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return SimpleExecutor.instance();
             }
         }, control);
         

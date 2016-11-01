@@ -39,7 +39,14 @@ public class ParameterChecker {
     }
     
     public static int checkPositive(int number, String hint){
-        if(number < 0){
+        if(number <= 0){
+            throw new IllegalArgumentException(hint);
+        }
+        return number;
+    }
+
+    public static long checkPositive(long number, String hint){
+        if(number <= 0){
             throw new IllegalArgumentException(hint);
         }
         return number;
