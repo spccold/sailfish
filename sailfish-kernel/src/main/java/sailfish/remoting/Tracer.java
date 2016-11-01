@@ -23,9 +23,11 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.future.ResponseFuture;
+import sailfish.remoting.protocol.ResponseProtocol;
 
 /**
+ * tcp communication tracer
  * 
  * @author spccold
  * @version $Id: Tracer.java, v 0.1 2016年10月26日 下午2:46:38 jileng Exp $
@@ -39,12 +41,12 @@ public class Tracer {
         TRACES.putIfAbsent(packageId, future);
     }
     
-    public static void erase(long packageId, Protocol protocol){
-        ResponseFuture<byte[]> future = TRACES.get(packageId);
+    public static void erase(ResponseProtocol protocol){
+        ResponseFuture<byte[]> future = TRACES.get(protocol.getPacketId());
         if(null == future){
-            logger.info("future no exist for packageId[{}]", packageId);
+            logger.info("trace no exist for packageId[{}]", protocol.getPacketId());
             return;
         }
-        future.setResponse(protocol.body(), protocol.result());
+        future.putResponse(protocol.getBody(), protocol.getResult());
     }
 }

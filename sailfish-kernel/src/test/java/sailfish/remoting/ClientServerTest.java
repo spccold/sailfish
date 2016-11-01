@@ -31,6 +31,7 @@ import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.executor.SimpleExecutor;
+import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
@@ -53,14 +54,14 @@ public class ClientServerTest {
             public void handle(ChannelHandlerContext ctx, Protocol msg) {
                 if(msg.request()){
                     RequestProtocol requestProtocol = (RequestProtocol)msg;
-                    Assert.assertNotNull(requestProtocol.body());
-                    Assert.assertTrue(requestProtocol.body().length > 0);
-                    Assert.assertArrayEquals(data, requestProtocol.body());
+                    Assert.assertNotNull(requestProtocol.getBody());
+                    Assert.assertTrue(requestProtocol.getBody().length > 0);
+                    Assert.assertArrayEquals(data, requestProtocol.getBody());
                     
                     ResponseProtocol responseProtocol = new ResponseProtocol();
                     responseProtocol.setBody(data);
-                    responseProtocol.setPackageId(requestProtocol.packageId());
-                    responseProtocol.setResult((byte)1);
+                    responseProtocol.setPacketId(requestProtocol.getPacketId());
+                    responseProtocol.setResult((byte)0);
                     ctx.writeAndFlush(responseProtocol);
                 }
             }

@@ -26,11 +26,18 @@ import sailfish.remoting.exceptions.SailfishException;
  * @version $Id: Protocol.java, v 0.1 2016年10月4日 下午3:01:29 jileng Exp $
  */
 public interface Protocol {
-    byte getVersion();
-    void serialize(ByteBuf output) throws SailfishException;
-    void deserialize(ByteBuf input, int totalLength) throws SailfishException;
+    /**
+     * request or response direction
+     */
     boolean request();
-    byte[] body();
-    long packageId();
-    int result();
+    
+    /**
+     * serialize bytes data to channel
+     */
+    void serialize(ByteBuf output) throws SailfishException;
+    
+    /**
+     * deserialize bytes data from channel
+     */
+    void deserialize(ByteBuf input, int totalLength) throws SailfishException;
 }

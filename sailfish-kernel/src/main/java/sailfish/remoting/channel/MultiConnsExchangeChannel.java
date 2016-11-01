@@ -19,7 +19,7 @@ package sailfish.remoting.channel;
 
 import sailfish.remoting.ExchangeClient;
 import sailfish.remoting.RequestControl;
-import sailfish.remoting.ResponseFuture;
+import sailfish.remoting.future.ResponseFuture;
 
 /**
  * with multiple {@link SimpleExchangeChannel} or {@link LazyConnectionExchangeChannel} for one or more {@link ExchangeClient}

@@ -18,7 +18,7 @@
 package sailfish.remoting.channel;
 
 import sailfish.remoting.RequestControl;
-import sailfish.remoting.ResponseFuture;
+import sailfish.remoting.future.ResponseFuture;
 
 /**
  * similar to {@link MultiConnsExchangeChannel}, but support read write splitting, this means some connections used for write only

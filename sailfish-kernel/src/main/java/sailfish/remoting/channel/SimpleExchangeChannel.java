@@ -28,18 +28,19 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
-import sailfish.remoting.BytesResponseFuture;
 import sailfish.remoting.RequestControl;
-import sailfish.remoting.ResponseFuture;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.future.BytesResponseFuture;
+import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.PacketIdGenerator;
 import sailfish.remoting.utils.RemotingUtils;
 
@@ -66,10 +67,10 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         RequestProtocol protocol = new RequestProtocol();
         protocol.setOneway(false);
         protocol.setBody(data);
-        protocol.setPackageId(PacketIdGenerator.nextId());
+        protocol.setPacketId(PacketIdGenerator.nextId());
         nettyChannel.writeAndFlush(protocol);
-        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.getPackageId());
-        Tracer.trace(protocol.getPackageId(), future);
+        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.getPacketId());
+        Tracer.trace(protocol.getPacketId(), future);
         return future;
     }
 
@@ -88,7 +89,11 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         MsgHandler<Protocol> handler= new MsgHandler<Protocol>() {
             @Override
             public void handle(ChannelHandlerContext context, Protocol msg) {
-                Tracer.erase(msg.packageId(), msg);
+                if(msg.request()){
+                    //TODO
+                }else{
+                    Tracer.erase((ResponseProtocol)msg);
+                }
             }
         };
         Bootstrap boot = configureBoostrap(config, handler);

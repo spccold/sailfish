@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
+ * <a href="http://www.importnew.com/14410.html">different compression algorithm in java platform</a>
  * 
  * @author spccold
  * @version $Id: RemotingConstants.java, v 0.1 2016年10月9日 下午9:58:16 jileng Exp $
@@ -41,6 +42,37 @@ public class RemotingConstants {
     //milliseconds
     public static final int DEFAULT_CONNECT_TIMEOUT = 2000;
     
-    public static final int RESULT_SUCCESS = 0;
-    public static final int RESULT_FAIL = 1;
+    //result
+    public static final byte RESULT_SUCCESS = 0;
+    public static final byte RESULT_FAIL = 1;
+    
+    /** serializeType */
+    //pure bytes, no need any serialize and deserialize
+    public static final byte NON_SERIALIZE = -1;
+    //java platform
+    public static final byte JDK_SERIALIZE = 0;
+    //java platform with high performance
+    public static final byte KRYO_SERIALIZE = 1;
+    public static final byte FST_SERIALIZE = 2;
+    //cross-platform
+    public static final byte JSON_SERIALIZE = 3;
+    //cross-platform with high performance
+    public static final byte HESSIAN_SERIALIZE = 4;
+    public static final byte AVRO_SERIALIZE = 5;
+    public static final byte THRIFT_SERIALIZE = 6;
+    public static final byte PROTOBUF_SERIALIZE = 7;
+    public static final byte FLATBUFFER_SERIALIZE = 8;
+    
+    //TODO compressType with multiple mode, needs to perfect in future
+    public static final byte NON_COMPRESS = -1;
+    public static final byte LZ4_COMPRESS = 1;
+    public static final byte GZIP_COMPRESS = 2;
+    public static final byte DEFLATE_COMPRESS = 3;
+    public static final byte SNAPPY_COMPRESS = 4;
+    
+    //langType
+    public static final byte JAVA = 1;
+    public static final byte C = 2;
+    public static final byte CPP = 3;
+    public static final byte GO = 4;
 }

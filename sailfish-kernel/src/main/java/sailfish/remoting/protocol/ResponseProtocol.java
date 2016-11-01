@@ -29,10 +29,9 @@ import sailfish.remoting.utils.StrUtils;
  */
 public class ResponseProtocol implements Protocol{
     private static final int HEADER_LENGTH = 18;
-    private static final int PROTOCOL_VERSION = 1;
     private byte direction = RemotingConstants.DIRECTION_RESPONSE;
     // 8 bytes
-    private long packageId;
+    private long packetId;
     // 1 byte
     private byte result;
     // 4 bytes
@@ -49,7 +48,7 @@ public class ResponseProtocol implements Protocol{
             output.writeInt(HEADER_LENGTH + errorStackLength + bodyLength());
             output.writeInt(RemotingConstants.SAILFISH_MAGIC);
             output.writeByte(direction);
-            output.writeLong(packageId);
+            output.writeLong(packetId);
             output.writeByte(result);
             output.writeInt(errorStackLength);
             if(StrUtils.isNotBlank(errorStack)){
@@ -64,7 +63,7 @@ public class ResponseProtocol implements Protocol{
     @Override
     public void deserialize(ByteBuf input, int totalLength) throws SailfishException {
         try{
-            this.packageId = input.readLong();
+            this.packetId = input.readLong();
             this.result = input.readByte();
             this.errorStackLength = input.readInt();
             if(this.errorStackLength > 0){
@@ -78,13 +77,13 @@ public class ResponseProtocol implements Protocol{
             throw new SailfishException(cause);
         }
     }
-    
-    public long getPackageId() {
-        return packageId;
+
+    public long getPacketId() {
+        return packetId;
     }
 
-    public void setPackageId(long packageId) {
-        this.packageId = packageId;
+    public void setPacketId(long packetId) {
+        this.packetId = packetId;
     }
 
     public byte getResult() {
@@ -125,29 +124,9 @@ public class ResponseProtocol implements Protocol{
         }
         return body.length;
     }
-    
-    @Override
-    public byte getVersion() {
-        return PROTOCOL_VERSION;
-    }
 
     @Override
     public boolean request() {
         return false;
-    }
-
-    @Override
-    public byte[] body() {
-        return body;
-    }
-
-    @Override
-    public long packageId() {
-        return packageId;
-    }
-
-    @Override
-    public int result() {
-        return 0;
     }
 }

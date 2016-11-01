@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.exceptions;
 
+import sailfish.remoting.utils.StrUtils;
+
 /**
  * 
  * @author spccold
@@ -37,7 +39,7 @@ public class SailfishException extends Exception {
     }
 
     public SailfishException(ExceptionCode errorCode, String message) {
-        super(prefix(errorCode.toString()) + message);
+        super(message(errorCode, message));
         this.errorCode = errorCode;
     }
 
@@ -46,12 +48,16 @@ public class SailfishException extends Exception {
     }
 
     public SailfishException(ExceptionCode errorCode, String message, Throwable cause) {
-        super(prefix(errorCode.toString()) + message, cause);
+        super(message(errorCode, message), cause);
         this.errorCode = errorCode;
     }
 
-    private static String prefix(String errorCode) {
-        return "[errorCode:" + errorCode + "], ";
+    private static String message(ExceptionCode errorCode, String message) {
+        if(null == errorCode){
+            errorCode = ExceptionCode.DEFAULT;
+        }
+        String prefix = "[errorCode:" + errorCode.toString() + "]";
+        return StrUtils.isBlank(message) ? prefix : prefix + ", "+ message;
     }
 
     public ExceptionCode code() {

@@ -20,6 +20,7 @@ package sailfish.remoting;
 import sailfish.remoting.channel.ExchangeChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.future.ResponseFuture;
 
 /**
  * 

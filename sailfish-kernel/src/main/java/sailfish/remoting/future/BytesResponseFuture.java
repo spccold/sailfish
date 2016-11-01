@@ -15,7 +15,7 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.future;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -23,6 +23,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.util.CharsetUtil;
+import sailfish.remoting.RemotingConstants;
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.executor.SimpleExecutor;
@@ -86,7 +88,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     }
 
     @Override
-    public void setResponse(byte[] data, int result) {
+    public void putResponse(byte[] data, byte result) {
         synchronized (this) {
             this.done = true;
             this.data = data;

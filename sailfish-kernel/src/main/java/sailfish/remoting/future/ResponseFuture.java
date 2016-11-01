@@ -15,10 +15,11 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting;
+package sailfish.remoting.future;
 
 import java.util.concurrent.TimeUnit;
 
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
 
 /**
@@ -27,7 +28,7 @@ import sailfish.remoting.exceptions.SailfishException;
  * @version $Id: ResponseFuture.java, v 0.1 2016年10月4日 下午3:56:21 jileng Exp $
  */
 public interface ResponseFuture<T>{
-    void setResponse(T resp, int result);
+    void putResponse(T resp, byte result);
     boolean isDone();
     void setCallback(ResponseCallback<T> callback, int timeout);
     T get() throws SailfishException, InterruptedException;

@@ -18,7 +18,7 @@
 package sailfish.remoting.channel;
 
 import sailfish.remoting.RequestControl;
-import sailfish.remoting.ResponseFuture;
+import sailfish.remoting.future.ResponseFuture;
 
 /**
  * with only one connection and the connection need to be initialized lazily

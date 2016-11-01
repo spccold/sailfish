@@ -24,6 +24,7 @@ package sailfish.remoting.exceptions;
  */
 public enum ExceptionCode {
     BAD_PACKAGE,
-    TIMEOUT
+    TIMEOUT,
+    DEFAULT,
     ;
 }

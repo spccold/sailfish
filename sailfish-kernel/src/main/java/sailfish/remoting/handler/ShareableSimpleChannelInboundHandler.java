@@ -27,6 +27,7 @@ import sailfish.remoting.protocol.Protocol;
  * @author spccold
  * @version $Id: ShareableSimpleChannelInboundHandler.java, v 0.1 2016年11月1日 下午2:17:59 jileng Exp $
  */
+//FIXME should only single instance
 @ChannelHandler.Sharable
 public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Protocol>{
     private final MsgHandler<Protocol> msgHandler;
