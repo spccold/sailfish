@@ -35,9 +35,9 @@ import sailfish.remoting.protocol.ResponseProtocol;
 public class Tracer {
     private static final Logger logger = LoggerFactory.getLogger(Tracer.class);
     
-    private static final ConcurrentMap<Long /** packageId */, ResponseFuture<byte[]>> TRACES = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Integer /** packageId */, ResponseFuture<byte[]>> TRACES = new ConcurrentHashMap<>();
     
-    public static void trace(long packageId, ResponseFuture<byte[]> future){
+    public static void trace(int packageId, ResponseFuture<byte[]> future){
         TRACES.putIfAbsent(packageId, future);
     }
     

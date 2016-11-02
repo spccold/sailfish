@@ -36,7 +36,7 @@ import sailfish.remoting.utils.RemotingUtils;
 public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
     private static final Logger logger = LoggerFactory.getLogger(RemotingDecoder.class);
     public RemotingDecoder() {
-        super(RemotingConstants.DEFAULT_PAYLOAD, 0, 4);
+        super(RemotingConstants.DEFAULT_PAYLOAD, 2, 4);
     }
     
     //all read exceptions will be fired by exceptionCaught()

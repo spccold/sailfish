@@ -40,21 +40,23 @@ public class DefaultRemotingCodec implements RemotingCodec{
 
     @Override
     public Protocol decode(ByteBuf buffer) throws SailfishException {
-        int totalLength = buffer.readInt();
-        int magic = buffer.readInt();
+        short magic = buffer.readShort();
         if(RemotingConstants.SAILFISH_MAGIC != magic){
             throw new SailfishException(ExceptionCode.BAD_PACKAGE,  
                 "bad package, expected magic:"+RemotingConstants.SAILFISH_MAGIC+", but actual:"+magic+", current channel will be closed!");
         }
-        byte direction = buffer.readByte();
+        
+        int totalLength = buffer.readInt();
+        byte compactByte = buffer.getByte(buffer.readerIndex());
+        boolean request = ((compactByte & RequestProtocol.REQUEST_FLAG) != 0);
         Protocol protocol;
-        //FIXME may be replaced with RecycleProtocol in the future
-        if(RemotingConstants.DIRECTION_REQUEST == direction){//request
+        
+        //TODO may be replaced with RecycleProtocol in the future
+        if(request){//request
             protocol = new RequestProtocol();
         }else{//response
             protocol = new ResponseProtocol();
         }
-        //FIXME need create ByteBufOutputStream every time, ugly design
         protocol.deserialize(buffer, totalLength);
         return protocol;
     }

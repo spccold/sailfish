@@ -23,38 +23,63 @@ import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.StrUtils;
 
 /**
+ * sailfish binary response protocol
+ * <pre>
+ * 1-- magic(2 bytes)
+ * 2-- total length(header length + body length, 4 bytes)
+ * 3-- header (6 bytes)
+ *    3.1-- direction + heartbeat response or normal response + serializeType (1 byte)
+ *          --response(0)(eighth high-order bit)
+ *          --heartbeat response(1)/normal response(0)(sixth high-order bit)
+ *          --serializeType([0~31])(five low-order bits)
+ *    3.2-- packetId (4 bytes)
+ *    3.3-- result + compressType  (1 byte)
+ *          --result(four high-order bits)
+ *          --compressType(four low-order bits)
+ * 4-- body ((total length - header length) bytes)
+ * </pre>
  * 
  * @author spccold
- * @version $Id: ResponseProtocol.java, v 0.1 2016年10月11日 下午9:48:43 jileng Exp $
+ * @version $Id: ResponseProtocol.java, v 0.1 2016年10月11日 下午8:44:48 jileng Exp $
  */
 public class ResponseProtocol implements Protocol{
-    private static final int HEADER_LENGTH = 18;
-    private byte direction = RemotingConstants.DIRECTION_RESPONSE;
-    // 8 bytes
-    private long packetId;
-    // 1 byte
-    private byte result;
-    // 4 bytes
-    private int errorStackLength = 0;
+    private static final int HEADER_LENGTH = 6;
+    private static final int RESPONSE_FLAG = 0;
+    private static final int HEARTBEAT_FLAG = 0x20;
+        
+    //response direction
+    private boolean heartbeat;
+    private byte serializeType;
     
-    private String errorStack;
-    private byte[] errorStackBytes;
+    private int packetId;
+    
+    private byte result;
+    private byte compressType;
+
     private byte[] body;
     
     @Override
     public void serialize(ByteBuf output) throws SailfishException {
         try{
-            //write total length
-            output.writeInt(HEADER_LENGTH + errorStackLength + bodyLength());
-            output.writeInt(RemotingConstants.SAILFISH_MAGIC);
-            output.writeByte(direction);
-            output.writeLong(packetId);
-            output.writeByte(result);
-            output.writeInt(errorStackLength);
-            if(StrUtils.isNotBlank(errorStack)){
-                output.writeBytes(errorStackBytes);
+            //write magic first
+            output.writeShort(RemotingConstants.SAILFISH_MAGIC);
+            //write package length(not contain current length field(4 bytes))
+            output.writeInt(HEADER_LENGTH + bodyLength());
+
+            byte compactByte = (byte)RESPONSE_FLAG; 
+            if(heartbeat){
+                compactByte = (byte)(compactByte | HEARTBEAT_FLAG);
+                output.writeByte(compactByte);
+                return;
             }
-            output.writeBytes(body);
+            output.writeByte(compactByte | serializeType);
+            
+            output.writeInt(packetId);
+            output.writeByte(result << 4 | compressType);
+            
+            if(bodyLength() != 0){
+                output.writeBytes(body);
+            }
         }catch(Throwable cause){
             throw new SailfishException(cause);
         }
@@ -63,26 +88,52 @@ public class ResponseProtocol implements Protocol{
     @Override
     public void deserialize(ByteBuf input, int totalLength) throws SailfishException {
         try{
-            this.packetId = input.readLong();
-            this.result = input.readByte();
-            this.errorStackLength = input.readInt();
-            if(this.errorStackLength > 0){
-                errorStackBytes = new byte[errorStackLength];
-                input.readBytes(errorStackBytes);
-                this.errorStack = new String(errorStackBytes, RemotingConstants.DEFAULT_CHARSET);
+            byte compactByte = input.readByte();
+            this.heartbeat = ((compactByte & HEARTBEAT_FLAG) != 0);
+            if(this.heartbeat){
+                return;
             }
-            body = new byte[totalLength - HEADER_LENGTH - errorStackLength];
-            input.readBytes(body);
+            this.serializeType = (byte)(compactByte & 0x1F);
+            
+            this.packetId = input.readInt(); 
+            
+            byte tmp = input.readByte();
+
+            this.result = (byte)(tmp >> 4 & 0xF);
+            this.compressType = (byte)(tmp >> 0 & 0xF);
+            
+            //read body
+            int bodyLength = totalLength - HEADER_LENGTH;
+            if(bodyLength > 0){
+                this.body = new byte[bodyLength];
+                input.readBytes(this.body);
+            }
         }catch(Throwable cause){
             throw new SailfishException(cause);
         }
     }
+    
+    public boolean isHeartbeat() {
+        return heartbeat;
+    }
 
-    public long getPacketId() {
+    public void setHeartbeat(boolean heartbeat) {
+        this.heartbeat = heartbeat;
+    }
+
+    public byte getSerializeType() {
+        return serializeType;
+    }
+
+    public void setSerializeType(byte serializeType) {
+        this.serializeType = ProtocolParameterChecker.checkSerializeType(serializeType);
+    }
+
+    public int getPacketId() {
         return packetId;
     }
 
-    public void setPacketId(long packetId) {
+    public void setPacketId(int packetId) {
         this.packetId = packetId;
     }
 
@@ -91,19 +142,15 @@ public class ResponseProtocol implements Protocol{
     }
 
     public void setResult(byte result) {
-        this.result = result;
+        this.result = ProtocolParameterChecker.checkResult(result);
     }
 
-    public String getErrorStack() {
-        return errorStack;
+    public byte getCompressType() {
+        return compressType;
     }
 
-    public void setErrorStack(String errorStack) {
-        this.errorStack = errorStack;
-        if(StrUtils.isNotBlank(errorStack)){
-            errorStackBytes = errorStack.getBytes(RemotingConstants.DEFAULT_CHARSET);
-            this.errorStackLength = errorStackBytes.length;
-        }
+    public void setCompressType(byte compressType) {
+        this.compressType = ProtocolParameterChecker.checkCompressType(compressType);
     }
 
     public byte[] getBody() {
@@ -114,10 +161,12 @@ public class ResponseProtocol implements Protocol{
         this.body = body;
     }
 
-    public int getErrorStackLength() {
-        return errorStackLength;
+    public void setErrorStack(String errorStack) {
+        if(StrUtils.isNotBlank(errorStack)){
+            this.body = errorStack.getBytes(RemotingConstants.DEFAULT_CHARSET);
+        }
     }
-
+   
     private int bodyLength(){
         if(null == body){
             return 0;

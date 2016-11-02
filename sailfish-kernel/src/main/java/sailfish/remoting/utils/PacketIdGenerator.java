@@ -17,7 +17,7 @@
  */
 package sailfish.remoting.utils;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 
@@ -25,8 +25,8 @@ import java.util.concurrent.atomic.AtomicLong;
  * @version $Id: PacketIdGenerator.java, v 0.1 2016年10月26日 下午10:47:17 jileng Exp $
  */
 public class PacketIdGenerator {
-    private static final AtomicLong ID_GENERATOR = new AtomicLong(0);
-    public static Long nextId(){
+    private static final AtomicInteger ID_GENERATOR = new AtomicInteger(0);
+    public static int nextId(){
         return ID_GENERATOR.incrementAndGet();
     }
 }

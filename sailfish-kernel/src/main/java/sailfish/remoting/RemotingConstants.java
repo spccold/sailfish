@@ -28,51 +28,48 @@ import java.nio.charset.Charset;
  */
 public class RemotingConstants {
     //压缩阀值, KB
-    public static final int     COMPRESS_THRESHOLD = 4 * 1024;
+    public static final int     COMPRESS_THRESHOLD      = 4 * 1024;
     //sailfish binary protocol magic
-    public static final int     SAILFISH_MAGIC     = ByteBuffer.wrap("SASH".getBytes()).getInt();
-    public static final Charset DEFAULT_CHARSET    = Charset.forName("UTF-8");
+    public static final short   SAILFISH_MAGIC          = ByteBuffer.wrap("SH".getBytes()).getShort();
+    public static final Charset DEFAULT_CHARSET         = Charset.forName("UTF-8");
 
     //max frame size, 8MB
-    public static final int     DEFAULT_PAYLOAD    = 8 * 1024 * 1024;
-    
-    public static final byte    DIRECTION_REQUEST  = 1;
-    public static final byte    DIRECTION_RESPONSE = 2;
-    
+    public static final int     DEFAULT_PAYLOAD         = 8 * 1024 * 1024;
+
     //milliseconds
-    public static final int DEFAULT_CONNECT_TIMEOUT = 2000;
-    
+    public static final int     DEFAULT_CONNECT_TIMEOUT = 2000;
+
     //result
-    public static final byte RESULT_SUCCESS = 0;
-    public static final byte RESULT_FAIL = 1;
-    
+    public static final byte    RESULT_SUCCESS          = 0;
+    public static final byte    RESULT_FAIL             = 1;
+
     /** serializeType */
     //pure bytes, no need any serialize and deserialize
-    public static final byte NON_SERIALIZE = -1;
+    public static final byte    NON_SERIALIZE           = -1;
     //java platform
-    public static final byte JDK_SERIALIZE = 0;
+    public static final byte    JDK_SERIALIZE           = 0;
     //java platform with high performance
-    public static final byte KRYO_SERIALIZE = 1;
-    public static final byte FST_SERIALIZE = 2;
+    public static final byte    KRYO_SERIALIZE          = 1;
+    public static final byte    FST_SERIALIZE           = 2;
     //cross-platform
-    public static final byte JSON_SERIALIZE = 3;
+    public static final byte    JSON_SERIALIZE          = 3;
     //cross-platform with high performance
-    public static final byte HESSIAN_SERIALIZE = 4;
-    public static final byte AVRO_SERIALIZE = 5;
-    public static final byte THRIFT_SERIALIZE = 6;
-    public static final byte PROTOBUF_SERIALIZE = 7;
-    public static final byte FLATBUFFER_SERIALIZE = 8;
-    
+    public static final byte    HESSIAN_SERIALIZE       = 4;
+    public static final byte    AVRO_SERIALIZE          = 5;
+    public static final byte    THRIFT_SERIALIZE        = 6;
+    public static final byte    PROTOBUF_SERIALIZE      = 7;
+    public static final byte    FLATBUFFER_SERIALIZE    = 8;
+
     //TODO compressType with multiple mode, needs to perfect in future
-    public static final byte NON_COMPRESS = -1;
-    public static final byte LZ4_COMPRESS = 1;
-    public static final byte GZIP_COMPRESS = 2;
-    public static final byte DEFLATE_COMPRESS = 3;
-    public static final byte SNAPPY_COMPRESS = 4;
-    
+    public static final byte    NON_COMPRESS            = -1;
+    public static final byte    LZ4_COMPRESS            = 1;
+    public static final byte    GZIP_COMPRESS           = 2;
+    public static final byte    DEFLATE_COMPRESS        = 3;
+    public static final byte    SNAPPY_COMPRESS         = 4;
+
     //langType
-    public static final byte JAVA = 1;
-    public static final byte C = 2;
-    public static final byte CPP = 3;
-    public static final byte GO = 4;
+    public static final byte    JAVA                    = 1;
+    public static final byte    C                       = 2;
+    public static final byte    CPP                     = 3;
+    public static final byte    GO                      = 4;
 }
