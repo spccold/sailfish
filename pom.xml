@@ -19,7 +19,7 @@
 	</issueManagement>
 	<modules>
 		<module>sailfish-kernel</module>
-		
+		<module>netty-demos</module>
 	</modules>
 
 	<properties>
