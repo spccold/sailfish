@@ -18,8 +18,8 @@
 package sailfish.remoting.configuration;
 
 import sailfish.remoting.Address;
-import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.channel.ChannelMode;
+import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 import sailfish.remoting.utils.StrUtils;
 

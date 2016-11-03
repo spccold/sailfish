@@ -18,7 +18,8 @@
 package sailfish.remoting.protocol;
 
 import io.netty.buffer.ByteBuf;
-import sailfish.remoting.RemotingConstants;
+import sailfish.remoting.constants.LangType;
+import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 
 /**
@@ -59,7 +60,7 @@ public class RequestProtocol implements Protocol {
     private short            opcode;
 
     private byte             compressType;
-    private byte             langType = RemotingConstants.JAVA;
+    private byte             langType = LangType.JAVA;
 
     private byte[]           body;
     

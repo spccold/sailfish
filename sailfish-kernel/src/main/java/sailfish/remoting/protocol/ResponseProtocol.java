@@ -18,7 +18,7 @@
 package sailfish.remoting.protocol;
 
 import io.netty.buffer.ByteBuf;
-import sailfish.remoting.RemotingConstants;
+import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.StrUtils;
 

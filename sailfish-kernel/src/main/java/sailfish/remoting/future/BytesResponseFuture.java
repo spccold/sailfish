@@ -23,8 +23,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.util.CharsetUtil;
-import sailfish.remoting.RemotingConstants;
 import sailfish.remoting.ResponseCallback;
+import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.executor.SimpleExecutor;
