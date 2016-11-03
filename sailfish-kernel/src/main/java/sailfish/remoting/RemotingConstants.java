@@ -45,23 +45,23 @@ public class RemotingConstants {
 
     /** serializeType */
     //pure bytes, no need any serialize and deserialize
-    public static final byte    NON_SERIALIZE           = -1;
+    public static final byte    NON_SERIALIZE           = 0;
     //java platform
-    public static final byte    JDK_SERIALIZE           = 0;
+    public static final byte    JDK_SERIALIZE           = 1;
     //java platform with high performance
-    public static final byte    KRYO_SERIALIZE          = 1;
-    public static final byte    FST_SERIALIZE           = 2;
+    public static final byte    KRYO_SERIALIZE          = 2;
+    public static final byte    FST_SERIALIZE           = 3;
     //cross-platform
-    public static final byte    JSON_SERIALIZE          = 3;
+    public static final byte    JSON_SERIALIZE          = 4;
     //cross-platform with high performance
-    public static final byte    HESSIAN_SERIALIZE       = 4;
-    public static final byte    AVRO_SERIALIZE          = 5;
-    public static final byte    THRIFT_SERIALIZE        = 6;
-    public static final byte    PROTOBUF_SERIALIZE      = 7;
-    public static final byte    FLATBUFFER_SERIALIZE    = 8;
+    public static final byte    HESSIAN_SERIALIZE       = 5;
+    public static final byte    AVRO_SERIALIZE          = 6;
+    public static final byte    THRIFT_SERIALIZE        = 7;
+    public static final byte    PROTOBUF_SERIALIZE      = 8;
+    public static final byte    FLATBUFFER_SERIALIZE    = 9;
 
     //TODO compressType with multiple mode, needs to perfect in future
-    public static final byte    NON_COMPRESS            = -1;
+    public static final byte    NON_COMPRESS            = 0;
     public static final byte    LZ4_COMPRESS            = 1;
     public static final byte    GZIP_COMPRESS           = 2;
     public static final byte    DEFLATE_COMPRESS        = 3;
