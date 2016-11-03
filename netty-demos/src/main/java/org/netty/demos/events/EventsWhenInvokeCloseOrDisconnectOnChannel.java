@@ -70,15 +70,15 @@ import io.netty.channel.socket.nio.NioSocketChannel;
  * 
  * 可以发现相同场景下, 执行close与执行disconnect具有相同的事件(包含顺序)
  * @author spccold
- * @version $Id: EventsWhenInvokeCloseOnChannel.java, v 0.1 2016年11月3日 下午5:13:49 jileng Exp $
+ * @version $Id: EventsWhenInvokeCloseOrDisconnectOnChannel.java, v 0.1 2016年11月3日 下午5:13:49 jileng Exp $
  */
-public class EventsWhenInvokeCloseOnChannel {
-    private static final Logger  logger        = LoggerFactory.getLogger(EventsWhenInvokeCloseOnChannel.class);
+public class EventsWhenInvokeCloseOrDisconnectOnChannel {
+    private static final Logger  logger        = LoggerFactory.getLogger(EventsWhenInvokeCloseOrDisconnectOnChannel.class);
 
     private static final String  HOST          = "127.0.0.1";
     private static final int     PORT          = 13141;
 
-    private static final boolean showClientLog = false;
+    private static final boolean showClientLog = true;
     private static final boolean showServerLog = true;
 
     public static void main(String[] args) throws Exception {
@@ -87,7 +87,7 @@ public class EventsWhenInvokeCloseOnChannel {
         //run2(true);
         //run2(false);
         //run3(true);
-        run3(false);
+        //run3(false);
     }
 
     public static void run1(boolean close) {

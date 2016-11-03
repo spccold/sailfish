@@ -49,7 +49,11 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         }
         super.bind(ctx, localAddress, future);
     }
-
+    
+    /**
+     * @see io.netty.channel.AbstractChannel#connect(SocketAddress) 
+     * channel在执行connect时, DefaultPipiple会触发下面的方法
+     */
     @Override
     public void connect(ChannelHandlerContext ctx, SocketAddress remoteAddress, SocketAddress localAddress,
                         ChannelPromise future) throws Exception {
@@ -66,7 +70,8 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         }
         super.disconnect(ctx, future);
     }
-
+    
+    //在channel上执行close, DefaultPipline会触发下面的方法
     @Override
     public void close(ChannelHandlerContext ctx, ChannelPromise future) throws Exception {
         if (show) {
@@ -75,6 +80,7 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         super.close(ctx, future);
     }
 
+    //close执行成功后会触发channelInactive and deregister
     @Override
     public void deregister(ChannelHandlerContext ctx, ChannelPromise future) throws Exception {
         if (show) {
@@ -106,7 +112,9 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         }
         super.flush(ctx);
     }
-
+    /**
+     * @see io.netty.channel.AbstractChannel.AbstractUnsafe#register0(ChannelPromise)
+     */
     @Override
     public void channelRegistered(ChannelHandlerContext ctx) throws Exception {
         if (show) {
@@ -122,7 +130,9 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         }
         super.channelUnregistered(ctx);
     }
-
+    
+    //1. io.netty.channel.nio.AbstractNioChannel.AbstractNioUnsafe.connect(SocketAddress, SocketAddress, ChannelPromise) 成功的话直接触发channelActive
+    //2. 如果1失败，io.netty.channel.nio.NioEventLoop.processSelectedKey(SelectionKey, AbstractNioChannel)处理OP_CONNECT, unsafe.finishConnect()时触发channelActive
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         if (show) {
@@ -130,7 +140,8 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         }
         super.channelActive(ctx);
     }
-
+    
+    //close执行成功后会触发channelInactive and deregister
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         if (show) {
@@ -179,6 +190,7 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
         super.exceptionCaught(ctx, cause);
     }
 
+    //DefaultPipline上添加ChannelHandler成功后就会触发下面的方法
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         if (show) {
