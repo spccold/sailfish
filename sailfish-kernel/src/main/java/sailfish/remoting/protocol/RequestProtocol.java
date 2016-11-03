@@ -59,7 +59,7 @@ public class RequestProtocol implements Protocol {
     private short            opcode;
 
     private byte             compressType;
-    private byte             langType;
+    private byte             langType = RemotingConstants.JAVA;
 
     private byte[]           body;
     

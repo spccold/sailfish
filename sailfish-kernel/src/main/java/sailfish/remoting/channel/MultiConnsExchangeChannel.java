@@ -30,7 +30,7 @@ import sailfish.remoting.future.ResponseFuture;
 public class MultiConnsExchangeChannel implements ExchangeChannel{
 
     @Override
-    public void oneway(byte[] data) {
+    public void oneway(byte[] data, RequestControl requestControl) {
     }
 
     @Override

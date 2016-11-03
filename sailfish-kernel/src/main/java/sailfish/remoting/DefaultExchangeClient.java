@@ -36,8 +36,8 @@ public class DefaultExchangeClient implements ExchangeClient{
     }
     
     @Override
-    public void oneway(byte[] data) {
-        exchanger.oneway(data);
+    public void oneway(byte[] data, RequestControl requestControl) {
+        exchanger.oneway(data, requestControl);
     }
 
     @Override
@@ -46,18 +46,18 @@ public class DefaultExchangeClient implements ExchangeClient{
     }
 
     @Override
+    public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) {
+        exchanger.request(data, requestControl).setCallback(callback, requestControl.timeout());
+    }
+
+    @Override
     public void close() throws InterruptedException{
         this.exchanger.close();
     }
-
+    
     @Override
     public void close(int timeout) throws InterruptedException{
         this.exchanger.close(timeout);
-    }
-
-    @Override
-    public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) {
-        exchanger.request(data, requestControl).setCallback(callback, requestControl.timeout());
     }
 
     @Override

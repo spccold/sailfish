@@ -25,5 +25,8 @@ import sailfish.remoting.channel.ExchangeChannel;
  * @version $Id: ExchangeClient.java, v 0.1 2016年10月27日 下午5:35:32 jileng Exp $
  */
 public interface ExchangeClient extends ExchangeChannel{
+    /**
+     * callback invoke
+     */
     void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl);
 }

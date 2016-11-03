@@ -23,13 +23,35 @@ package sailfish.remoting;
  * @version $Id: RequestControl.java, v 0.1 2016年11月1日 下午2:24:47 jileng Exp $
  */
 public class RequestControl {
-    //request timeout in milliseconds
+    //request timeout in milliseconds, for callback invoke
     private int timeout;
-
+    private short opcode;
+    private byte serializeType;
+    private byte compressType;
+    
     public int timeout() {
         return timeout;
     }
     public void timeout(int timeout) {
         this.timeout = timeout;
+    }
+    
+    public short opcode() {
+        return opcode;
+    }
+    public void opcode(short opcode) {
+        this.opcode = opcode;
+    }
+    public byte serializeType() {
+        return serializeType;
+    }
+    public void serializeType(byte serializeType) {
+        this.serializeType = serializeType;
+    }
+    public byte compressType() {
+        return compressType;
+    }
+    public void compressType(byte compressType) {
+        this.compressType = compressType;
     }
 }

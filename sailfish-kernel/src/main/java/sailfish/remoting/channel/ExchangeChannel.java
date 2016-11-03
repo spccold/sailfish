@@ -34,7 +34,7 @@ public interface ExchangeChannel extends Endpoint{
     /**
      * one-way pattern
      */
-    void oneway(byte[] data);
+    void oneway(byte[] data, RequestControl requestControl);
     
     /**
      * request–response pattern

@@ -41,7 +41,6 @@ import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
-import sailfish.remoting.utils.PacketIdGenerator;
 import sailfish.remoting.utils.RemotingUtils;
 
 /**
@@ -58,16 +57,19 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public void oneway(byte[] data) {
-        
+    public void oneway(byte[] data, RequestControl requestControl) {
+        RequestProtocol protocol = newRequest(requestControl);
+        protocol.setOneway(true);
+        protocol.setBody(data);
+        //FIXME wait write success?
+        nettyChannel.writeAndFlush(protocol);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
-        RequestProtocol protocol = new RequestProtocol();
+        RequestProtocol protocol = newRequest(requestControl);
         protocol.setOneway(false);
         protocol.setBody(data);
-        protocol.setPacketId(PacketIdGenerator.nextId());
         nettyChannel.writeAndFlush(protocol);
         ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.getPacketId());
         Tracer.trace(protocol.getPacketId(), future);

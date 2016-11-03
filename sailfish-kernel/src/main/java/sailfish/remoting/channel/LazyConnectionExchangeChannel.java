@@ -29,7 +29,7 @@ import sailfish.remoting.future.ResponseFuture;
 public class LazyConnectionExchangeChannel implements ExchangeChannel{
 
     @Override
-    public void oneway(byte[] data) {
+    public void oneway(byte[] data, RequestControl requestControl) {
         
     }
 

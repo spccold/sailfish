@@ -21,8 +21,11 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import sailfish.remoting.RequestControl;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.utils.PacketIdGenerator;
 
 /**
  * 
@@ -38,6 +41,15 @@ public abstract class AbstractExchangeChannel {
         //replace by heart beat
         boot.option(ChannelOption.SO_KEEPALIVE, false);
         return boot;
+    }
+    
+    protected RequestProtocol newRequest(RequestControl requestControl){
+        RequestProtocol protocol = new RequestProtocol();
+        protocol.setPacketId(PacketIdGenerator.nextId());
+        protocol.setOpcode(requestControl.opcode());
+        protocol.setCompressType(requestControl.compressType());
+        protocol.setSerializeType(requestControl.serializeType());
+        return protocol;
     }
     
     protected abstract Channel doConnect(ExchangeClientConfig config) throws SailfishException;
