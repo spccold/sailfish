@@ -1,8 +1,8 @@
 package sailfish.remoting.constants;
 
 public interface LangType {
-    byte JAVA = 1;
-    byte C    = 2;
-    byte CPP  = 3;
-    byte GO   = 4;
+    byte JAVA = 0;
+    byte C    = 1;
+    byte CPP  = 2;
+    byte GO   = 3;
 }

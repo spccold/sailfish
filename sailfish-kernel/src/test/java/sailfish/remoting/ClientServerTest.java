@@ -54,14 +54,14 @@ public class ClientServerTest {
             public void handle(ChannelHandlerContext ctx, Protocol msg) {
                 if(msg.request()){
                     RequestProtocol requestProtocol = (RequestProtocol)msg;
-                    Assert.assertNotNull(requestProtocol.getBody());
-                    Assert.assertTrue(requestProtocol.getBody().length > 0);
-                    Assert.assertArrayEquals(data, requestProtocol.getBody());
+                    Assert.assertNotNull(requestProtocol.body());
+                    Assert.assertTrue(requestProtocol.body().length > 0);
+                    Assert.assertArrayEquals(data, requestProtocol.body());
                     
                     ResponseProtocol responseProtocol = new ResponseProtocol();
-                    responseProtocol.setBody(data);
-                    responseProtocol.setPacketId(requestProtocol.getPacketId());
-                    responseProtocol.setResult((byte)0);
+                    responseProtocol.body(data);
+                    responseProtocol.packetId(requestProtocol.packetId());
+                    responseProtocol.result((byte)0);
                     ctx.writeAndFlush(responseProtocol);
                 }
             }

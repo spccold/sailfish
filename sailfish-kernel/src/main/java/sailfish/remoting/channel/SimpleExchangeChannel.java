@@ -25,6 +25,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -59,8 +61,8 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     @Override
     public void oneway(byte[] data, RequestControl requestControl) {
         RequestProtocol protocol = newRequest(requestControl);
-        protocol.setOneway(true);
-        protocol.setBody(data);
+        protocol.oneway(true);
+        protocol.body(data);
         //FIXME wait write success?
         nettyChannel.writeAndFlush(protocol);
     }
@@ -68,11 +70,11 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
         RequestProtocol protocol = newRequest(requestControl);
-        protocol.setOneway(false);
-        protocol.setBody(data);
+        protocol.oneway(false);
+        protocol.body(data);
         nettyChannel.writeAndFlush(protocol);
-        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.getPacketId());
-        Tracer.trace(protocol.getPacketId(), future);
+        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.packetId());
+        Tracer.trace(protocol.packetId(), future);
         return future;
     }
 
@@ -119,11 +121,15 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         final EventExecutorGroup executorGroup = new DefaultEventExecutorGroup(config.codecThreads(),
             new DefaultThreadFactory(config.codecThreadName()));
         boot.handler(new ChannelInitializer<SocketChannel>() {
+            @SuppressWarnings("deprecation")
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
+                ch.attr(new AttributeKey<Integer>("idleTimeout")).set(config.idleTimeout());
+                ch.attr(new AttributeKey<Integer>("maxIdleTimeout")).set(config.maxIdleTimeout());
                 pipeline.addLast(executorGroup, new RemotingEncoder());
                 pipeline.addLast(executorGroup, new RemotingDecoder());
+                pipeline.addLast(executorGroup, new IdleStateHandler(config.idleTimeout(), 0, 0));
                 pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler));
             }
         });

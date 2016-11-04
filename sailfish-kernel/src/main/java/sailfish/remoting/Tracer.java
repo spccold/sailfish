@@ -42,11 +42,11 @@ public class Tracer {
     }
     
     public static void erase(ResponseProtocol protocol){
-        ResponseFuture<byte[]> future = TRACES.get(protocol.getPacketId());
+        ResponseFuture<byte[]> future = TRACES.get(protocol.packetId());
         if(null == future){
-            logger.info("trace no exist for packageId[{}]", protocol.getPacketId());
+            logger.info("trace no exist for packageId[{}]", protocol.packetId());
             return;
         }
-        future.putResponse(protocol.getBody(), protocol.getResult());
+        future.putResponse(protocol.body(), protocol.result());
     }
 }

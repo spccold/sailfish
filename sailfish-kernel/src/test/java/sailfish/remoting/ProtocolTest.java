@@ -40,14 +40,14 @@ public class ProtocolTest {
     @Test
     public void testRequestProtocol() throws SailfishException{
         RequestProtocol send = new RequestProtocol();
-        send.setBody(new byte[]{1,2,3,4});
-        send.setCompressType(CompressType.NON_COMPRESS);
-        send.setHeartbeat(false);
-        send.setLangType(LangType.JAVA);
-        send.setOneway(false);
-        send.setOpcode((short)1);
-        send.setPacketId(1);
-        send.setSerializeType(SerializeType.NON_SERIALIZE);
+        send.body(new byte[]{1,2,3,4});
+        send.compressType(CompressType.NON_COMPRESS);
+        send.heartbeat(false);
+        send.langType(LangType.JAVA);
+        send.oneway(false);
+        send.opcode((short)1);
+        send.packetId(1);
+        send.serializeType(SerializeType.NON_SERIALIZE);
         
         ByteBuf output = ByteBufAllocator.DEFAULT.buffer(128);
         send.serialize(output);
@@ -55,49 +55,49 @@ public class ProtocolTest {
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
         RequestProtocol receive = new RequestProtocol();
         receive.deserialize(output, output.readInt());
-        Assert.assertArrayEquals(send.getBody(), receive.getBody());
-        Assert.assertTrue(receive.getCompressType() == CompressType.NON_COMPRESS);
-        Assert.assertFalse(receive.isHeartbeat());
-        Assert.assertTrue(receive.getLangType() == LangType.JAVA);
-        Assert.assertFalse(receive.isOneway());
-        Assert.assertTrue(1 == receive.getOpcode());
-        Assert.assertTrue(1 == receive.getPacketId());
-        Assert.assertTrue(receive.getSerializeType() == SerializeType.NON_SERIALIZE);
+        Assert.assertArrayEquals(send.body(), receive.body());
+        Assert.assertTrue(receive.compressType() == CompressType.NON_COMPRESS);
+        Assert.assertFalse(receive.heartbeat());
+        Assert.assertTrue(receive.langType() == LangType.JAVA);
+        Assert.assertFalse(receive.oneway());
+        Assert.assertTrue(1 == receive.opcode());
+        Assert.assertTrue(1 == receive.packetId());
+        Assert.assertTrue(receive.serializeType() == SerializeType.NON_SERIALIZE);
         
         
         output.clear();
-        send.setBody(new byte[]{-1, -1, -1, -1});
-        send.setHeartbeat(true);
-        send.setOneway(true);
-        send.setLangType(LangType.CPP);
-        send.setSerializeType(SerializeType.PROTOBUF_SERIALIZE);
-        send.setCompressType(CompressType.LZ4_COMPRESS);
-        send.setOpcode((short)100);
-        send.setPacketId(1000);
+        send.body(new byte[]{-1, -1, -1, -1});
+        send.heartbeat(true);
+        send.oneway(true);
+        send.langType(LangType.CPP);
+        send.serializeType(SerializeType.PROTOBUF_SERIALIZE);
+        send.compressType(CompressType.LZ4_COMPRESS);
+        send.opcode((short)100);
+        send.packetId(1000);
         send.serialize(output);
         
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
         receive = new RequestProtocol();
         receive.deserialize(output, output.readInt());
-        Assert.assertArrayEquals(send.getBody(), receive.getBody());
-        Assert.assertTrue(receive.getCompressType() == CompressType.LZ4_COMPRESS);
-        Assert.assertTrue(receive.isHeartbeat());
-        Assert.assertTrue(receive.getLangType() == LangType.CPP);
-        Assert.assertTrue(receive.isOneway());
-        Assert.assertTrue(100 == receive.getOpcode());
-        Assert.assertTrue(1000 == receive.getPacketId());
-        Assert.assertTrue(receive.getSerializeType() == SerializeType.PROTOBUF_SERIALIZE);
+        Assert.assertArrayEquals(send.body(), receive.body());
+        Assert.assertTrue(receive.compressType() == CompressType.LZ4_COMPRESS);
+        Assert.assertTrue(receive.heartbeat());
+        Assert.assertTrue(receive.langType() == LangType.CPP);
+        Assert.assertTrue(receive.oneway());
+        Assert.assertTrue(100 == receive.opcode());
+        Assert.assertTrue(1000 == receive.packetId());
+        Assert.assertTrue(receive.serializeType() == SerializeType.PROTOBUF_SERIALIZE);
     }
     
     @Test
     public void testResponseProtocol() throws SailfishException{
         ResponseProtocol send = new ResponseProtocol();
-        send.setBody(new byte[]{1,2,3,4});
-        send.setCompressType(CompressType.GZIP_COMPRESS);
-        send.setHeartbeat(false);
-        send.setPacketId(1);
-        send.setResult((byte)0);
-        send.setSerializeType(SerializeType.JDK_SERIALIZE);
+        send.body(new byte[]{1,2,3,4});
+        send.compressType(CompressType.GZIP_COMPRESS);
+        send.heartbeat(false);
+        send.packetId(1);
+        send.result((byte)0);
+        send.serializeType(SerializeType.JDK_SERIALIZE);
 
         ByteBuf output = ByteBufAllocator.DEFAULT.buffer(128);
         send.serialize(output);
@@ -105,22 +105,22 @@ public class ProtocolTest {
         ResponseProtocol receive = new ResponseProtocol();
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
         receive.deserialize(output, output.readInt());
-        Assert.assertArrayEquals(send.getBody(), receive.getBody());
-        Assert.assertTrue(send.getCompressType() == CompressType.GZIP_COMPRESS);
-        Assert.assertTrue(send.getSerializeType() == SerializeType.JDK_SERIALIZE);
-        Assert.assertFalse(receive.isHeartbeat());
-        Assert.assertTrue(1 == receive.getPacketId());
-        Assert.assertTrue(0 == receive.getResult());
+        Assert.assertArrayEquals(send.body(), receive.body());
+        Assert.assertTrue(send.compressType() == CompressType.GZIP_COMPRESS);
+        Assert.assertTrue(send.serializeType() == SerializeType.JDK_SERIALIZE);
+        Assert.assertFalse(receive.heartbeat());
+        Assert.assertTrue(1 == receive.packetId());
+        Assert.assertTrue(0 == receive.result());
         
         
         output.clear();
-        send.setHeartbeat(true);
+        send.heartbeat(true);
         send.serialize(output);
         
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
         receive = new ResponseProtocol();
         receive.deserialize(output, output.readInt());
-        Assert.assertTrue(receive.isHeartbeat());
+        Assert.assertTrue(receive.heartbeat());
     }
 }
 

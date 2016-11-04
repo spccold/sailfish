@@ -19,8 +19,10 @@ package sailfish.remoting.protocol;
 
 import io.netty.buffer.ByteBuf;
 import sailfish.remoting.constants.LangType;
+import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.utils.PacketIdGenerator;
 
 /**
  * sailfish binary request protocol
@@ -120,69 +122,73 @@ public class RequestProtocol implements Protocol {
             throw new SailfishException(cause);
         }
     }
-    
-    public boolean isHeartbeat() {
-        return heartbeat;
-    }
 
-    public void setHeartbeat(boolean heartbeat) {
+    public RequestProtocol heartbeat(boolean heartbeat) {
         this.heartbeat = heartbeat;
+        return this;
     }
 
-    public boolean isOneway() {
+    public boolean oneway() {
         return oneway;
     }
 
-    public void setOneway(boolean oneway) {
+    public RequestProtocol oneway(boolean oneway) {
         this.oneway = oneway;
+        return this;
     }
 
-    public byte getSerializeType() {
+    public byte serializeType() {
         return serializeType;
     }
 
-    public void setSerializeType(byte serializeType) {
+    public RequestProtocol serializeType(byte serializeType) {
         this.serializeType = ProtocolParameterChecker.checkSerializeType(serializeType);
+        return this;
     }
 
-    public int getPacketId() {
+    public int packetId() {
         return packetId;
     }
 
-    public void setPacketId(int packetId) {
+    public RequestProtocol packetId(int packetId) {
         this.packetId = packetId;
+        return this;
     }
 
-    public short getOpcode() {
+    public short opcode() {
         return opcode;
     }
 
-    public void setOpcode(short opcode) {
+    public RequestProtocol opcode(short opcode) {
         this.opcode = opcode;
+        return this;
     }
 
-    public byte getCompressType() {
+    public byte compressType() {
         return compressType;
     }
 
-    public void setCompressType(byte compressType) {
+    public RequestProtocol compressType(byte compressType) {
         this.compressType = ProtocolParameterChecker.checkCompressType(compressType);
+        return this;
     }
 
-    public byte getLangType() {
+    public byte langType() {
         return langType;
     }
 
-    public void setLangType(byte langType) {
+    public RequestProtocol langType(byte langType) {
         this.langType = ProtocolParameterChecker.checkLangType(langType);
+        return this;
     }
 
-    public byte[] getBody() {
+    public byte[] body() {
         return body;
     }
 
-    public void setBody(byte[] body) {
+    public RequestProtocol body(byte[] body) {
         this.body = body;
+        return this;
     }
 
     private int bodyLength() {
@@ -195,5 +201,21 @@ public class RequestProtocol implements Protocol {
     @Override
     public boolean request() {
         return true;
+    }
+    
+    public boolean heartbeat() {
+        return this.heartbeat;
+    }
+    
+    public static RequestProtocol newHeartbeat(){
+        RequestProtocol heartbeat = new RequestProtocol();
+        heartbeat.packetId(PacketIdGenerator.nextId());
+        heartbeat.heartbeat(true);
+        heartbeat.opcode(Opcode.HEARTBEAT);
+        return heartbeat;
+    }
+    
+    public static RequestProtocol newNegotiateHeartbeat(byte idleTimeout, byte maxIdleTimeout){
+        return newHeartbeat().opcode(Opcode.HEARTBEAT_WITH_NEGOTIATE).body(new byte[]{idleTimeout, maxIdleTimeout});
     }
 }

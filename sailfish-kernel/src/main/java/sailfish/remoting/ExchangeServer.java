@@ -24,6 +24,7 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -64,6 +65,7 @@ public class ExchangeServer implements Endpoint{
                 ChannelPipeline pipeline = ch.pipeline();
                 pipeline.addLast(executor, new RemotingDecoder());
                 pipeline.addLast(executor, new RemotingEncoder());
+                pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
                 pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler));
             }
         });

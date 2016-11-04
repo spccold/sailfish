@@ -32,6 +32,11 @@ public interface Protocol {
     boolean request();
     
     /**
+     * heartbeat request/response
+     */
+    boolean heartbeat();
+
+    /**
      * serialize bytes data to channel
      */
     void serialize(ByteBuf output) throws SailfishException;

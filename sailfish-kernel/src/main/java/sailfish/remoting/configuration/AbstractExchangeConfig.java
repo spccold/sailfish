@@ -18,6 +18,7 @@
 package sailfish.remoting.configuration;
 
 import sailfish.remoting.Address;
+import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 
 /**
@@ -30,7 +31,10 @@ public abstract class AbstractExchangeConfig {
      * remote address for client, local address for server
      */
     protected Address address;
-
+    //seconds
+    protected int idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
+    protected int maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
+    
     protected int ioThreads = Runtime.getRuntime().availableProcessors();
     protected String ioThreadName;
     
@@ -40,6 +44,11 @@ public abstract class AbstractExchangeConfig {
     //check parameters
     protected void check(){
         ParameterChecker.checkNotNull(this.address, "remoteAddress can not be null");
+        ParameterChecker.checkBytePositive(this.idleTimeout);
+        ParameterChecker.checkBytePositive(this.maxIdleTimeout);
+        if(this.idleTimeout > this.maxIdleTimeout){
+            throw new IllegalArgumentException("maxIdleTimeout must be greater than idleTimeout");
+        }
     }
     
     public Address address() {
@@ -47,6 +56,19 @@ public abstract class AbstractExchangeConfig {
     }
     public void address(Address address) {
         this.address = ParameterChecker.checkNotNull(address, "address");
+    }
+    public int idleTimeout() {
+        return idleTimeout;
+    }
+
+    public void idleTimeout(int idleTimeout) {
+        this.idleTimeout = ParameterChecker.checkBytePositive(idleTimeout);
+    }
+    public int maxIdleTimeout() {
+        return maxIdleTimeout;
+    }
+    public void maxIdleTimeout(int maxIdleTimeout) {
+        this.maxIdleTimeout = ParameterChecker.checkBytePositive(maxIdleTimeout);
     }
     public int iothreads() {
         return ioThreads;

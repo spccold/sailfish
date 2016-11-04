@@ -51,4 +51,11 @@ public class ParameterChecker {
         }
         return number;
     }
+    
+    public static int checkBytePositive(int number){
+        if(number <= 0 || number > 0x7F){
+            throw new IllegalArgumentException("number: " + number + " (expected: 0 < number <= 0x7F)");
+        }
+        return number;
+    }
 }

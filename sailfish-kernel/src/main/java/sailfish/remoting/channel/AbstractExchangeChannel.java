@@ -45,10 +45,10 @@ public abstract class AbstractExchangeChannel {
     
     protected RequestProtocol newRequest(RequestControl requestControl){
         RequestProtocol protocol = new RequestProtocol();
-        protocol.setPacketId(PacketIdGenerator.nextId());
-        protocol.setOpcode(requestControl.opcode());
-        protocol.setCompressType(requestControl.compressType());
-        protocol.setSerializeType(requestControl.serializeType());
+        protocol.packetId(PacketIdGenerator.nextId());
+        protocol.opcode(requestControl.opcode());
+        protocol.compressType(requestControl.compressType());
+        protocol.serializeType(requestControl.serializeType());
         return protocol;
     }
     

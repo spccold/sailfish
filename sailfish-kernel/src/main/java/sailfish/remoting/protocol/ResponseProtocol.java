@@ -112,56 +112,52 @@ public class ResponseProtocol implements Protocol{
             throw new SailfishException(cause);
         }
     }
-    
-    public boolean isHeartbeat() {
-        return heartbeat;
-    }
 
-    public void setHeartbeat(boolean heartbeat) {
+    public void heartbeat(boolean heartbeat) {
         this.heartbeat = heartbeat;
     }
 
-    public byte getSerializeType() {
+    public byte serializeType() {
         return serializeType;
     }
 
-    public void setSerializeType(byte serializeType) {
+    public void serializeType(byte serializeType) {
         this.serializeType = ProtocolParameterChecker.checkSerializeType(serializeType);
     }
 
-    public int getPacketId() {
+    public int packetId() {
         return packetId;
     }
 
-    public void setPacketId(int packetId) {
+    public void packetId(int packetId) {
         this.packetId = packetId;
     }
 
-    public byte getResult() {
+    public byte result() {
         return result;
     }
 
-    public void setResult(byte result) {
+    public void result(byte result) {
         this.result = ProtocolParameterChecker.checkResult(result);
     }
 
-    public byte getCompressType() {
+    public byte compressType() {
         return compressType;
     }
 
-    public void setCompressType(byte compressType) {
+    public void compressType(byte compressType) {
         this.compressType = ProtocolParameterChecker.checkCompressType(compressType);
     }
 
-    public byte[] getBody() {
+    public byte[] body() {
         return body;
     }
 
-    public void setBody(byte[] body) {
+    public void body(byte[] body) {
         this.body = body;
     }
 
-    public void setErrorStack(String errorStack) {
+    public void errorStack(String errorStack) {
         if(StrUtils.isNotBlank(errorStack)){
             this.body = errorStack.getBytes(RemotingConstants.DEFAULT_CHARSET);
         }
@@ -177,5 +173,15 @@ public class ResponseProtocol implements Protocol{
     @Override
     public boolean request() {
         return false;
+    }
+    
+    public boolean heartbeat() {
+        return this.heartbeat;
+    }
+    
+    public static ResponseProtocol newHeartbeat(){
+        ResponseProtocol heartbeat = new ResponseProtocol();
+        heartbeat.heartbeat(true);
+        return heartbeat;
     }
 }

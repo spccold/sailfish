@@ -17,10 +17,16 @@
  */
 package sailfish.remoting.handler;
 
+import java.util.concurrent.TimeUnit;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleStateHandler;
+import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.protocol.ResponseProtocol;
 
 /**
  * 
@@ -38,6 +44,19 @@ public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHa
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
+        if(msg.request() && msg.heartbeat()){//deal heartbeat request
+            RequestProtocol requestProtocol = (RequestProtocol)msg;
+            if(requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE){//negotiate idle timeout
+                int idleTimeout = requestProtocol.body()[0];
+                int idleMaxTimeout = requestProtocol.body()[1];
+                IdleStateHandler old = ctx.pipeline().get(IdleStateHandler.class);
+                if(null != old && TimeUnit.MILLISECONDS.toSeconds(old.getReaderIdleTimeInMillis()) < requestProtocol.body()[0]){
+                    ctx.pipeline().replace(IdleStateHandler.class, null, new IdleStateHandler(requestProtocol.body()[0], 0, 0));
+                }
+            }
+            ctx.writeAndFlush(ResponseProtocol.newHeartbeat());
+            return;
+        }
         msgHandler.handle(ctx, msg);
     }
 
