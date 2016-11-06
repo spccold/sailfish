@@ -17,46 +17,63 @@
  */
 package sailfish.remoting.handler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateEvent;
-import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.AttributeKey;
+import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.utils.RemotingUtils;
 
 /**
  * 
  * @author spccold
- * @version $Id: ChannelEventsHandler.java, v 0.1 2016年11月4日 下午2:25:38 jileng Exp $
+ * @version $Id: ChannelEventsHandler.java, v 0.1 2016年11月4日 下午2:25:38 jileng
+ *          Exp $
  */
-public class ChannelEventsHandler extends ChannelDuplexHandler{
-    private final boolean clientSide;
+public class ChannelEventsHandler extends ChannelDuplexHandler {
+	private static final Logger logger = LoggerFactory.getLogger(ChannelEventsHandler.class);
+	private final boolean clientSide;
 
-    public ChannelEventsHandler(boolean clientSide) {
-        this.clientSide = clientSide;
-    }
+	public ChannelEventsHandler(boolean clientSide) {
+		this.clientSide = clientSide;
+	}
 
-    @Override
-    @SuppressWarnings("deprecation")
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        super.channelActive(ctx);
-        if(this.clientSide){
-            int idleTimeout = ctx.channel().attr(new AttributeKey<Integer>("idleTimeout")).get();
-            int maxIdleTimeout = ctx.channel().attr(new AttributeKey<Integer>("maxIdleTimeout")).get();
-            IdleStateHandler idleStateHandler = ctx.pipeline().get(IdleStateHandler.class);
-            if(null != idleStateHandler){
-                //negotiate idle timeout with remote peer
-                ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte)idleTimeout, (byte)maxIdleTimeout));
-            }
-        }
-    }
+	@Override
+	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		//record lastReadTimeMills
+		ctx.channel().attr(ChannelAttrKeys.lastReadTimeMillis).set(System.currentTimeMillis());
+		super.channelRead(ctx, msg);
+	}
 
-    @Override
-    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
-        if(evt instanceof IdleStateEvent){
-            
-        }else{
-            super.userEventTriggered(ctx, evt);
-        }
-    }
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		ctx.channel().attr(ChannelAttrKeys.lastReadTimeMillis).set(System.currentTimeMillis());
+		super.channelActive(ctx);
+		if (this.clientSide) {
+			int idleTimeout = ctx.channel().attr(ChannelAttrKeys.idleTimeout).get();
+			int maxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
+			// negotiate idle timeout with remote peer
+			ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte) idleTimeout, (byte) maxIdleTimeout));
+		}
+	}
+
+	@Override
+	public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+		if (evt instanceof IdleStateEvent) {
+			int maxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
+			long expireTime = System.currentTimeMillis() - ctx.channel().attr(ChannelAttrKeys.lastReadTimeMillis).get();
+			if(expireTime >= maxIdleTimeout * 1000){
+				logger.warn("readIdleTimeout exceed maxIdleTimeout, real timeout {}, this channel will be closed", expireTime);
+				RemotingUtils.closeChannel(ctx.channel());
+			}else if(this.clientSide){
+				//send heart beat to remote peer
+				ctx.writeAndFlush(RequestProtocol.newHeartbeat());
+			}
+		} else {
+			super.userEventTriggered(ctx, evt);
+		}
+	}
 }

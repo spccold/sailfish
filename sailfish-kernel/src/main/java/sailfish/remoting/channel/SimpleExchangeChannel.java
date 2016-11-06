@@ -26,7 +26,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.AttributeKey;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -35,6 +34,7 @@ import sailfish.remoting.Tracer;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
 import sailfish.remoting.future.ResponseFuture;
@@ -121,12 +121,11 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         final EventExecutorGroup executorGroup = new DefaultEventExecutorGroup(config.codecThreads(),
             new DefaultThreadFactory(config.codecThreadName()));
         boot.handler(new ChannelInitializer<SocketChannel>() {
-            @SuppressWarnings("deprecation")
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
-                ch.attr(new AttributeKey<Integer>("idleTimeout")).set(config.idleTimeout());
-                ch.attr(new AttributeKey<Integer>("maxIdleTimeout")).set(config.maxIdleTimeout());
+                ch.attr(ChannelAttrKeys.idleTimeout).set(config.idleTimeout());
+                ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
                 pipeline.addLast(executorGroup, new RemotingEncoder());
                 pipeline.addLast(executorGroup, new RemotingDecoder());
                 pipeline.addLast(executorGroup, new IdleStateHandler(config.idleTimeout(), 0, 0));

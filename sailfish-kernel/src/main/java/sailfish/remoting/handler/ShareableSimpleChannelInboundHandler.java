@@ -17,12 +17,11 @@
  */
 package sailfish.remoting.handler;
 
-import java.util.concurrent.TimeUnit;
-
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleStateHandler;
+import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
@@ -50,8 +49,9 @@ public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHa
                 int idleTimeout = requestProtocol.body()[0];
                 int idleMaxTimeout = requestProtocol.body()[1];
                 IdleStateHandler old = ctx.pipeline().get(IdleStateHandler.class);
-                if(null != old && TimeUnit.MILLISECONDS.toSeconds(old.getReaderIdleTimeInMillis()) < requestProtocol.body()[0]){
-                    ctx.pipeline().replace(IdleStateHandler.class, null, new IdleStateHandler(requestProtocol.body()[0], 0, 0));
+                if(null != old){
+                    ctx.pipeline().replace(IdleStateHandler.class, null, new IdleStateHandler(idleTimeout, 0, 0));
+                    ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(idleMaxTimeout);
                 }
             }
             ctx.writeAndFlush(ResponseProtocol.newHeartbeat());

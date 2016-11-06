@@ -40,7 +40,7 @@ public interface RemotingConstants {
     int     DEFAULT_CONNECT_TIMEOUT = 2000;
     //seconds
     int     DEFAULT_IDLE_TIMEOUT = 10;
-    int     DEFAULT_MAX_IDLE_TIMEOUT = 3 * DEFAULT_CONNECT_TIMEOUT;
+    int     DEFAULT_MAX_IDLE_TIMEOUT = 3 * DEFAULT_IDLE_TIMEOUT;
     
     //result
     byte    RESULT_SUCCESS          = 0;
