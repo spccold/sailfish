@@ -43,7 +43,7 @@ public class Exchanger {
                 channel = new SimpleExchangeChannel(config);
                 break;
             case multiconns:
-                channel = new MultiConnsExchangeChannel();
+                channel = new MultiConnsExchangeChannel(config);
                 break;
             case readwrite:
                 channel = new ReadWriteSplittingExchangeChannel();

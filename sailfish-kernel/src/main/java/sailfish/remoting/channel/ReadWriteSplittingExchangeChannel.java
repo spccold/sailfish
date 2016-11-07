@@ -41,12 +41,12 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel{
     }
 
     @Override
-    public void close() throws InterruptedException{
+    public void close(){
         
     }
 
     @Override
-    public void close(int timeout) throws InterruptedException{
+    public void close(int timeout){
         
     }
 

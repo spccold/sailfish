@@ -101,12 +101,12 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public void close() throws InterruptedException{
+    public void close(){
         RemotingUtils.closeChannel(nettyChannel);
     }
 
     @Override
-    public void close(int timeout) throws InterruptedException{
+    public void close(int timeout){
         RemotingUtils.closeChannel(nettyChannel);
     }
     
@@ -172,7 +172,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     private Bootstrap configureBoostrap(final ExchangeClientConfig config, final MsgHandler<Protocol> handler){
         Bootstrap boot = newBootstrap();
         boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.Connecttimeout());
-        if(null != config.localAddress()){
+        if(config.mode() == ChannelMode.simple && null != config.localAddress()){
             boot.localAddress(config.localAddress().host(), config.localAddress().port());
         }
         boot.remoteAddress(config.address().host(), config.address().port());

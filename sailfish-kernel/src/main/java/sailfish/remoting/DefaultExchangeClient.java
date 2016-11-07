@@ -55,12 +55,12 @@ public class DefaultExchangeClient implements ExchangeClient{
     }
 
     @Override
-    public void close() throws InterruptedException{
+    public void close(){
         this.exchanger.close();
     }
     
     @Override
-    public void close(int timeout) throws InterruptedException{
+    public void close(int timeout){
         this.exchanger.close(timeout);
     }
 

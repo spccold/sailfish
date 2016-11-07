@@ -94,18 +94,22 @@ public class ExchangeServer implements Endpoint{
     }
 
     @Override
-    public void close() throws InterruptedException{
+    public void close(){
         close(0);
     }
 
     @Override
-    public void close(int timeout) throws InterruptedException{
+    public void close(int timeout){
         synchronized (this) {
             if(isClosed)
                 return;
             if(null != boot){
-                boot.group().shutdownGracefully().await(timeout);
-                boot.childGroup().shutdownGracefully().await(timeout);;
+                try{
+                    boot.group().shutdownGracefully().await(timeout);
+                    boot.childGroup().shutdownGracefully().await(timeout);;
+                }catch(InterruptedException cause){
+                    //do nothing
+                }
             }
         }
     }

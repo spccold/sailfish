@@ -17,34 +17,71 @@
  */
 package sailfish.remoting.channel;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import sailfish.remoting.ExchangeClient;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
 /**
- * with multiple {@link SimpleExchangeChannel} or {@link LazyConnectionExchangeChannel} for one or more {@link ExchangeClient}
+ * with multiple {@link SimpleExchangeChannel} for one or more {@link ExchangeClient}
  * 
  * @author spccold
  * @version $Id: MultiConnsExchangeChannel.java, v 0.1 2016年10月26日 下午9:25:00 jileng Exp $
  */
-public class MultiConnsExchangeChannel implements ExchangeChannel{
+public class MultiConnsExchangeChannel implements ExchangeChannel {
+    private final SimpleExchangeChannel[] simpleChannels;
+    private final AtomicInteger           liveCount;
+    private final AtomicInteger           currentChannelIndex = new AtomicInteger(0);
 
-    @Override
-    public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
+    public MultiConnsExchangeChannel(ExchangeClientConfig clientConfig) throws SailfishException {
+        int connections = clientConfig.connections();
+        liveCount = new AtomicInteger(connections);
+        simpleChannels = new SimpleExchangeChannel[connections];
+        try {
+            for (int i = 0; i < connections; i++) {
+                simpleChannels[i] = new SimpleExchangeChannel(clientConfig);
+            }
+        } catch (Throwable cause) {
+            destory();
+            throw cause;
+        }
+    }
+
+    private SimpleExchangeChannel channel() {
+        return simpleChannels[currentChannelIndex.getAndIncrement() % liveCount.get()];
+    }
+
+    private void destory() {
+        for (int i = 0; i < simpleChannels.length; i++) {
+            if (null != simpleChannels[i]) {
+                simpleChannels[i].close();
+            }
+        }
+        liveCount.set(0);
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
-        return null;
+    public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
+        channel().oneway(data, requestControl);
     }
 
     @Override
-    public void close() throws InterruptedException{
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
+        return channel().request(data, requestControl);
     }
 
     @Override
-    public void close(int timeout) throws InterruptedException{
+    public void close() {
+        close(0);
+    }
+
+    @Override
+    public void close(int timeout) {
+        //FIXME
+        destory();
     }
 
     @Override
@@ -54,6 +91,6 @@ public class MultiConnsExchangeChannel implements ExchangeChannel{
 
     @Override
     public boolean isAvailable() {
-        return false;
+        return liveCount.get() > 0;
     }
 }
