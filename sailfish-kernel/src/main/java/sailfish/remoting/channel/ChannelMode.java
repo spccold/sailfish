@@ -24,7 +24,6 @@ package sailfish.remoting.channel;
  */
 public enum ChannelMode {
     simple,
-    lazy,
     multiconns,
     readwrite,
     ;

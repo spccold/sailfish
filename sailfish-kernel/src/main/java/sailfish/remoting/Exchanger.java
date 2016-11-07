@@ -18,7 +18,6 @@
 package sailfish.remoting;
 
 import sailfish.remoting.channel.ExchangeChannel;
-import sailfish.remoting.channel.LazyConnectionExchangeChannel;
 import sailfish.remoting.channel.MultiConnsExchangeChannel;
 import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
 import sailfish.remoting.channel.SimpleExchangeChannel;
@@ -42,9 +41,6 @@ public class Exchanger {
         switch (config.mode()) {
             case simple:
                 channel = new SimpleExchangeChannel(config);
-                break;
-            case lazy:
-                channel = new LazyConnectionExchangeChannel();
                 break;
             case multiconns:
                 channel = new MultiConnsExchangeChannel();

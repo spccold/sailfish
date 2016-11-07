@@ -29,6 +29,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
+import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.codec.RemotingDecoder;
@@ -47,20 +48,39 @@ import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.RemotingUtils;
 
 /**
- * with only one connection and the connection need to be initialized immediately
+ * with only one connection and the connection need to be initialized immediately or lazy
  * 
  * @author spccold
  * @version $Id: SimpleExchangeChannel.java, v 0.1 2016年10月26日 下午9:08:24 jileng Exp $
  */
 public class SimpleExchangeChannel extends AbstractExchangeChannel implements ExchangeChannel{
-    private Channel nettyChannel;
-
+    private final ExchangeClientConfig clientConfig;
+    private volatile Channel nettyChannel;
+    private volatile boolean lazyWithOutInit;
+    private volatile boolean reconnectting;
     public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException{
-        this.nettyChannel = doConnect(config);
+        this.clientConfig = config;
+        if(config.isLazyConnection()){
+            this.lazyWithOutInit = true;
+        }else{
+            this.nettyChannel = doConnect(config);
+            this.lazyWithOutInit = false;
+        }
+        reconnectting = false;
     }
-
+    
+    public ExchangeClientConfig getConfig(){
+        return this.clientConfig;
+    }
+    
+    public void reset(Channel newChannel){
+        this.nettyChannel = newChannel;
+        this.reconnectting = false;
+    }
+    
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
+        initChannel();
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
         protocol.body(data);
@@ -70,6 +90,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
+        initChannel();
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
         protocol.body(data);
@@ -90,7 +111,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
     
     @Override
-    protected Channel doConnect(final ExchangeClientConfig config) throws SailfishException{
+    public Channel doConnect(final ExchangeClientConfig config) throws SailfishException{
         MsgHandler<Protocol> handler= new MsgHandler<Protocol>() {
             @Override
             public void handle(ChannelHandlerContext context, Protocol msg) {
@@ -106,6 +127,45 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
             return boot.connect().syncUninterruptibly().channel();
         }catch(Throwable cause){
             throw new SailfishException(cause);
+        }
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        if(this.lazyWithOutInit){
+           return true; 
+        }
+        boolean isAvailable = (null != nettyChannel && nettyChannel.isOpen() && nettyChannel.isActive());
+        if(!isAvailable && !reconnectting){
+            synchronized (this) {
+                if(!isAvailable && !reconnectting){
+                    //add reconnect task
+                    ReconnectManager.INSTANCE.addReconnectTask(this);
+                    this.reconnectting = true;
+                }
+            }
+        }
+        return isAvailable;
+    }
+    
+    private void initChannel() throws SailfishException{
+        if(!clientConfig.isLazyConnection()){
+            return;
+        }
+        if(null != nettyChannel){
+            return;
+        }
+        synchronized (this) {
+            if(null != nettyChannel){
+                return;
+            }
+            this.nettyChannel = doConnect(this.clientConfig);
+            this.lazyWithOutInit = false;
         }
     }
     
@@ -135,15 +195,5 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
             }
         });
         return boot;
-    }
-
-    @Override
-    public boolean isClosed() {
-        return false;
-    }
-
-    @Override
-    public boolean isAvailable() {
-        return null != nettyChannel && nettyChannel.isOpen() && nettyChannel.isActive();
     }
 }

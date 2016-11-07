@@ -32,7 +32,8 @@ public class ExchangeClientConfig extends AbstractExchangeConfig{
     private Address localAddress;
     //ms
     private int connectTimeout = RemotingConstants.DEFAULT_CONNECT_TIMEOUT;
-
+    private int reconnectInterval =  RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
+    
     private int connections = 1;
     //enable channels Read/Write Splitting or not when connections greater than one
     private boolean enableReadWriteSplitting = false;
@@ -43,9 +44,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig{
     
     public ChannelMode mode(){
         if(connections == 1){
-            if(lazyConnection){
-                return ChannelMode.lazy;
-            }
             return ChannelMode.simple;
         }
         if(enableReadWriteSplitting){
@@ -80,6 +78,14 @@ public class ExchangeClientConfig extends AbstractExchangeConfig{
 
     public void connections(int connections) {
         this.connections = ParameterChecker.checkPositive(connections, "connections");
+    }
+    
+    public int reconnectInterval() {
+        return reconnectInterval;
+    }
+
+    public void reconnectInterval(int reconnectInterval) {
+        this.reconnectInterval = ParameterChecker.checkPositive(reconnectInterval, "reconnectInterval");
     }
 
     public int Connecttimeout() {
