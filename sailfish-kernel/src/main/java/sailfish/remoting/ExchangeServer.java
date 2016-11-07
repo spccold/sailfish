@@ -31,7 +31,9 @@ import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeServerConfig;
+import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -63,9 +65,11 @@ public class ExchangeServer implements Endpoint{
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
+                ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
                 pipeline.addLast(executor, new RemotingDecoder());
                 pipeline.addLast(executor, new RemotingEncoder());
-                pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
+                pipeline.addLast(executor, "idleStateHandler", new IdleStateHandler(config.idleTimeout(), 0, 0));
+                pipeline.addLast(executor, new ChannelEventsHandler(false));
                 pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler));
             }
         });

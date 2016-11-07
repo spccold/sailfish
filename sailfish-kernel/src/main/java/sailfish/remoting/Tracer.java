@@ -42,6 +42,9 @@ public class Tracer {
     }
     
     public static void erase(ResponseProtocol protocol){
+        if(protocol.heartbeat()){
+            return;
+        }
         ResponseFuture<byte[]> future = TRACES.get(protocol.packetId());
         if(null == future){
             logger.info("trace no exist for packageId[{}]", protocol.packetId());

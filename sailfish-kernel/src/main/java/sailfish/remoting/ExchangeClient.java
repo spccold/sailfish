@@ -18,6 +18,7 @@
 package sailfish.remoting;
 
 import sailfish.remoting.channel.ExchangeChannel;
+import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -28,5 +29,5 @@ public interface ExchangeClient extends ExchangeChannel{
     /**
      * callback invoke
      */
-    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl);
+    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException;
 }

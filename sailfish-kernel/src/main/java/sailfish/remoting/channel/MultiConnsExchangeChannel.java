@@ -19,6 +19,7 @@ package sailfish.remoting.channel;
 
 import sailfish.remoting.ExchangeClient;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
 /**
@@ -30,11 +31,11 @@ import sailfish.remoting.future.ResponseFuture;
 public class MultiConnsExchangeChannel implements ExchangeChannel{
 
     @Override
-    public void oneway(byte[] data, RequestControl requestControl) {
+    public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
         return null;
     }
 
@@ -48,6 +49,11 @@ public class MultiConnsExchangeChannel implements ExchangeChannel{
 
     @Override
     public boolean isClosed() {
+        return false;
+    }
+
+    @Override
+    public boolean isAvailable() {
         return false;
     }
 }

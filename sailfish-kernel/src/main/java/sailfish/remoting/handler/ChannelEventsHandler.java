@@ -76,4 +76,11 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
 			super.userEventTriggered(ctx, evt);
 		}
 	}
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        String msg = "exceptionCaught, localAddress [%s], remoteAddress [%s]";
+        logger.warn(String.format(msg, ctx.channel().localAddress().toString(), ctx.channel().remoteAddress().toString()), cause);
+        super.exceptionCaught(ctx, cause);
+    }
 }

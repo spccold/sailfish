@@ -43,14 +43,14 @@ public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHa
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
-        if(msg.request() && msg.heartbeat()){//deal heartbeat request
+        if(msg.request() && msg.heartbeat()){//deal heart beat request
             RequestProtocol requestProtocol = (RequestProtocol)msg;
             if(requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE){//negotiate idle timeout
                 int idleTimeout = requestProtocol.body()[0];
                 int idleMaxTimeout = requestProtocol.body()[1];
                 IdleStateHandler old = ctx.pipeline().get(IdleStateHandler.class);
                 if(null != old){
-                    ctx.pipeline().replace(IdleStateHandler.class, null, new IdleStateHandler(idleTimeout, 0, 0));
+                    ctx.pipeline().replace(IdleStateHandler.class, "idleStateHandler", new IdleStateHandler(idleTimeout, 0, 0));
                     ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(idleMaxTimeout);
                 }
             }

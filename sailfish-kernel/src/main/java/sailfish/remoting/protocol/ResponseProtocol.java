@@ -64,7 +64,11 @@ public class ResponseProtocol implements Protocol{
             //write magic first
             output.writeShort(RemotingConstants.SAILFISH_MAGIC);
             //write package length(not contain current length field(4 bytes))
-            output.writeInt(HEADER_LENGTH + bodyLength());
+            if(this.heartbeat){
+                output.writeInt(1);
+            }else{
+                output.writeInt(HEADER_LENGTH + bodyLength());
+            }
 
             byte compactByte = (byte)RESPONSE_FLAG; 
             if(heartbeat){

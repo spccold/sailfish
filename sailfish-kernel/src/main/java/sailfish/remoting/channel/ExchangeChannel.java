@@ -19,6 +19,7 @@ package sailfish.remoting.channel;
 
 import sailfish.remoting.Endpoint;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
 /**
@@ -31,13 +32,15 @@ import sailfish.remoting.future.ResponseFuture;
  * @version $Id: ExchangeChannel.java, v 0.1 2016年10月26日 下午8:34:37 jileng Exp $
  */
 public interface ExchangeChannel extends Endpoint{
+    boolean isAvailable();
+    
     /**
      * one-way pattern
      */
-    void oneway(byte[] data, RequestControl requestControl);
+    void oneway(byte[] data, RequestControl requestControl) throws SailfishException;
     
     /**
      * request–response pattern
      */
-    ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl);
+    ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException;
 }

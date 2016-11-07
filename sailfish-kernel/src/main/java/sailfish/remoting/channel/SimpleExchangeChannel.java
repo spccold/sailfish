@@ -38,6 +38,7 @@ import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
 import sailfish.remoting.future.ResponseFuture;
+import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -59,7 +60,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public void oneway(byte[] data, RequestControl requestControl) {
+    public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
         protocol.body(data);
@@ -68,7 +69,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) {
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
         protocol.body(data);
@@ -87,7 +88,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     public void close(int timeout) throws InterruptedException{
         RemotingUtils.closeChannel(nettyChannel);
     }
-
+    
     @Override
     protected Channel doConnect(final ExchangeClientConfig config) throws SailfishException{
         MsgHandler<Protocol> handler= new MsgHandler<Protocol>() {
@@ -129,6 +130,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
                 pipeline.addLast(executorGroup, new RemotingEncoder());
                 pipeline.addLast(executorGroup, new RemotingDecoder());
                 pipeline.addLast(executorGroup, new IdleStateHandler(config.idleTimeout(), 0, 0));
+                pipeline.addLast(executorGroup, new ChannelEventsHandler(true));
                 pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler));
             }
         });
@@ -138,5 +140,10 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     @Override
     public boolean isClosed() {
         return false;
+    }
+
+    @Override
+    public boolean isAvailable() {
+        return null != nettyChannel && nettyChannel.isOpen() && nettyChannel.isActive();
     }
 }
