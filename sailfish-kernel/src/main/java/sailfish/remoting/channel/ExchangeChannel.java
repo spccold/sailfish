@@ -19,6 +19,7 @@ package sailfish.remoting.channel;
 
 import sailfish.remoting.Endpoint;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
@@ -43,4 +44,9 @@ public interface ExchangeChannel extends Endpoint{
      * request–response pattern
      */
     ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException;
+    
+    /**
+     * callback invoke
+     */
+    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException;
 }

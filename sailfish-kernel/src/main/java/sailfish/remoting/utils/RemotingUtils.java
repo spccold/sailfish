@@ -33,10 +33,14 @@ public class RemotingUtils {
     private static final Logger logger = LoggerFactory.getLogger(RemotingUtils.class);
 
     public static void closeChannel(final Channel channel) {
+        if (null == channel) {
+            return;
+        }
         channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                String log = String.format("closeChannel: close connection to remoteAddress [%s] , localAddress [%s], ret:[%b]",
+                String log = String.format(
+                    "closeChannel: close connection to remoteAddress [%s] , localAddress [%s], ret:[%b]",
                     channel.remoteAddress().toString(), channel.localAddress().toString(), future.isSuccess());
                 logger.info(log);
             }

@@ -20,6 +20,7 @@ package sailfish.remoting.channel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -32,11 +33,13 @@ import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
+import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
@@ -48,6 +51,7 @@ import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.RemotingUtils;
+import sailfish.remoting.utils.StrUtils;
 
 /**
  * with only one connection and the connection need to be initialized immediately or lazy
@@ -106,11 +110,40 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
+        return requestWithFuture(data, null, requestControl);
+    }
+
+    @Override
+    public void request(byte[] data, ResponseCallback<byte[]> callback,
+                        RequestControl requestControl) throws SailfishException {
+        requestWithFuture(data, callback, requestControl);
+    }
+    
+    public ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
+                                          RequestControl requestControl) throws SailfishException {
         initChannel();
-        RequestProtocol protocol = newRequest(requestControl);
+        final RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
         protocol.body(data);
-        ChannelFuture future = nettyChannel.writeAndFlush(protocol);
+
+        ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
+        respFuture.setCallback(callback, requestControl.timeout());
+        //trace before write
+        Tracer.trace(protocol.packetId(), respFuture);
+        ChannelFuture future = nettyChannel.writeAndFlush(protocol).addListener(new ChannelFutureListener() {
+            @Override
+            public void operationComplete(ChannelFuture future) throws Exception {
+                if(!future.isSuccess()){
+                    String errorMsg = "write fail!";
+                    if(null != future.cause()){
+                        errorMsg = StrUtils.exception2String(future.cause());
+                    }
+                    //FIXME maybe need more concrete error, like WriteOverFlowException or some other special exceptions
+                    Tracer.erase(ResponseProtocol.newErrorResponse(protocol.packetId(), 
+                        errorMsg, RemotingConstants.RESULT_FAIL));
+                }
+            }
+        });
         try{
             if(requestControl.sent()){
                 boolean ret = future.await(requestControl.timeout());
@@ -122,12 +155,9 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         }catch(InterruptedException cause){
             throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
         }
-        
-        ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
-        Tracer.trace(protocol.packetId(), respFuture);
         return respFuture;
     }
-
+    
     @Override
     public void close() {
         RemotingUtils.closeChannel(nettyChannel);
@@ -203,7 +233,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     private Bootstrap configureBoostrap(final ExchangeClientConfig config, final MsgHandler<Protocol> handler) {
         Bootstrap boot = newBootstrap();
-        boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.Connecttimeout());
+        boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.connectTimeout());
         if (config.mode() == ChannelMode.simple && null != config.localAddress()) {
             boot.localAddress(config.localAddress().host(), config.localAddress().port());
         }

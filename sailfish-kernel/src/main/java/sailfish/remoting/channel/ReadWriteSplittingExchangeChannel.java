@@ -18,6 +18,7 @@
 package sailfish.remoting.channel;
 
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
@@ -41,6 +42,12 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel{
     }
 
     @Override
+    public void request(byte[] data, ResponseCallback<byte[]> callback,
+                        RequestControl requestControl) throws SailfishException {
+        
+    }
+    
+    @Override
     public void close(){
         
     }
@@ -59,5 +66,4 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel{
     public boolean isAvailable() {
         return false;
     }
-
 }

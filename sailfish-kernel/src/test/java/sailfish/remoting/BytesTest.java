@@ -17,17 +17,30 @@
  */
 package sailfish.remoting;
 
-import sailfish.remoting.channel.ExchangeChannel;
-import sailfish.remoting.exceptions.SailfishException;
+import org.junit.Assert;
+import org.junit.Test;
+
+import sailfish.remoting.utils.Bytes;
 
 /**
  * 
  * @author spccold
- * @version $Id: ExchangeClient.java, v 0.1 2016年10月27日 下午5:35:32 jileng Exp $
+ * @version $Id: BytesTest.java, v 0.1 2016年11月8日 下午7:53:57 jileng Exp $
  */
-public interface ExchangeClient extends ExchangeChannel{
-    /**
-     * callback invoke
-     */
-    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException;
+public class BytesTest {
+    
+    @Test
+    public void test() {
+        //test positive
+        int integer = 1;
+        Assert.assertTrue(integer == Bytes.bytes2int(Bytes.int2bytes(integer)));
+        
+        //test negative
+        integer = -1;
+        Assert.assertTrue(integer == Bytes.bytes2int(Bytes.int2bytes(integer)));
+        
+        //test zero
+        integer = 0;
+        Assert.assertTrue(integer == Bytes.bytes2int(Bytes.int2bytes(integer)));
+    }
 }

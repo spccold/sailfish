@@ -27,7 +27,7 @@ import sailfish.remoting.future.ResponseFuture;
  * @author spccold
  * @version $Id: DefaultExchangeClient.java, v 0.1 2016年10月31日 上午10:47:17 jileng Exp $
  */
-public class DefaultExchangeClient implements ExchangeClient{
+public class DefaultExchangeClient implements ExchangeChannel{
 
     private ExchangeChannel exchanger;
     
@@ -47,7 +47,7 @@ public class DefaultExchangeClient implements ExchangeClient{
 
     @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException{
-        exchanger.request(data, requestControl).setCallback(callback, requestControl.timeout());
+        exchanger.request(data, callback, requestControl);
     }
 
     @Override

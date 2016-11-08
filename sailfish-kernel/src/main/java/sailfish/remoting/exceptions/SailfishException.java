@@ -64,9 +64,9 @@ public class SailfishException extends Exception {
         return errorCode;
     }
 
-    public RemoteSailfishException toRemoteException() {
-        return new RemoteSailfishException(errorCode, getMessage(), getCause());
-    }
+//    public RemoteSailfishException toRemoteException() {
+//        return new RemoteSailfishException(errorCode, getMessage(), getCause());
+//    }
     
     /**
      * exception for remote peer

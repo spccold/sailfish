@@ -188,4 +188,12 @@ public class ResponseProtocol implements Protocol{
         heartbeat.heartbeat(true);
         return heartbeat;
     }
+    
+    public static ResponseProtocol newErrorResponse(int packetId, String errorStack, byte result){
+        ResponseProtocol error = new ResponseProtocol();
+        error.packetId(packetId);
+        error.errorStack(errorStack);
+        error.result(result);
+        return error;
+    }
 }

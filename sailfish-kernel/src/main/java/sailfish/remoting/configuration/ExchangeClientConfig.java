@@ -88,19 +88,19 @@ public class ExchangeClientConfig extends AbstractExchangeConfig{
         this.reconnectInterval = ParameterChecker.checkPositive(reconnectInterval, "reconnectInterval");
     }
 
-    public int Connecttimeout() {
+    public int connectTimeout() {
         return connectTimeout;
     }
 
-    public void Connecttimeout(int connectTimeout) {
+    public void connectTimeout(int connectTimeout) {
         this.connectTimeout = ParameterChecker.checkPositive(connectTimeout, "connectTimeout");
     }
 
-    public boolean isEnableReadWriteSplitting() {
+    public boolean enableReadWriteSplitting() {
         return enableReadWriteSplitting;
     }
 
-    public void setEnableReadWriteSplitting(boolean enableReadWriteSplitting) {
+    public void enableReadWriteSplitting(boolean enableReadWriteSplitting) {
         this.enableReadWriteSplitting = enableReadWriteSplitting;
     }
 

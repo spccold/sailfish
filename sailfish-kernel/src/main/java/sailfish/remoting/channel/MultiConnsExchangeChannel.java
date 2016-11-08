@@ -19,8 +19,8 @@ package sailfish.remoting.channel;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import sailfish.remoting.ExchangeClient;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
@@ -70,7 +70,12 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
         return next().request(data, requestControl);
     }
-
+    
+    @Override
+    public void request(byte[] data, ResponseCallback<byte[]> callback,
+                        RequestControl requestControl) throws SailfishException {
+        next().request(data, callback, requestControl);
+    }
     @Override
     public void close() {
         close(0);

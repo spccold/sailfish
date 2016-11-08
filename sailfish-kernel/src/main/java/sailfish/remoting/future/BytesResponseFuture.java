@@ -61,7 +61,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
             }
         }
         if(!this.successed){
-            throw new SailfishException(new String(data, CharsetUtil.UTF_8)).toRemoteException();
+            throw new SailfishException(new String(data, CharsetUtil.UTF_8));
         }
         return data;
     }
@@ -82,7 +82,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
             throw new SailfishException(ExceptionCode.TIMEOUT, msg);
         }
         if(!this.successed){
-            throw new SailfishException(new String(data, CharsetUtil.UTF_8)).toRemoteException();
+            throw new SailfishException(new String(data, CharsetUtil.UTF_8));
         }
         return data;
     }
@@ -115,6 +115,9 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     
     @Override
     public void setCallback(final ResponseCallback<byte[]> callback, final int timeout) {
+        if(null == callback){
+            return;
+        }
         this.callback = callback;
         this.task = new CallbackCheckTask();
         TIMER.schedule(task, timeout);
@@ -133,7 +136,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
                 return;
             }
             BytesResponseFuture.this.callback.handleException(new SailfishException(
-                new String(BytesResponseFuture.this.data, CharsetUtil.UTF_8)).toRemoteException());
+                new String(BytesResponseFuture.this.data, CharsetUtil.UTF_8)));
         }
     }
     

@@ -17,6 +17,9 @@
  */
 package sailfish.remoting.utils;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 /**
  * 
  * @author spccold
@@ -172,5 +175,14 @@ public class StrUtils {
             }
         }
         return buf.toString();
+    }
+    //covert exception object to error stack with string presentation
+    public static String exception2String(Throwable cause){
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter writer = new PrintWriter(stringWriter);
+        cause.printStackTrace(writer);
+        writer.flush();
+        writer.close();
+        return stringWriter.toString();
     }
 }
