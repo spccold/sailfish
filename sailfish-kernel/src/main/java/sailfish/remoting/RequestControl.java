@@ -17,41 +17,58 @@
  */
 package sailfish.remoting;
 
+import sailfish.remoting.utils.ParameterChecker;
+
 /**
  * 
  * @author spccold
  * @version $Id: RequestControl.java, v 0.1 2016年11月1日 下午2:24:47 jileng Exp $
  */
 public class RequestControl {
-    //request timeout in milliseconds, for callback invoke
-    private int timeout;
-    private short opcode;
-    private byte serializeType;
-    private byte compressType;
-    
+    private int     timeout;
+    private short   opcode;
+    private byte    serializeType;
+    private byte    compressType;
+    //wait write success or not
+    private boolean sent;
+
     public int timeout() {
         return timeout;
     }
+
     public void timeout(int timeout) {
-        this.timeout = timeout;
+        this.timeout = ParameterChecker.checkPositive(timeout, "timeout");
     }
-    
+
     public short opcode() {
         return opcode;
     }
+
     public void opcode(short opcode) {
         this.opcode = opcode;
     }
+
     public byte serializeType() {
         return serializeType;
     }
+
     public void serializeType(byte serializeType) {
         this.serializeType = serializeType;
     }
+
     public byte compressType() {
         return compressType;
     }
+
     public void compressType(byte compressType) {
         this.compressType = compressType;
+    }
+
+    public boolean sent() {
+        return sent;
+    }
+
+    public void sent(boolean sent) {
+        this.sent = sent;
     }
 }

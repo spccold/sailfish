@@ -40,8 +40,8 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
 
     public MultiConnsExchangeChannel(ExchangeClientConfig clientConfig) throws SailfishException {
         this.connections = clientConfig.connections();
-        this.deadChannels = new SimpleExchangeChannel[this.connections];
         this.allChannels = new SimpleExchangeChannel[this.connections];
+        this.deadChannels = new SimpleExchangeChannel[this.connections];
         try {
             for (int i = 0; i < this.connections; i++) {
                 allChannels[i] = new SimpleExchangeChannel(clientConfig);
@@ -89,25 +89,31 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
 
     @Override
     public boolean isAvailable() {
-        for(int i = 0; i< this.connections ; i++){
-            if(deadChannels[i] == null){
+        //can hit most of the time
+        if (deadChannels[0] == null || deadChannels[0].isAvailable()) {
+            return true;
+        }
+
+        for (int i = 1; i < this.connections; i++) {
+            if (deadChannels[i] == null || deadChannels[i].isAvailable()) {
                 return true;
             }
         }
         return false;
     }
-    
-    private SimpleExchangeChannel next() throws SailfishException{
-        int currentIndex = Math.abs(channelIndex.getAndIncrement() % this.connections);
-        for(int i=0; i< this.connections; i++){
-            SimpleExchangeChannel currentChannel = allChannels[(currentIndex++) % this.connections];
-            if(currentChannel.isAvailable()){
-                if(null != deadChannels[currentIndex]){
-                    deadChannels[currentIndex] = null;
+    //lock free
+    private SimpleExchangeChannel next() throws SailfishException {
+        int arrayIndex = 0;
+        int currentIndex = channelIndex.getAndIncrement();
+        for (int i = 0; i < this.connections; i++) {
+            SimpleExchangeChannel currentChannel = allChannels[arrayIndex = ((currentIndex++) % this.connections)];
+            if (currentChannel.isAvailable()) {
+                if (null != deadChannels[arrayIndex]) {
+                    deadChannels[arrayIndex] = null;
                 }
                 return currentChannel;
             }
-            deadChannels[currentIndex] = currentChannel;
+            deadChannels[arrayIndex] = currentChannel;
         }
         throw new SailfishException(ExceptionCode.EXCHANGER_NOT_AVAILABLE, "exchanger is not available!");
     }

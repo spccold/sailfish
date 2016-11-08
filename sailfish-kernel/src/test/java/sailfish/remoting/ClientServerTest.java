@@ -105,6 +105,7 @@ public class ClientServerTest {
         latch.await(2000, TimeUnit.MILLISECONDS);
         Assert.assertTrue(latch.getCount() == 0);
         
+        client.close();
         server.close();
     }
     
@@ -158,7 +159,61 @@ public class ClientServerTest {
         
         latch.await(2500, TimeUnit.MILLISECONDS);
         Assert.assertTrue(latch.getCount() == 0);
+        
+        client.close();
+        server.close();
+    }
+    
+    @Test
+    public void testMultiConns() throws Exception{
+        int port= 13143;
+        final byte data[] = "hello sailfish!".getBytes(CharsetUtil.UTF_8);
+        ExchangeServerConfig serverConfig = new ExchangeServerConfig();
+        serverConfig.address(new Address("localhost", port));
+        ExchangeServer server = Exchanger.bind(serverConfig, new MsgHandler<Protocol>() {
+            @Override
+            public void handle(ChannelHandlerContext ctx, Protocol msg) {
+                if(msg.request()){
+                    RequestProtocol requestProtocol = (RequestProtocol)msg;
+                    Assert.assertNotNull(requestProtocol.body());
+                    Assert.assertTrue(requestProtocol.body().length > 0);
+                    Assert.assertArrayEquals(data, requestProtocol.body());
+                    
+                    ResponseProtocol responseProtocol = new ResponseProtocol();
+                    responseProtocol.body(data);
+                    responseProtocol.packetId(requestProtocol.packetId());
+                    responseProtocol.result((byte)0);
+                    ctx.writeAndFlush(responseProtocol);
+                }
+            }
+        });
+        server.start();
+        
+        ExchangeClientConfig clientConfig = new ExchangeClientConfig();
+        clientConfig.connections(2);
+        clientConfig.address(new Address("localhost", port));
+        ExchangeClient client = new DefaultExchangeClient(clientConfig);
+        //test request-response
+        RequestControl control = new RequestControl();
+        ResponseFuture<byte[]> future = client.request(data, control);
+        byte[] result = future.get();
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.length > 0);
+        Assert.assertArrayEquals(data, result);
+        
+        future = client.request(data, control);
+        result = future.get();
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.length > 0);
+        Assert.assertArrayEquals(data, result);
 
+        future = client.request(data, control);
+        result = future.get();
+        Assert.assertNotNull(result);
+        Assert.assertTrue(result.length > 0);
+        Assert.assertArrayEquals(data, result);
+        
+        client.close();
         server.close();
     }
 }

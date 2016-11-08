@@ -19,6 +19,7 @@ package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -36,6 +37,7 @@ import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
+import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
 import sailfish.remoting.future.ResponseFuture;
@@ -87,8 +89,19 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
         protocol.body(data);
-        //FIXME wait write success?
-        nettyChannel.writeAndFlush(protocol);
+        //TODO write or writeAndFlush?
+        ChannelFuture future = nettyChannel.writeAndFlush(protocol);
+        try{
+            if(requestControl.sent()){
+                boolean ret = future.await(requestControl.timeout());
+                if(!ret){
+                    future.cancel(true);
+                    throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
+                }
+            }
+        }catch(InterruptedException cause){
+            throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
+        }
     }
 
     @Override
@@ -97,10 +110,22 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
         protocol.body(data);
-        nettyChannel.writeAndFlush(protocol);
-        ResponseFuture<byte[]> future = new BytesResponseFuture(protocol.packetId());
-        Tracer.trace(protocol.packetId(), future);
-        return future;
+        ChannelFuture future = nettyChannel.writeAndFlush(protocol);
+        try{
+            if(requestControl.sent()){
+                boolean ret = future.await(requestControl.timeout());
+                if(!ret){
+                    future.cancel(true);
+                    throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
+                }
+            }
+        }catch(InterruptedException cause){
+            throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
+        }
+        
+        ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
+        Tracer.trace(protocol.packetId(), respFuture);
+        return respFuture;
     }
 
     @Override
