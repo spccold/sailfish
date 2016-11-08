@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import sailfish.remoting.ExchangeClient;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
@@ -32,17 +33,18 @@ import sailfish.remoting.future.ResponseFuture;
  * @version $Id: MultiConnsExchangeChannel.java, v 0.1 2016年10月26日 下午9:25:00 jileng Exp $
  */
 public class MultiConnsExchangeChannel implements ExchangeChannel {
-    private final SimpleExchangeChannel[] simpleChannels;
-    private final AtomicInteger           liveCount;
-    private final AtomicInteger           currentChannelIndex = new AtomicInteger(0);
+    private final SimpleExchangeChannel[] allChannels;
+    private final SimpleExchangeChannel[] deadChannels;
+    private final int                     connections;
+    private final AtomicInteger           channelIndex = new AtomicInteger(0);
 
     public MultiConnsExchangeChannel(ExchangeClientConfig clientConfig) throws SailfishException {
-        int connections = clientConfig.connections();
-        liveCount = new AtomicInteger(connections);
-        simpleChannels = new SimpleExchangeChannel[connections];
+        this.connections = clientConfig.connections();
+        this.deadChannels = new SimpleExchangeChannel[this.connections];
+        this.allChannels = new SimpleExchangeChannel[this.connections];
         try {
-            for (int i = 0; i < connections; i++) {
-                simpleChannels[i] = new SimpleExchangeChannel(clientConfig);
+            for (int i = 0; i < this.connections; i++) {
+                allChannels[i] = new SimpleExchangeChannel(clientConfig);
             }
         } catch (Throwable cause) {
             destory();
@@ -50,27 +52,23 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
         }
     }
 
-    private SimpleExchangeChannel channel() {
-        return simpleChannels[currentChannelIndex.getAndIncrement() % liveCount.get()];
-    }
-
     private void destory() {
-        for (int i = 0; i < simpleChannels.length; i++) {
-            if (null != simpleChannels[i]) {
-                simpleChannels[i].close();
+        for (int i = 0; i < allChannels.length; i++) {
+            deadChannels[i] = null;
+            if (null != allChannels[i]) {
+                allChannels[i].close();
             }
         }
-        liveCount.set(0);
     }
 
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
-        channel().oneway(data, requestControl);
+        next().oneway(data, requestControl);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
-        return channel().request(data, requestControl);
+        return next().request(data, requestControl);
     }
 
     @Override
@@ -91,6 +89,26 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
 
     @Override
     public boolean isAvailable() {
-        return liveCount.get() > 0;
+        for(int i = 0; i< this.connections ; i++){
+            if(deadChannels[i] == null){
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private SimpleExchangeChannel next() throws SailfishException{
+        int currentIndex = Math.abs(channelIndex.getAndIncrement() % this.connections);
+        for(int i=0; i< this.connections; i++){
+            SimpleExchangeChannel currentChannel = allChannels[(currentIndex++) % this.connections];
+            if(currentChannel.isAvailable()){
+                if(null != deadChannels[currentIndex]){
+                    deadChannels[currentIndex] = null;
+                }
+                return currentChannel;
+            }
+            deadChannels[currentIndex] = currentChannel;
+        }
+        throw new SailfishException(ExceptionCode.EXCHANGER_NOT_AVAILABLE, "exchanger is not available!");
     }
 }

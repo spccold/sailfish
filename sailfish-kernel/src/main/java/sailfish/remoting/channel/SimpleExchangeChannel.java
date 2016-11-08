@@ -53,33 +53,36 @@ import sailfish.remoting.utils.RemotingUtils;
  * @author spccold
  * @version $Id: SimpleExchangeChannel.java, v 0.1 2016年10月26日 下午9:08:24 jileng Exp $
  */
-public class SimpleExchangeChannel extends AbstractExchangeChannel implements ExchangeChannel{
+public class SimpleExchangeChannel extends AbstractExchangeChannel implements ExchangeChannel {
     private final ExchangeClientConfig clientConfig;
-    private volatile Channel nettyChannel;
-    private volatile boolean lazyWithOutInit;
-    private volatile boolean reconnectting;
-    public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException{
+    private volatile Channel           nettyChannel;
+    private volatile boolean           lazyWithOutInit;
+    private volatile boolean           reconnectting;
+
+    public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException {
         this.clientConfig = config;
-        if(config.isLazyConnection()){
+        if (config.isLazyConnection()) {
             this.lazyWithOutInit = true;
-        }else{
+        } else {
             this.nettyChannel = doConnect(config);
             this.lazyWithOutInit = false;
         }
         reconnectting = false;
     }
-    
-    public ExchangeClientConfig getConfig(){
+
+    public ExchangeClientConfig getConfig() {
         return this.clientConfig;
     }
-    
-    public void reset(Channel newChannel){
-        this.nettyChannel = newChannel;
-        this.reconnectting = false;
+
+    public void reset(Channel newChannel) {
+        synchronized (this) {
+            this.nettyChannel = newChannel;
+            this.reconnectting = false;
+        }
     }
-    
+
     @Override
-    public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
+    public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
         initChannel();
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
@@ -89,7 +92,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
+    public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
         initChannel();
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
@@ -101,31 +104,31 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     }
 
     @Override
-    public void close(){
+    public void close() {
         RemotingUtils.closeChannel(nettyChannel);
     }
 
     @Override
-    public void close(int timeout){
+    public void close(int timeout) {
         RemotingUtils.closeChannel(nettyChannel);
     }
-    
+
     @Override
-    public Channel doConnect(final ExchangeClientConfig config) throws SailfishException{
-        MsgHandler<Protocol> handler= new MsgHandler<Protocol>() {
+    public Channel doConnect(final ExchangeClientConfig config) throws SailfishException {
+        MsgHandler<Protocol> handler = new MsgHandler<Protocol>() {
             @Override
             public void handle(ChannelHandlerContext context, Protocol msg) {
-                if(msg.request()){
+                if (msg.request()) {
                     //TODO
-                }else{
-                    Tracer.erase((ResponseProtocol)msg);
+                } else {
+                    Tracer.erase((ResponseProtocol) msg);
                 }
             }
         };
         Bootstrap boot = configureBoostrap(config, handler);
-        try{
+        try {
             return boot.connect().syncUninterruptibly().channel();
-        }catch(Throwable cause){
+        } catch (Throwable cause) {
             throw new SailfishException(cause);
         }
     }
@@ -137,13 +140,13 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     @Override
     public boolean isAvailable() {
-        if(this.lazyWithOutInit){
-           return true; 
+        if (this.lazyWithOutInit) {
+            return true;
         }
-        boolean isAvailable = (null != nettyChannel && nettyChannel.isOpen() && nettyChannel.isActive());
-        if(!isAvailable && !reconnectting){
+        boolean isAvailable = false;
+        if (!(isAvailable = available()) && !reconnectting) {
             synchronized (this) {
-                if(!isAvailable && !reconnectting){
+                if (!(isAvailable = available()) && !reconnectting) {
                     //add reconnect task
                     ReconnectManager.INSTANCE.addReconnectTask(this);
                     this.reconnectting = true;
@@ -152,31 +155,36 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         }
         return isAvailable;
     }
+
+    private boolean available(){
+        return null != nettyChannel && nettyChannel.isOpen() && nettyChannel.isActive();
+    }
     
-    private void initChannel() throws SailfishException{
-        if(!clientConfig.isLazyConnection()){
+    private void initChannel() throws SailfishException {
+        if (!clientConfig.isLazyConnection()) {
             return;
         }
-        if(null != nettyChannel){
+        if (null != nettyChannel) {
             return;
         }
         synchronized (this) {
-            if(null != nettyChannel){
+            if (null != nettyChannel) {
                 return;
             }
             this.nettyChannel = doConnect(this.clientConfig);
             this.lazyWithOutInit = false;
         }
     }
-    
-    private Bootstrap configureBoostrap(final ExchangeClientConfig config, final MsgHandler<Protocol> handler){
+
+    private Bootstrap configureBoostrap(final ExchangeClientConfig config, final MsgHandler<Protocol> handler) {
         Bootstrap boot = newBootstrap();
         boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.Connecttimeout());
-        if(config.mode() == ChannelMode.simple && null != config.localAddress()){
+        if (config.mode() == ChannelMode.simple && null != config.localAddress()) {
             boot.localAddress(config.localAddress().host(), config.localAddress().port());
         }
         boot.remoteAddress(config.address().host(), config.address().port());
-        NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
+        NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(config.iothreads(),
+            new DefaultThreadFactory(config.iothreadName()));
         boot.group(eventLoopGroup);
 
         final EventExecutorGroup executorGroup = new DefaultEventExecutorGroup(config.codecThreads(),
