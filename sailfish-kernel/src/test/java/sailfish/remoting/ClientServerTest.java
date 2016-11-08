@@ -159,6 +159,7 @@ public class ClientServerTest {
         //sent true
         control.sent(true);
         testSendAndReceive(client, control);
+        client.close();
     }
 
     @Test
@@ -174,6 +175,7 @@ public class ClientServerTest {
         //sent true
         control.sent(true);
         testSendAndReceive(client, control);
+        client.close();
     }
 
     @Test
@@ -193,6 +195,7 @@ public class ClientServerTest {
         for (int i = 0; i < conns + 1; i++) {
             testSendAndReceive(client, control);
         }
+        client.close();
     }
 
     @Test
@@ -213,6 +216,7 @@ public class ClientServerTest {
         for (int i = 0; i < conns + 1; i++) {
             testSendAndReceive(client, control);
         }
+        client.close();
     }
 
     @Test
