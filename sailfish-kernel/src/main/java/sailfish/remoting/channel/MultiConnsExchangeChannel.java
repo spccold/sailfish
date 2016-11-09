@@ -47,16 +47,16 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
                 allChannels[i] = new SimpleExchangeChannel(clientConfig);
             }
         } catch (Throwable cause) {
-            destory();
+            close(2000);
             throw cause;
         }
     }
 
-    private void destory() {
+    private void destory(int timeout) {
         for (int i = 0; i < allChannels.length; i++) {
             deadChannels[i] = null;
             if (null != allChannels[i]) {
-                allChannels[i].close();
+                allChannels[i].close(timeout);
             }
         }
     }
@@ -70,12 +70,13 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
         return next().request(data, requestControl);
     }
-    
+
     @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback,
                         RequestControl requestControl) throws SailfishException {
         next().request(data, callback, requestControl);
     }
+
     @Override
     public void close() {
         close(0);
@@ -83,8 +84,7 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
 
     @Override
     public void close(int timeout) {
-        //FIXME
-        destory();
+        destory(timeout);
     }
 
     @Override
@@ -106,6 +106,7 @@ public class MultiConnsExchangeChannel implements ExchangeChannel {
         }
         return false;
     }
+
     //lock free
     private SimpleExchangeChannel next() throws SailfishException {
         int arrayIndex = 0;

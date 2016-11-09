@@ -38,6 +38,13 @@ public class ParameterChecker {
         return content;
     }
     
+    public static int checkNotNegative(int number, String hint){
+        if(number < 0){
+            throw new IllegalArgumentException(hint);
+        }
+        return number;
+    }
+    
     public static int checkPositive(int number, String hint){
         if(number <= 0){
             throw new IllegalArgumentException(hint);

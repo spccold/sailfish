@@ -53,7 +53,7 @@ public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
                 String log = String.format("packet from remoteAddress [%s] invalid, begin to close channel to [%s], detail: %s",
                     ctx.channel().remoteAddress().toString(), ctx.channel().remoteAddress().toString(), e.getMessage());
                 logger.error(log);
-                RemotingUtils.closeChannel(ctx.channel());
+                RemotingUtils.closeChannel(ctx.channel(), 0);
                 return null;
             }
             throw e;

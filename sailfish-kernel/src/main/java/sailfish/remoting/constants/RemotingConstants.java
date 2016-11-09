@@ -28,22 +28,26 @@ import java.nio.charset.Charset;
  */
 public interface RemotingConstants {
     //压缩阀值, KB
-    int     COMPRESS_THRESHOLD      = 4 * 1024;
+    int     COMPRESS_THRESHOLD         = 4 * 1024;
     //sailfish binary protocol magic
-    short   SAILFISH_MAGIC          = ByteBuffer.wrap("SH".getBytes()).getShort();
-    Charset DEFAULT_CHARSET         = Charset.forName("UTF-8");
+    short   SAILFISH_MAGIC             = ByteBuffer.wrap("SH".getBytes()).getShort();
+    Charset DEFAULT_CHARSET            = Charset.forName("UTF-8");
 
     //max frame size, 8MB
-    int     DEFAULT_PAYLOAD         = 8 * 1024 * 1024;
+    int     DEFAULT_PAYLOAD            = 8 * 1024 * 1024;
 
     //milliseconds
-    int     DEFAULT_CONNECT_TIMEOUT = 2000;
+    int     DEFAULT_CONNECT_TIMEOUT    = 2000;
     int     DEFAULT_RECONNECT_INTERVAL = 1000;
     //seconds
-    int     DEFAULT_IDLE_TIMEOUT = 10;
-    int     DEFAULT_MAX_IDLE_TIMEOUT = 3 * DEFAULT_IDLE_TIMEOUT;
-    
+    int     DEFAULT_IDLE_TIMEOUT       = 10;
+    int     DEFAULT_MAX_IDLE_TIMEOUT   = 3 * DEFAULT_IDLE_TIMEOUT;
+
     //result
-    byte    RESULT_SUCCESS          = 0;
-    byte    RESULT_FAIL             = 1;
+    byte    RESULT_SUCCESS             = 0;
+    byte    RESULT_FAIL                = 1;
+    
+    //channel type for read write splitting
+    byte    WRITE_CHANNEL              = 0;
+    byte    READ_CHANNEL               = 1;
 }

@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.constants;
 
+import java.util.UUID;
+
 import io.netty.util.AttributeKey;
 
 /**
@@ -24,7 +26,13 @@ import io.netty.util.AttributeKey;
  * @version $Id: ChannelAttrKeys.java, v 0.1 2016年11月6日 上午11:22:41 spccold Exp $
  */
 public interface ChannelAttrKeys {
+    //for idle handle and heart beat
 	AttributeKey<Integer> idleTimeout = AttributeKey.valueOf("idleTimeout");
 	AttributeKey<Integer> maxIdleTimeout = AttributeKey.valueOf("maxIdleTimeout");
 	AttributeKey<Long> lastReadTimeMillis = AttributeKey.valueOf("lastReadTimeMillis");
+	
+	//for read write splitting
+	AttributeKey<Boolean> writeChannel = AttributeKey.valueOf("readwrite.writeChannel");
+	AttributeKey<UUID> uuid = AttributeKey.valueOf("readwrite.uuid");
+	AttributeKey<Integer> channelIndex = AttributeKey.valueOf("readwrite.channelIndex");
 }

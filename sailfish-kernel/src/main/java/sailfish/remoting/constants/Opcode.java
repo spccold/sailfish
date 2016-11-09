@@ -24,5 +24,4 @@ package sailfish.remoting.constants;
  */
 public interface Opcode {
     short HEARTBEAT_WITH_NEGOTIATE = 1;
-    short HEARTBEAT = 2;
 }

@@ -17,8 +17,11 @@
  */
 package sailfish.remoting.configuration;
 
+import java.util.UUID;
+
 import sailfish.remoting.Address;
 import sailfish.remoting.channel.ChannelMode;
+import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 import sailfish.remoting.utils.StrUtils;
@@ -28,47 +31,67 @@ import sailfish.remoting.utils.StrUtils;
  * @author spccold
  * @version $Id: ExchangeClientConfig.java, v 0.1 2016年10月26日 下午10:55:22 jileng Exp $
  */
-public class ExchangeClientConfig extends AbstractExchangeConfig{
+public class ExchangeClientConfig extends AbstractExchangeConfig {
     private Address localAddress;
     //ms
-    private int connectTimeout = RemotingConstants.DEFAULT_CONNECT_TIMEOUT;
-    private int reconnectInterval =  RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
-    
-    private int connections = 1;
+    private int     connectTimeout           = RemotingConstants.DEFAULT_CONNECT_TIMEOUT;
+    private int     reconnectInterval        = RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
+
+    private int     connections              = 1;
     //enable channels Read/Write Splitting or not when connections greater than one
     private boolean enableReadWriteSplitting = false;
-    //write channels ratio when enableReadWriteSplitting is true 
-    private int writeRatio = 50;
-    private int writeConnections;
-    private boolean lazyConnection = false;
+    /**
+     * write channels ratio when enableReadWriteSplitting is true, take writeConnections first
+     * if you don't specify writeConnections, writeRatio will be used
+     */
+    private int     writeRatio               = 50;
+    private int     writeConnections;
+    private boolean lazyConnection           = false;
+    /**
+     * inner use, user should't set this field
+     * identify current connection is write connection when enableReadWriteSplitting is true
+     */
+    private boolean writeConnection          = false;
+    /**
+     * inner use, user should't set this field
+     * identify current {@link ReadWriteSplittingExchangeChannel} when enableReadWriteSplitting is true
+     */
+    private UUID  uuid;
+    //inner use, user should't set this field
+    private int channelIndex;
     
-    public ChannelMode mode(){
-        if(connections == 1){
+    public ChannelMode mode() {
+        if (connections == 1) {
             return ChannelMode.simple;
         }
-        if(enableReadWriteSplitting){
+        if (enableReadWriteSplitting) {
             return ChannelMode.readwrite;
         }
         return ChannelMode.multiconns;
     }
-    
+
     @Override
-    public void check(){
+    public void check() {
         super.check();
-        if(this.enableReadWriteSplitting){
-            if(this.connections <= 1){
+        if (this.enableReadWriteSplitting) {
+            if (this.connections <= 1) {
                 throw new IllegalArgumentException("connections must greater than one when enableReadWriteSplitting");
             }
-            this.writeConnections = connections * (writeRatio / 100);
-            if(this.writeConnections == 0 || this.writeConnections == this.connections){
-                throw new IllegalArgumentException("you should specify an appropriate writeRatio");
+            if (this.writeConnections == 0) {
+                this.writeConnections = connections * (writeRatio / 100);
             }
+            if (this.writeConnections == 0 || this.writeConnections == this.connections) {
+                throw new IllegalArgumentException("writeConnections:" + this.writeConnections
+                                                   + ", you should specify an appropriate writeConnections or writeRatio");
+            }
+            //ParameterChecker.checkNotNull(uuid, "uuid");
+            //ParameterChecker.checkNotNegative(channelIndex, "channelIndex");
         }
-        if(StrUtils.isBlank(ioThreadName)){
+        if (StrUtils.isBlank(ioThreadName)) {
             this.ioThreadName = "sailfish-client-io";
         }
-        if(StrUtils.isBlank(codecThreadName)){
-            this.codecThreadName= "sailfish-client-codec";
+        if (StrUtils.isBlank(codecThreadName)) {
+            this.codecThreadName = "sailfish-client-codec";
         }
     }
 
@@ -79,7 +102,15 @@ public class ExchangeClientConfig extends AbstractExchangeConfig{
     public void connections(int connections) {
         this.connections = ParameterChecker.checkPositive(connections, "connections");
     }
-    
+
+    public int writeConnections() {
+        return writeConnections;
+    }
+
+    public void writeConnections(int writeConnections) {
+        this.writeConnections = ParameterChecker.checkPositive(writeConnections, "writeConnections");
+    }
+
     public int reconnectInterval() {
         return reconnectInterval;
     }
@@ -123,11 +154,63 @@ public class ExchangeClientConfig extends AbstractExchangeConfig{
         this.lazyConnection = lazyConnection;
     }
 
+    public boolean isWriteConnection() {
+        return writeConnection;
+    }
+
+    public void setWriteConnection(boolean writeConnection) {
+        this.writeConnection = writeConnection;
+    }
+
     public Address localAddress() {
         return localAddress;
     }
 
     public void localAddress(Address localAddress) {
         this.localAddress = ParameterChecker.checkNotNull(localAddress, "localAddress");
+    }
+
+    public UUID uuid() {
+        return uuid;
+    }
+
+    public void uuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
+    public int channelIndex() {
+        return channelIndex;
+    }
+
+    public void channelIndex(int channelIndex) {
+        this.channelIndex = channelIndex;
+    }
+    
+    public ExchangeClientConfig deepCopy(){
+        ExchangeClientConfig copy = new ExchangeClientConfig();
+        //from parent
+        copy.address(this.address());
+        copy.idleTimeout(this.idleTimeout());
+        copy.maxIdleTimeout(this.maxIdleTimeout());
+        copy.iothreads(this.iothreads());
+        copy.iothreadName(this.iothreadName());
+        copy.codecThreads(this.codecThreads());
+        copy.codecThreadName(this.codecThreadName());
+        //from self
+        if(null != this.localAddress()){
+            copy.localAddress(this.localAddress());
+        }
+        copy.connectTimeout(this.connectTimeout());
+        copy.connections(this.connections());
+        copy.enableReadWriteSplitting(this.enableReadWriteSplitting());
+        copy.writeRatio(this.writeRatio());
+        if(this.enableReadWriteSplitting){
+            copy.writeConnections(this.writeConnections());
+        }
+        copy.setLazyConnection(this.isLazyConnection());
+        copy.setWriteConnection(this.isWriteConnection());
+        copy.uuid(this.uuid());
+        copy.channelIndex(this.channelIndex());
+        return copy;
     }
 }

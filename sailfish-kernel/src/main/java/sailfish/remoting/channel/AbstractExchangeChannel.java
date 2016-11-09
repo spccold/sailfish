@@ -51,6 +51,5 @@ public abstract class AbstractExchangeChannel {
         protocol.serializeType(requestControl.serializeType());
         return protocol;
     }
-    
     protected abstract Channel doConnect(ExchangeClientConfig config) throws SailfishException;
 }

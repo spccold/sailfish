@@ -46,7 +46,7 @@ public class Exchanger {
                 channel = new MultiConnsExchangeChannel(config);
                 break;
             case readwrite:
-                channel = new ReadWriteSplittingExchangeChannel();
+                channel = new ReadWriteSplittingExchangeChannel(config);
                 break;
             default:
                 throw new SailfishException(new IllegalArgumentException("invalid channel mode"));

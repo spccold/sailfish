@@ -66,11 +66,12 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     private volatile boolean           reconnectting;
 
     public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException {
-        this.clientConfig = config;
-        if (config.isLazyConnection()) {
+        this.clientConfig = config.deepCopy();
+        if ((!ChannelMode.readwrite.equals(clientConfig.mode()) && clientConfig.isLazyConnection())
+                || (ChannelMode.readwrite.equals(clientConfig.mode()) && clientConfig.isWriteConnection() && clientConfig.isLazyConnection())) {
             this.lazyWithOutInit = true;
         } else {
-            this.nettyChannel = doConnect(config);
+            this.nettyChannel = doConnect(clientConfig);
             this.lazyWithOutInit = false;
         }
         reconnectting = false;
@@ -160,12 +161,12 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     
     @Override
     public void close() {
-        RemotingUtils.closeChannel(nettyChannel);
+        RemotingUtils.closeChannel(nettyChannel, 0);
     }
 
     @Override
     public void close(int timeout) {
-        RemotingUtils.closeChannel(nettyChannel);
+        RemotingUtils.closeChannel(nettyChannel, timeout);
     }
 
     @Override
@@ -250,11 +251,17 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
                 ChannelPipeline pipeline = ch.pipeline();
                 ch.attr(ChannelAttrKeys.idleTimeout).set(config.idleTimeout());
                 ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
+                if(ChannelMode.readwrite.equals(config.mode())){
+                    ch.attr(ChannelAttrKeys.writeChannel).set(config.isWriteConnection());
+                    ch.attr(ChannelAttrKeys.channelIndex).set(config.channelIndex());
+                    ch.attr(ChannelAttrKeys.uuid).set(config.uuid());
+                }
+                //TODO should increase ioRatio when every ChannelHandler bind to executorGroup?
                 pipeline.addLast(executorGroup, new RemotingEncoder());
                 pipeline.addLast(executorGroup, new RemotingDecoder());
                 pipeline.addLast(executorGroup, new IdleStateHandler(config.idleTimeout(), 0, 0));
                 pipeline.addLast(executorGroup, new ChannelEventsHandler(true));
-                pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler));
+                pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler, true));
             }
         });
         return boot;

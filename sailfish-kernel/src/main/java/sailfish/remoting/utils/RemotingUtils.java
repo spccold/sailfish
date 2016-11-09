@@ -23,6 +23,8 @@ import org.slf4j.LoggerFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
+import sailfish.remoting.exceptions.ExceptionCode;
+import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -32,18 +34,25 @@ import io.netty.channel.ChannelFutureListener;
 public class RemotingUtils {
     private static final Logger logger = LoggerFactory.getLogger(RemotingUtils.class);
 
-    public static void closeChannel(final Channel channel) {
+    public static void closeChannel(final Channel channel, int timeout) {
         if (null == channel) {
             return;
         }
-        channel.close().addListener(new ChannelFutureListener() {
+        ChannelFuture closeFuture = channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 String log = String.format(
                     "closeChannel: close connection to remoteAddress [%s] , localAddress [%s], ret:[%b]",
-                    channel.remoteAddress().toString(), channel.localAddress().toString(), future.isSuccess());
+                    null != channel.remoteAddress() ? channel.remoteAddress().toString() : "null",
+                    null != channel.localAddress() ? channel.localAddress().toString() : "null", future.isSuccess());
                 logger.info(log);
             }
         });
+        if (timeout > 0) {
+            boolean ret = closeFuture.awaitUninterruptibly(timeout);
+            if (ret)
+                return;
+            throw new RuntimeException(new SailfishException(ExceptionCode.TIMEOUT, "wait channel to close timeout!"));
+        }
     }
 }

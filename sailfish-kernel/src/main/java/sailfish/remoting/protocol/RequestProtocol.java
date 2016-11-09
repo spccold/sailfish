@@ -17,6 +17,11 @@
  */
 package sailfish.remoting.protocol;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.UUID;
+
 import io.netty.buffer.ByteBuf;
 import sailfish.remoting.constants.LangType;
 import sailfish.remoting.constants.Opcode;
@@ -211,11 +216,24 @@ public class RequestProtocol implements Protocol {
         RequestProtocol heartbeat = new RequestProtocol();
         heartbeat.packetId(PacketIdGenerator.nextId());
         heartbeat.heartbeat(true);
-        heartbeat.opcode(Opcode.HEARTBEAT);
         return heartbeat;
     }
     
-    public static RequestProtocol newNegotiateHeartbeat(byte idleTimeout, byte maxIdleTimeout){
-        return newHeartbeat().opcode(Opcode.HEARTBEAT_WITH_NEGOTIATE).body(new byte[]{idleTimeout, maxIdleTimeout});
+    public static RequestProtocol newNegotiateHeartbeat(byte idleTimeout, byte maxIdleTimeout, UUID uuid, boolean writeChannel, int channelIndex){
+        try(ByteArrayOutputStream baos = new ByteArrayOutputStream(2+16+1+4);
+            DataOutputStream dos = new DataOutputStream(baos);){
+            dos.writeByte(idleTimeout);
+            dos.writeByte(maxIdleTimeout);
+            if(null != uuid){
+                dos.writeBoolean(writeChannel);
+                dos.writeInt(channelIndex);
+                dos.writeLong(uuid.getMostSignificantBits());
+                dos.writeLong(uuid.getLeastSignificantBits());
+            }
+            return newHeartbeat().opcode(Opcode.HEARTBEAT_WITH_NEGOTIATE).body(baos.toByteArray());
+        } catch (IOException e) {
+            //TODO
+        }
+        return null;
     }
 }

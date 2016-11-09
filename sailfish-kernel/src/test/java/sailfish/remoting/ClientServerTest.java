@@ -220,6 +220,53 @@ public class ClientServerTest {
     }
 
     @Test
+    public void testReadWriteSplittingChannel() throws Exception {
+        int writeConns = 2;
+        int readConns = 2;
+        ExchangeClientConfig config = newBaseConfig(originPort);
+        config.enableReadWriteSplitting(true);
+        config.connections(writeConns + readConns);
+        config.writeConnections(writeConns);
+        ExchangeChannel client = new DefaultExchangeClient(config);
+        RequestControl control = new RequestControl();
+        control.timeout(2000);
+        //sent false
+        for (int i = 0; i < writeConns + readConns + 1; i++) {
+            testSendAndReceive(client, control);
+        }
+        //sent true
+        control.sent(true);
+        for (int i = 0; i < writeConns + readConns + 1; i++) {
+            testSendAndReceive(client, control);
+        }
+        client.close();
+    }
+
+    @Test
+    public void testReadWriteSplittingWithLazyChannel() throws Exception {
+        int writeConns = 2;
+        int readConns = 2;
+        ExchangeClientConfig config = newBaseConfig(originPort);
+        config.enableReadWriteSplitting(true);
+        config.setLazyConnection(true);
+        config.connections(writeConns + readConns);
+        config.writeConnections(writeConns);
+        ExchangeChannel client = new DefaultExchangeClient(config);
+        RequestControl control = new RequestControl();
+        control.timeout(2000);
+        //sent false
+        for (int i = 0; i < writeConns + readConns + 1; i++) {
+            testSendAndReceive(client, control);
+        }
+        //sent true
+        control.sent(true);
+        for (int i = 0; i < writeConns + readConns + 1; i++) {
+            testSendAndReceive(client, control);
+        }
+        client.close();
+    }
+
+    @Test
     public void testTimeout() throws Exception {
         int port = originPort + 1;
         ExchangeServerConfig serverConfig = new ExchangeServerConfig();
