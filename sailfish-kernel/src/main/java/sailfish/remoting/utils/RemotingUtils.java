@@ -23,8 +23,6 @@ import org.slf4j.LoggerFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import sailfish.remoting.exceptions.ExceptionCode;
-import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -34,11 +32,11 @@ import sailfish.remoting.exceptions.SailfishException;
 public class RemotingUtils {
     private static final Logger logger = LoggerFactory.getLogger(RemotingUtils.class);
 
-    public static void closeChannel(final Channel channel, int timeout) {
+    public static void closeChannel(final Channel channel) {
         if (null == channel) {
             return;
         }
-        ChannelFuture closeFuture = channel.close().addListener(new ChannelFutureListener() {
+        channel.close().addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
                 String log = String.format(
@@ -48,11 +46,5 @@ public class RemotingUtils {
                 logger.info(log);
             }
         });
-        if (timeout > 0) {
-            boolean ret = closeFuture.awaitUninterruptibly(timeout);
-            if (ret)
-                return;
-            throw new RuntimeException(new SailfishException(ExceptionCode.TIMEOUT, "wait channel to close timeout!"));
-        }
     }
 }

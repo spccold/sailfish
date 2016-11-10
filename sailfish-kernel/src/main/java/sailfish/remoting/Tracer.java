@@ -17,14 +17,18 @@
  */
 package sailfish.remoting;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sailfish.remoting.channel.SimpleExchangeChannel;
 import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.protocol.ResponseProtocol;
+import sailfish.remoting.utils.CollectionUtils;
+import sailfish.remoting.utils.ParameterChecker;
 
 /**
  * tcp communication tracer
@@ -34,22 +38,55 @@ import sailfish.remoting.protocol.ResponseProtocol;
  */
 public class Tracer {
     private static final Logger logger = LoggerFactory.getLogger(Tracer.class);
+    private static final Object EMPTY_VALUE = new Object();
+    private static final ConcurrentMap<Integer , TraceContext> TRACES = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<SimpleExchangeChannel, ConcurrentMap<Integer, Object>> 
+                                            SINGLE_CHANNEL_TRACES = new ConcurrentHashMap<>();
     
-    private static final ConcurrentMap<Integer /** packageId */, ResponseFuture<byte[]>> TRACES = new ConcurrentHashMap<>();
+    public static Map<Integer, Object> popPendingRequests(SimpleExchangeChannel channel){
+        return SINGLE_CHANNEL_TRACES.remove(channel);
+    }
+
+    public static Map<Integer, Object> peekPendingRequests(SimpleExchangeChannel channel){
+        return SINGLE_CHANNEL_TRACES.get(channel);
+    }
     
-    public static void trace(int packageId, ResponseFuture<byte[]> future){
-        TRACES.putIfAbsent(packageId, future);
+    public static void trace(SimpleExchangeChannel channel ,int packageId, ResponseFuture<byte[]> future){
+        TRACES.putIfAbsent(packageId, new TraceContext(channel, future));
+        
+        ConcurrentMap<Integer, Object> packetIds = SINGLE_CHANNEL_TRACES.get(channel);
+        if(null == packetIds){
+            ConcurrentMap<Integer, Object> old = SINGLE_CHANNEL_TRACES.putIfAbsent(channel,
+                packetIds = new ConcurrentHashMap<>());
+            if(null != old){
+                packetIds = old;
+            }
+        }
+        packetIds.put(packageId, EMPTY_VALUE);
     }
     
     public static void erase(ResponseProtocol protocol){
         if(protocol.heartbeat()){
             return;
         }
-        ResponseFuture<byte[]> future = TRACES.get(protocol.packetId());
-        if(null == future){
+        TraceContext traceContext = TRACES.remove(protocol.packetId());
+        if(null == traceContext){
             logger.info("trace no exist for packageId[{}]", protocol.packetId());
             return;
         }
-        future.putResponse(protocol.body(), protocol.result());
+        traceContext.respFuture.putResponse(protocol.body(), protocol.result());
+        ConcurrentMap<Integer, Object> packetIds = SINGLE_CHANNEL_TRACES.get(traceContext.channel);
+        if(CollectionUtils.isNotEmpty(packetIds)){
+            packetIds.remove(protocol.packetId());
+        }
+    }
+    
+    static class TraceContext{
+        SimpleExchangeChannel channel;
+        ResponseFuture<byte[]> respFuture;
+        public TraceContext(SimpleExchangeChannel channel, ResponseFuture<byte[]> respFuture) {
+            this.channel = ParameterChecker.checkNotNull(channel, "channel");
+            this.respFuture = ParameterChecker.checkNotNull(respFuture, "respFuture");
+        }
     }
 }

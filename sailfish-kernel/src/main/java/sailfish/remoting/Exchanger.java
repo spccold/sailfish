@@ -49,7 +49,7 @@ public class Exchanger {
                 channel = new ReadWriteSplittingExchangeChannel(config);
                 break;
             default:
-                throw new SailfishException(new IllegalArgumentException("invalid channel mode"));
+                throw new IllegalArgumentException("invalid channel mode");
         }
         return channel;
     }

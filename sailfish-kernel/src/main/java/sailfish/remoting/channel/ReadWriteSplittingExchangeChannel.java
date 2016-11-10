@@ -42,7 +42,9 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
     private final SimpleExchangeChannel[] deadWriteChannels;
     private final SimpleExchangeChannel[] deadReadChannels;
     private final AtomicInteger           writeChannelIndex = new AtomicInteger(0);
-    private final AtomicInteger           readChannelIndex = new AtomicInteger(0);
+    private final AtomicInteger           readChannelIndex  = new AtomicInteger(0);
+    private volatile boolean              closed            = false;
+
     public ReadWriteSplittingExchangeChannel(ExchangeClientConfig config) throws SailfishException {
         config.uuid(UUID.randomUUID());
         this.writeConns = config.writeConnections();
@@ -70,34 +72,23 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
         }
     }
 
-    private void destory(int timeout) {
-        for (int i = 0; i < this.writeConns; i++) {
-            this.deadWriteChannels[i] = null;
-            if (null != this.writeChannels[i]) {
-                this.writeChannels[i].close(timeout);
-            }
-        }
-        for (int i = 0; i < this.readConns; i++) {
-            this.deadReadChannels[i] = null;
-            if (null != this.readChannels[i]) {
-                this.readChannels[i].close(timeout);
-            }
-        }
-    }
 
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
+        channelStatusCheck();
         next().oneway(data, requestControl);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
+        channelStatusCheck();
         return next().request(data, requestControl);
     }
 
     @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback,
                         RequestControl requestControl) throws SailfishException {
+        channelStatusCheck();
         next().request(data, callback, requestControl);
     }
 
@@ -108,16 +99,48 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
 
     @Override
     public void close(int timeout) {
-        destory(timeout);
+        if(this.isClosed()){
+            return;
+        }
+        synchronized (this) {
+            if(this.isClosed()){
+                return;
+            }
+            this.closed = true;
+
+            for (int i = 0; i < this.writeConns; i++) {
+                this.deadWriteChannels[i] = null;
+                if (null != this.writeChannels[i]) {
+                    this.writeChannels[i].close(timeout);
+                }
+            }
+            for (int i = 0; i < this.readConns; i++) {
+                this.deadReadChannels[i] = null;
+                if (null != this.readChannels[i]) {
+                    this.readChannels[i].close(timeout);
+                }
+            }
+        }
     }
 
     @Override
     public boolean isClosed() {
-        return false;
+        return this.closed;
     }
 
+    private void channelStatusCheck() throws SailfishException {
+        if (isClosed()) {
+            throw new SailfishException(ExceptionCode.INVOKE_ON_CLOSED_CHANNEL,
+                "current channel closed already, can't invoke anymore");
+        }
+    }
+    
     @Override
     public boolean isAvailable() {
+        if(this.isClosed()){
+            return false;
+        }
+        
         //can hit most of the time
         if (deadWriteChannels[0] == null || deadWriteChannels[0].isAvailable()) {
             return true;
@@ -142,7 +165,8 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
         //select write channel first 
         int currentIndex = writeChannelIndex.getAndIncrement();
         for (int i = 0; i < this.writeConns; i++) {
-            SimpleExchangeChannel currentChannel = writeChannels[arrayIndex = ((currentIndex++) % this.writeConns)];
+            SimpleExchangeChannel currentChannel = writeChannels[arrayIndex = Math
+                .abs((currentIndex++) % this.writeConns)];
             if (currentChannel.isAvailable()) {
                 if (null != deadWriteChannels[arrayIndex]) {
                     deadWriteChannels[arrayIndex] = null;
@@ -151,12 +175,13 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
             }
             deadWriteChannels[arrayIndex] = currentChannel;
         }
-        
+
         //if all write channel unavailable, try to select read channel
         arrayIndex = 0;
         currentIndex = readChannelIndex.getAndIncrement();
         for (int i = 0; i < this.readConns; i++) {
-            SimpleExchangeChannel currentChannel = readChannels[arrayIndex = ((currentIndex++) % this.readConns)];
+            SimpleExchangeChannel currentChannel = readChannels[arrayIndex = Math
+                .abs((currentIndex++) % this.readConns)];
             if (currentChannel.isAvailable()) {
                 if (null != deadReadChannels[arrayIndex]) {
                     deadReadChannels[arrayIndex] = null;

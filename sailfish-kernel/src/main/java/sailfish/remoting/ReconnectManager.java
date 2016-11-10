@@ -26,7 +26,6 @@ import org.slf4j.LoggerFactory;
 
 import sailfish.remoting.channel.SimpleExchangeChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
-import sailfish.remoting.exceptions.SailfishException;
 
 /**
  * 
@@ -64,14 +63,16 @@ public class ReconnectManager {
 
         @Override
         public void run() {
+            if(reconnectedChannel.isClosed()){
+                return;
+            }
             try{
                 reconnectedChannel.reset(reconnectedChannel.doConnect(this.clientConfig));
             }catch(Throwable cause){
                 String msg = "reconnect to remoteAddress[%s] fail";
                 logger.error(String.format(msg, clientConfig.address().toString()), cause);
-                if(cause instanceof SailfishException){
-                    reconnectExecutor.schedule(this, this.clientConfig.reconnectInterval(), TimeUnit.MILLISECONDS);
-                }
+                //reconnect next time
+                ReconnectManager.this.reconnectExecutor.schedule(this, this.clientConfig.reconnectInterval(), TimeUnit.MILLISECONDS);
             }
         }
     }

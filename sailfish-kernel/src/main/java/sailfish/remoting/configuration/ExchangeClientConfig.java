@@ -189,28 +189,28 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
     public ExchangeClientConfig deepCopy(){
         ExchangeClientConfig copy = new ExchangeClientConfig();
         //from parent
-        copy.address(this.address());
-        copy.idleTimeout(this.idleTimeout());
-        copy.maxIdleTimeout(this.maxIdleTimeout());
-        copy.iothreads(this.iothreads());
-        copy.iothreadName(this.iothreadName());
-        copy.codecThreads(this.codecThreads());
-        copy.codecThreadName(this.codecThreadName());
+        copy.address(this.address);
+        copy.idleTimeout(this.idleTimeout);
+        copy.maxIdleTimeout(this.maxIdleTimeout);
+        copy.iothreads(this.ioThreads);
+        copy.iothreadName(this.ioThreadName);
+        copy.codecThreads(this.codecThreads);
+        copy.codecThreadName(this.codecThreadName);
         //from self
-        if(null != this.localAddress()){
-            copy.localAddress(this.localAddress());
+        copy.connectTimeout(this.connectTimeout);
+        copy.connections(this.connections);
+        copy.setLazyConnection(this.lazyConnection);
+        if(null != this.localAddress){
+            copy.localAddress(this.localAddress);
         }
-        copy.connectTimeout(this.connectTimeout());
-        copy.connections(this.connections());
-        copy.enableReadWriteSplitting(this.enableReadWriteSplitting());
-        copy.writeRatio(this.writeRatio());
         if(this.enableReadWriteSplitting){
-            copy.writeConnections(this.writeConnections());
+            copy.enableReadWriteSplitting(this.enableReadWriteSplitting);
+            copy.writeConnections(this.writeConnections);
+            copy.setWriteConnection(this.writeConnection);
+            copy.writeRatio(this.writeRatio);
+            copy.channelIndex(this.channelIndex);
+            copy.uuid(this.uuid);
         }
-        copy.setLazyConnection(this.isLazyConnection());
-        copy.setWriteConnection(this.isWriteConnection());
-        copy.uuid(this.uuid());
-        copy.channelIndex(this.channelIndex());
         return copy;
     }
 }

@@ -15,19 +15,30 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.exceptions;
+package sailfish.remoting.utils;
+
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * 
  * @author spccold
- * @version $Id: ExceptionCode.java, v 0.1 2016年10月27日 下午4:25:28 jileng Exp $
+ * @version $Id: CollectionUtils.java, v 0.1 2016年11月10日 下午5:33:30 jileng Exp $
  */
-public enum ExceptionCode {
-    BAD_PACKAGE,
-    TIMEOUT,
-    EXCHANGER_NOT_AVAILABLE,
-    INVOKE_ON_CLOSED_CHANNEL,
-    INTERRUPTED,
-    DEFAULT,
-    ;
+public class CollectionUtils {
+    public static boolean isEmpty(Collection<?> coll) {
+        return (null == coll || coll.isEmpty());
+    }
+
+    public static boolean isNotEmpty(Collection<?> coll) {
+        return !isEmpty(coll);
+    }
+   
+    public static boolean isEmpty(Map<?, ?> map) {
+        return (map == null || map.isEmpty());
+    }
+
+    public static boolean isNotEmpty(Map<?, ?> map) {
+        return !isEmpty(map);
+    }
 }

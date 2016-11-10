@@ -89,7 +89,13 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
 
     @Override
     public void putResponse(byte[] data, byte result) {
+        if(this.done){
+            return;
+        }
         synchronized (this) {
+            if(this.done){
+                return;
+            }
             this.done = true;
             this.data = data;
             switch(result){
@@ -127,6 +133,9 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
         @Override
         public void run() {
             if(!BytesResponseFuture.this.done){
+                synchronized (BytesResponseFuture.this) {
+                    BytesResponseFuture.this.done = true;
+                }
                 String msg = String.format("wait response for packageId[%d] timeout", BytesResponseFuture.this.packageId);
                 BytesResponseFuture.this.callback.handleException(new SailfishException(ExceptionCode.TIMEOUT, msg));
                 return;

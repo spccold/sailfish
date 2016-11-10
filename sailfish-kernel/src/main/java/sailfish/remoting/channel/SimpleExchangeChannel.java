@@ -17,6 +17,9 @@
  */
 package sailfish.remoting.channel;
 
+import java.util.Map;
+import java.util.concurrent.locks.LockSupport;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -50,6 +53,8 @@ import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
+import sailfish.remoting.utils.CollectionUtils;
+import sailfish.remoting.utils.ParameterChecker;
 import sailfish.remoting.utils.RemotingUtils;
 import sailfish.remoting.utils.StrUtils;
 
@@ -64,17 +69,19 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     private volatile Channel           nettyChannel;
     private volatile boolean           lazyWithOutInit;
     private volatile boolean           reconnectting;
+    private volatile boolean           closed = false;
 
     public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException {
         this.clientConfig = config.deepCopy();
+        this.reconnectting = false;
         if ((!ChannelMode.readwrite.equals(clientConfig.mode()) && clientConfig.isLazyConnection())
-                || (ChannelMode.readwrite.equals(clientConfig.mode()) && clientConfig.isWriteConnection() && clientConfig.isLazyConnection())) {
+            || (ChannelMode.readwrite.equals(clientConfig.mode()) && clientConfig.isWriteConnection()
+                && clientConfig.isLazyConnection())) {
             this.lazyWithOutInit = true;
         } else {
             this.nettyChannel = doConnect(clientConfig);
             this.lazyWithOutInit = false;
         }
-        reconnectting = false;
     }
 
     public ExchangeClientConfig getConfig() {
@@ -83,28 +90,33 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     public void reset(Channel newChannel) {
         synchronized (this) {
-            this.nettyChannel = newChannel;
             this.reconnectting = false;
+            if(this.isClosed()){
+                RemotingUtils.closeChannel(newChannel);
+                return;
+            }
+            this.nettyChannel = newChannel;
         }
     }
 
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
+        channelStatusCheck();
         initChannel();
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
         protocol.body(data);
         //TODO write or writeAndFlush?
         ChannelFuture future = nettyChannel.writeAndFlush(protocol);
-        try{
-            if(requestControl.sent()){
+        try {
+            if (requestControl.sent()) {
                 boolean ret = future.await(requestControl.timeout());
-                if(!ret){
+                if (!ret) {
                     future.cancel(true);
                     throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
                 }
             }
-        }catch(InterruptedException cause){
+        } catch (InterruptedException cause) {
             throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
         }
     }
@@ -119,9 +131,10 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
                         RequestControl requestControl) throws SailfishException {
         requestWithFuture(data, callback, requestControl);
     }
-    
+
     public ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
-                                          RequestControl requestControl) throws SailfishException {
+                                                    RequestControl requestControl) throws SailfishException {
+        channelStatusCheck();
         initChannel();
         final RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
@@ -130,43 +143,68 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
         respFuture.setCallback(callback, requestControl.timeout());
         //trace before write
-        Tracer.trace(protocol.packetId(), respFuture);
+        Tracer.trace(this, protocol.packetId(), respFuture);
         ChannelFuture future = nettyChannel.writeAndFlush(protocol).addListener(new ChannelFutureListener() {
             @Override
             public void operationComplete(ChannelFuture future) throws Exception {
-                if(!future.isSuccess()){
+                if (!future.isSuccess()) {
                     String errorMsg = "write fail!";
-                    if(null != future.cause()){
+                    if (null != future.cause()) {
                         errorMsg = StrUtils.exception2String(future.cause());
                     }
                     //FIXME maybe need more concrete error, like WriteOverFlowException or some other special exceptions
-                    Tracer.erase(ResponseProtocol.newErrorResponse(protocol.packetId(), 
-                        errorMsg, RemotingConstants.RESULT_FAIL));
+                    Tracer.erase(ResponseProtocol.newErrorResponse(protocol.packetId(), errorMsg,
+                        RemotingConstants.RESULT_FAIL));
                 }
             }
         });
-        try{
-            if(requestControl.sent()){
+        try {
+            if (requestControl.sent()) {
                 boolean ret = future.await(requestControl.timeout());
-                if(!ret){
+                if (!ret) {
                     future.cancel(true);
                     throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
                 }
             }
-        }catch(InterruptedException cause){
+        } catch (InterruptedException cause) {
             throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
         }
         return respFuture;
     }
-    
+
     @Override
     public void close() {
-        RemotingUtils.closeChannel(nettyChannel, 0);
+        close(0);
     }
 
     @Override
     public void close(int timeout) {
-        RemotingUtils.closeChannel(nettyChannel, timeout);
+        ParameterChecker.checkNotNegative(timeout, "timeout");
+        if(this.isClosed()){
+            return;
+        }
+        synchronized (this) {
+            if(this.isClosed()){
+                return;
+            }
+            this.closed = true;
+            //deal unfinished requests, response with channel closed exception
+            long start = System.currentTimeMillis();
+            while (CollectionUtils.isNotEmpty(Tracer.peekPendingRequests(this))
+                   && (System.currentTimeMillis() - start < timeout)) {
+                LockSupport.parkNanos(1000 * 1000 * 10L);
+            }
+            Map<Integer, Object> pendingRequests = Tracer.popPendingRequests(this);
+            if (CollectionUtils.isEmpty(pendingRequests)) {
+                return;
+            }
+            for (Integer packetId : pendingRequests.keySet()) {
+                Tracer.erase(ResponseProtocol.newErrorResponse(packetId,
+                    "unfinished request because of channel:" + nettyChannel.toString() + " be closed",
+                    RemotingConstants.RESULT_FAIL));
+            }
+            RemotingUtils.closeChannel(nettyChannel);
+        }
     }
 
     @Override
@@ -191,18 +229,21 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     @Override
     public boolean isClosed() {
-        return false;
+        return this.closed;
     }
 
     @Override
     public boolean isAvailable() {
+        if (isClosed()) {
+            return false;
+        }
         if (this.lazyWithOutInit) {
             return true;
         }
         boolean isAvailable = false;
-        if (!(isAvailable = available()) && !reconnectting) {
+        if (!isClosed() && !(isAvailable = available()) && !reconnectting) {
             synchronized (this) {
-                if (!(isAvailable = available()) && !reconnectting) {
+                if (!isClosed() && !(isAvailable = available()) && !reconnectting) {
                     //add reconnect task
                     ReconnectManager.INSTANCE.addReconnectTask(this);
                     this.reconnectting = true;
@@ -212,10 +253,17 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         return isAvailable;
     }
 
-    private boolean available(){
-        return null != nettyChannel && nettyChannel.isOpen() && nettyChannel.isActive();
+    private boolean available() {
+        return null != this.nettyChannel && this.nettyChannel.isOpen() && this.nettyChannel.isActive();
     }
-    
+
+    private void channelStatusCheck() throws SailfishException {
+        if (isClosed()) {
+            throw new SailfishException(ExceptionCode.INVOKE_ON_CLOSED_CHANNEL,
+                "current channel closed already, can't invoke anymore");
+        }
+    }
+
     private void initChannel() throws SailfishException {
         if (!clientConfig.isLazyConnection()) {
             return;
@@ -251,7 +299,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
                 ChannelPipeline pipeline = ch.pipeline();
                 ch.attr(ChannelAttrKeys.idleTimeout).set(config.idleTimeout());
                 ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
-                if(ChannelMode.readwrite.equals(config.mode())){
+                if (ChannelMode.readwrite.equals(config.mode())) {
                     ch.attr(ChannelAttrKeys.writeChannel).set(config.isWriteConnection());
                     ch.attr(ChannelAttrKeys.channelIndex).set(config.channelIndex());
                     ch.attr(ChannelAttrKeys.uuid).set(config.uuid());

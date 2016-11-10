@@ -82,7 +82,7 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
             if (expireTime >= maxIdleTimeout * 1000) {
                 logger.warn("readIdleTimeout exceed maxIdleTimeout, real timeout {}, this channel will be closed",
                     expireTime);
-                RemotingUtils.closeChannel(ctx.channel(), 0);
+                RemotingUtils.closeChannel(ctx.channel());
             } else if (this.clientSide) {
                 //send heart beat to remote peer
                 ctx.writeAndFlush(RequestProtocol.newHeartbeat());

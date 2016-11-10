@@ -32,7 +32,7 @@ import sailfish.remoting.utils.PacketIdGenerator;
  * @author spccold
  * @version $Id: AbstractExchangeChannel.java, v 0.1 2016年10月27日 上午11:42:58 jileng Exp $
  */
-public abstract class AbstractExchangeChannel {
+public abstract class AbstractExchangeChannel{
 
     protected Bootstrap newBootstrap(){
         Bootstrap boot = new Bootstrap();
