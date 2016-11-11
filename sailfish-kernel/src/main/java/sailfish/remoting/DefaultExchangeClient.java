@@ -19,6 +19,7 @@ package sailfish.remoting;
 
 import sailfish.remoting.channel.ExchangeChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
 
@@ -37,16 +38,19 @@ public class DefaultExchangeClient implements ExchangeChannel{
     
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
+        checkAvailable();
         exchanger.oneway(data, requestControl);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
+        checkAvailable();
         return exchanger.request(data, requestControl);
     }
 
     @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException{
+        checkAvailable();
         exchanger.request(data, callback, requestControl);
     }
 
@@ -68,5 +72,11 @@ public class DefaultExchangeClient implements ExchangeChannel{
     @Override
     public boolean isAvailable() {
         return exchanger.isAvailable();
+    }
+    
+    private void checkAvailable() throws SailfishException{
+        if(!isAvailable()){
+            throw new SailfishException(ExceptionCode.EXCHANGER_NOT_AVAILABLE, "exchange channel not available");
+        }
     }
 }
