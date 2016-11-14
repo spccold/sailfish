@@ -34,7 +34,12 @@ import java.net.URL;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.Properties;
-
+/**
+ * copy from com.sun.javafx.PlatformUtil
+ * 
+ * @author spccold
+ * @version $Id: PlatformUtil.java, v 0.1 2016年11月14日 下午5:13:56 jileng Exp $
+ */
 public class PlatformUtil {
 
     // NOTE: since this class can be initialized by application code in some
@@ -52,33 +57,13 @@ public class PlatformUtil {
     private static String        javafxPlatform;
 
     static {
-        javafxPlatform = AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty("javafx.platform");
-            }
-        });
+        javafxPlatform = AccessController.doPrivileged(new PrivilegedAction<String>() {public String run() { return System.getProperty("javafx.platform");}});
         loadProperties();
-        embedded = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-            public Boolean run() {
-                return Boolean.getBoolean("com.sun.javafx.isEmbedded");
-            }
-        });
-        embeddedType = AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty("embedded");
-            }
-        });
-        useEGL = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-            public Boolean run() {
-                return Boolean.getBoolean("use.egl");
-            }
-        });
+        embedded = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {public Boolean run() { return Boolean.getBoolean("com.sun.javafx.isEmbedded");}});
+        embeddedType = AccessController.doPrivileged(new PrivilegedAction<String>() {public String run() { return System.getProperty("embedded");}});
+        useEGL = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {public Boolean run() {return Boolean.getBoolean("use.egl");}});
         if (useEGL) {
-            doEGLCompositing = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {
-                public Boolean run() {
-                    return Boolean.getBoolean("doNativeComposite");
-                }
-            });
+            doEGLCompositing = AccessController.doPrivileged(new PrivilegedAction<Boolean>() {public Boolean run() { return Boolean.getBoolean("doNativeComposite");}});
         } else
             doEGLCompositing = false;
     }
@@ -156,9 +141,7 @@ public class PlatformUtil {
     public static boolean useGLES2() {
         String useGles2 = "false";
         useGles2 = AccessController.doPrivileged(new PrivilegedAction<String>() {
-            public String run() {
-                return System.getProperty("use.gles2");
-            }
+            public String run() {return System.getProperty("use.gles2");}
         });
         if ("true".equals(useGles2))
             return true;
@@ -267,7 +250,6 @@ public class PlatformUtil {
         AccessController.doPrivileged(new PrivilegedAction<Void>() {
             @Override
             public Void run() {
-
                 final File rtDir = getRTDir();
                 final String propertyFilename = "javafx.platform.properties";
                 File rtProperties = new File(rtDir, propertyFilename);
