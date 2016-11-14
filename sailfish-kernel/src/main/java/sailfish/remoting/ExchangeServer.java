@@ -104,8 +104,8 @@ public class ExchangeServer implements Endpoint{
                 return;
             if(null != boot){
                 try{
-                    boot.group().shutdownGracefully().await(timeout);
-                    boot.childGroup().shutdownGracefully().await(timeout);;
+                    boot.config().group().shutdownGracefully().await(timeout);
+                    boot.config().childGroup().shutdownGracefully().await(timeout);;
                 }catch(InterruptedException cause){
                     //do nothing
                 }

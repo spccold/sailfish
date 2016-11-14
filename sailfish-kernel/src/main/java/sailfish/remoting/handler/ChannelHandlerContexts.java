@@ -121,7 +121,8 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
     }
 
     /********************************implementation from ChannelHandlerContext****************************************/
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     public <T> Attribute<T> attr(AttributeKey<T> key) {
         return next().attr(key);
     }
@@ -320,4 +321,10 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
     public ChannelPromise voidPromise() {
         return next().voidPromise();
     }
+
+	@SuppressWarnings("deprecation")
+	@Override
+	public <T> boolean hasAttr(AttributeKey<T> arg0) {
+		return next().hasAttr(arg0);
+	}
 }

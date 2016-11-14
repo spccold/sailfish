@@ -282,5 +282,6 @@ public class PlatformUtil {
     }
     public static void main(String[] args) {
         System.out.println(isMac());
+        System.out.println(isLinux());
     }
 }
