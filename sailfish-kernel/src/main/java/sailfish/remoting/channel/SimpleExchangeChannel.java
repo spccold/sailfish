@@ -28,12 +28,13 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
+import sailfish.remoting.NettyPlatformIndependent;
 import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
@@ -91,7 +92,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     public void reset(Channel newChannel) {
         synchronized (this) {
             this.reconnectting = false;
-            if(this.isClosed()){
+            if (this.isClosed()) {
                 RemotingUtils.closeChannel(newChannel);
                 return;
             }
@@ -180,11 +181,11 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
     @Override
     public void close(int timeout) {
         ParameterChecker.checkNotNegative(timeout, "timeout");
-        if(this.isClosed()){
+        if (this.isClosed()) {
             return;
         }
         synchronized (this) {
-            if(this.isClosed()){
+            if (this.isClosed()) {
                 return;
             }
             this.closed = true;
@@ -287,7 +288,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
             boot.localAddress(config.localAddress().host(), config.localAddress().port());
         }
         boot.remoteAddress(config.address().host(), config.address().port());
-        NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup(config.iothreads(),
+        EventLoopGroup eventLoopGroup = NettyPlatformIndependent.newEventLoopGroup(config.iothreads(),
             new DefaultThreadFactory(config.iothreadName()));
         boot.group(eventLoopGroup);
 

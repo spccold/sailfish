@@ -20,7 +20,7 @@ package sailfish.remoting.channel;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import sailfish.remoting.NettyPlatformIndependent;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.SailfishException;
@@ -36,7 +36,7 @@ public abstract class AbstractExchangeChannel{
 
     protected Bootstrap newBootstrap(){
         Bootstrap boot = new Bootstrap();
-        boot.channel(NioSocketChannel.class);
+        boot.channel(NettyPlatformIndependent.channelClass());
         boot.option(ChannelOption.TCP_NODELAY, true);
         //replace by heart beat
         boot.option(ChannelOption.SO_KEEPALIVE, false);

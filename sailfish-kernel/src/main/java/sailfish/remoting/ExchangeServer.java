@@ -21,9 +21,8 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
@@ -56,8 +55,8 @@ public class ExchangeServer implements Endpoint{
     
     public void start() throws SailfishException{
         ServerBootstrap boot = newServerBootstrap();
-        NioEventLoopGroup boss = new NioEventLoopGroup(config.bossThreads(), new DefaultThreadFactory(config.bossThreadName()));
-        NioEventLoopGroup io = new NioEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
+        EventLoopGroup boss = NettyPlatformIndependent.newEventLoopGroup(config.bossThreads(), new DefaultThreadFactory(config.bossThreadName()));
+        EventLoopGroup io = NettyPlatformIndependent.newEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
         final EventExecutorGroup executor = new DefaultEventExecutorGroup(config.codecThreads(), new DefaultThreadFactory(config.codecThreadName()));
         boot.group(boss, io);
         boot.localAddress(config.address().host(), config.address().port());
@@ -83,7 +82,7 @@ public class ExchangeServer implements Endpoint{
     
     private ServerBootstrap newServerBootstrap(){
         ServerBootstrap serverBoot = new ServerBootstrap();
-        serverBoot.channel(NioServerSocketChannel.class);
+        serverBoot.channel(NettyPlatformIndependent.serverChannelClass());
         // connections wait for accept
         serverBoot.option(ChannelOption.SO_BACKLOG, 1024);
         serverBoot.option(ChannelOption.SO_REUSEADDR, true);
