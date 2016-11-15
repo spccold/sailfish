@@ -28,6 +28,7 @@ public interface Endpoint {
      * close current Endpoint
      */
     void close();
+    
     /**
      * graceful close current Endpoint
      * @param timeout millisecond

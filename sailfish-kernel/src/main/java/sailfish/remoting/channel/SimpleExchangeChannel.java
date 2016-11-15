@@ -60,7 +60,7 @@ import sailfish.remoting.utils.RemotingUtils;
 import sailfish.remoting.utils.StrUtils;
 
 /**
- * with only one connection and the connection need to be initialized immediately or lazy
+ * with only one connection and the connection need to be initialized immediately or lazily
  * 
  * @author spccold
  * @version $Id: SimpleExchangeChannel.java, v 0.1 2016年10月26日 下午9:08:24 jileng Exp $
@@ -242,9 +242,9 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
             return true;
         }
         boolean isAvailable = false;
-        if (!isClosed() && !(isAvailable = available()) && !reconnectting) {
+        if (!reconnectting && !(isAvailable = available())) {
             synchronized (this) {
-                if (!isClosed() && !(isAvailable = available()) && !reconnectting) {
+                if (!reconnectting && !(isAvailable = available())) {
                     //add reconnect task
                     ReconnectManager.INSTANCE.addReconnectTask(this);
                     this.reconnectting = true;

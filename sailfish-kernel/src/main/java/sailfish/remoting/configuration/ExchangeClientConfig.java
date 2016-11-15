@@ -33,7 +33,7 @@ import sailfish.remoting.utils.StrUtils;
  */
 public class ExchangeClientConfig extends AbstractExchangeConfig {
     private Address localAddress;
-    //ms
+    //milliseconds
     private int     connectTimeout           = RemotingConstants.DEFAULT_CONNECT_TIMEOUT;
     private int     reconnectInterval        = RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
 
@@ -84,8 +84,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
                 throw new IllegalArgumentException("writeConnections:" + this.writeConnections
                                                    + ", you should specify an appropriate writeConnections or writeRatio");
             }
-            //ParameterChecker.checkNotNull(uuid, "uuid");
-            //ParameterChecker.checkNotNegative(channelIndex, "channelIndex");
         }
         if (StrUtils.isBlank(ioThreadName)) {
             this.ioThreadName = "sailfish-client-io";

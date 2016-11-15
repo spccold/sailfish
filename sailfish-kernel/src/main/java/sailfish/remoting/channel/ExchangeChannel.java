@@ -33,6 +33,7 @@ import sailfish.remoting.future.ResponseFuture;
  * @version $Id: ExchangeChannel.java, v 0.1 2016年10月26日 下午8:34:37 jileng Exp $
  */
 public interface ExchangeChannel extends Endpoint{
+    
     boolean isAvailable();
     
     /**
