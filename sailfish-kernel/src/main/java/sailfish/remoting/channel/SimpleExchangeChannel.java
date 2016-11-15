@@ -55,6 +55,7 @@ import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.CollectionUtils;
+import sailfish.remoting.utils.PacketIdGenerator;
 import sailfish.remoting.utils.ParameterChecker;
 import sailfish.remoting.utils.RemotingUtils;
 import sailfish.remoting.utils.StrUtils;
@@ -65,12 +66,11 @@ import sailfish.remoting.utils.StrUtils;
  * @author spccold
  * @version $Id: SimpleExchangeChannel.java, v 0.1 2016年10月26日 下午9:08:24 jileng Exp $
  */
-public class SimpleExchangeChannel extends AbstractExchangeChannel implements ExchangeChannel {
+public class SimpleExchangeChannel extends AbstractExchangeChannel {
     private final ExchangeClientConfig clientConfig;
     private volatile Channel           nettyChannel;
     private volatile boolean           lazyWithOutInit;
     private volatile boolean           reconnectting;
-    private volatile boolean           closed = false;
 
     public SimpleExchangeChannel(ExchangeClientConfig config) throws SailfishException {
         this.clientConfig = config.deepCopy();
@@ -102,7 +102,6 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         initChannel();
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
@@ -135,7 +134,6 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     public ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
                                                     RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         initChannel();
         final RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(false);
@@ -208,7 +206,6 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         }
     }
 
-    @Override
     public Channel doConnect(final ExchangeClientConfig config) throws SailfishException {
         MsgHandler<Protocol> handler = new MsgHandler<Protocol>() {
             @Override
@@ -226,11 +223,6 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
         } catch (Throwable cause) {
             throw new SailfishException(cause);
         }
-    }
-
-    @Override
-    public boolean isClosed() {
-        return this.closed;
     }
 
     @Override
@@ -256,13 +248,6 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
 
     private boolean available() {
         return null != this.nettyChannel && this.nettyChannel.isOpen() && this.nettyChannel.isActive();
-    }
-
-    private void channelStatusCheck() throws SailfishException {
-        if (isClosed()) {
-            throw new SailfishException(ExceptionCode.INVOKE_ON_CLOSED_CHANNEL,
-                "current channel closed already, can't invoke anymore");
-        }
     }
 
     private void initChannel() throws SailfishException {
@@ -314,5 +299,24 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel implements Ex
             }
         });
         return boot;
+    }
+    
+    private Bootstrap newBootstrap(){
+        Bootstrap boot = new Bootstrap();
+        boot.channel(NettyPlatformIndependent.channelClass());
+        boot.option(ChannelOption.TCP_NODELAY, true);
+        //replace by heart beat
+        boot.option(ChannelOption.SO_KEEPALIVE, false);
+        boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
+        return boot;
+    }
+    
+    private RequestProtocol newRequest(RequestControl requestControl){
+        RequestProtocol protocol = new RequestProtocol();
+        protocol.packetId(PacketIdGenerator.nextId());
+        protocol.opcode(requestControl.opcode());
+        protocol.compressType(requestControl.compressType());
+        protocol.serializeType(requestControl.serializeType());
+        return protocol;
     }
 }

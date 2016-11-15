@@ -26,7 +26,6 @@ public enum ExceptionCode {
     BAD_PACKAGE,
     TIMEOUT,
     EXCHANGER_NOT_AVAILABLE,
-    INVOKE_ON_CLOSED_CHANNEL,
     INTERRUPTED,
     DEFAULT,
     ;

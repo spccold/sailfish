@@ -80,8 +80,8 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
             int maxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
             long expireTime = System.currentTimeMillis() - ctx.channel().attr(ChannelAttrKeys.lastReadTimeMillis).get();
             if (expireTime >= maxIdleTimeout * 1000) {
-                logger.warn("readIdleTimeout exceed maxIdleTimeout, real timeout {}, this channel will be closed",
-                    expireTime);
+                logger.warn("readIdleTimeout exceed maxIdleTimeout, real timeout {}, this channel[{}] will be closed",
+                    expireTime, ctx.channel().toString());
                 RemotingUtils.closeChannel(ctx.channel());
             } else if (this.clientSide) {
                 //send heart beat to remote peer
@@ -95,9 +95,7 @@ public class ChannelEventsHandler extends ChannelDuplexHandler {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         String msg = "exceptionCaught, localAddress [%s], remoteAddress [%s]";
-        logger.warn(
-            String.format(msg, ctx.channel().localAddress().toString(), ctx.channel().remoteAddress().toString()),
-            cause);
+        logger.warn(String.format(msg, ctx.channel().localAddress().toString(), ctx.channel().remoteAddress().toString()), cause);
         super.exceptionCaught(ctx, cause);
     }
 }

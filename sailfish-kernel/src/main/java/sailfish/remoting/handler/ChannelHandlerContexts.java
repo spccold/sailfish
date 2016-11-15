@@ -54,7 +54,7 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
             this.writeConns++;
             if (null == this.writeContexts) {
                 this.writeContexts = new ChannelHandlerContext[index + 1];
-            } else if(this.writeContexts.length < index + 1){
+            } else if (this.writeContexts.length < index + 1) {
                 ChannelHandlerContext[] newWriteContexts = new ChannelHandlerContext[index + 1];
                 System.arraycopy(this.writeContexts, 0, newWriteContexts, 0, this.writeContexts.length);
                 this.writeContexts = newWriteContexts;
@@ -69,7 +69,7 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
             this.readConns++;
             if (null == this.readContexts) {
                 this.readContexts = new ChannelHandlerContext[index + 1];
-            } else if(this.readContexts.length < index + 1){
+            } else if (this.readContexts.length < index + 1) {
                 ChannelHandlerContext[] newReadContexts = new ChannelHandlerContext[index + 1];
                 System.arraycopy(this.readContexts, 0, newReadContexts, 0, this.readContexts.length);
                 this.readContexts = newReadContexts;
@@ -79,12 +79,14 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
         }
     }
 
+    //lock free
     private ChannelHandlerContext next() {
         int arrayIndex = 0;
         //select write context first 
         int currentIndex = writeContextIndex.getAndIncrement();
         for (int i = 0; i < this.writeConns; i++) {
-            ChannelHandlerContext currentContext = writeContexts[arrayIndex = Math.abs((currentIndex++) % this.writeConns)];
+            ChannelHandlerContext currentContext = writeContexts[arrayIndex = Math
+                .abs((currentIndex++) % this.writeConns)];
             if (available(currentContext)) {
                 if (null != deadWriteContexts[arrayIndex]) {
                     deadWriteContexts[arrayIndex] = null;
@@ -98,7 +100,8 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
         arrayIndex = 0;
         currentIndex = readContextIndex.getAndIncrement();
         for (int i = 0; i < this.readConns; i++) {
-            ChannelHandlerContext currentContext = readContexts[arrayIndex = Math.abs((currentIndex++) % this.readConns)];
+            ChannelHandlerContext currentContext = readContexts[arrayIndex = Math
+                .abs((currentIndex++) % this.readConns)];
             if (available(currentContext)) {
                 if (null != deadReadContexts[arrayIndex]) {
                     deadReadContexts[arrayIndex] = null;
@@ -122,7 +125,7 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
 
     /********************************implementation from ChannelHandlerContext****************************************/
     @SuppressWarnings("deprecation")
-	@Override
+    @Override
     public <T> Attribute<T> attr(AttributeKey<T> key) {
         return next().attr(key);
     }
@@ -322,9 +325,9 @@ public class ChannelHandlerContexts implements ChannelHandlerContext {
         return next().voidPromise();
     }
 
-	@SuppressWarnings("deprecation")
-	@Override
-	public <T> boolean hasAttr(AttributeKey<T> arg0) {
-		return next().hasAttr(arg0);
-	}
+    @SuppressWarnings("deprecation")
+    @Override
+    public <T> boolean hasAttr(AttributeKey<T> arg0) {
+        return next().hasAttr(arg0);
+    }
 }

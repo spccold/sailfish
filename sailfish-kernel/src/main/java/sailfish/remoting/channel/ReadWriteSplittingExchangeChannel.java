@@ -34,7 +34,7 @@ import sailfish.remoting.future.ResponseFuture;
  * @author spccold
  * @version $Id: ReadWriteSplittingExchangeChannel.java, v 0.1 2016年10月26日 下午9:29:17 jileng Exp $
  */
-public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
+public class ReadWriteSplittingExchangeChannel extends AbstractExchangeChannel {
     private final int                     writeConns;
     private final int                     readConns;
     private final SimpleExchangeChannel[] writeChannels;
@@ -43,16 +43,16 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
     private final SimpleExchangeChannel[] deadReadChannels;
     private final AtomicInteger           writeChannelIndex = new AtomicInteger(0);
     private final AtomicInteger           readChannelIndex  = new AtomicInteger(0);
-    private volatile boolean              closed            = false;
 
     public ReadWriteSplittingExchangeChannel(ExchangeClientConfig config) throws SailfishException {
+        //TODO replace by channel id(support in netty 4.1.x)?
         config.uuid(UUID.randomUUID());
         this.writeConns = config.writeConnections();
         this.readConns = config.connections() - writeConns;
-        //TODO set channel write only via netty options?(selector only focus on SelectionKey.OP_READ)
+        //TODO set channel write only via netty options?(selector only focus on SelectionKey.OP_WRITE)
         this.writeChannels = new SimpleExchangeChannel[this.writeConns];
         this.deadWriteChannels = new SimpleExchangeChannel[this.writeConns];
-        //TODO set channel read only via netty options?(selector only focus on SelectionKey.OP_WRITE)
+        //TODO set channel read only via netty options?(selector only focus on SelectionKey.OP_READ)
         this.readChannels = new SimpleExchangeChannel[this.readConns];
         this.deadReadChannels = new SimpleExchangeChannel[this.readConns];
         try {
@@ -75,20 +75,17 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
 
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         next().oneway(data, requestControl);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         return next().request(data, requestControl);
     }
 
     @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback,
                         RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         next().request(data, callback, requestControl);
     }
 
@@ -123,18 +120,6 @@ public class ReadWriteSplittingExchangeChannel implements ExchangeChannel {
         }
     }
 
-    @Override
-    public boolean isClosed() {
-        return this.closed;
-    }
-
-    private void channelStatusCheck() throws SailfishException {
-        if (isClosed()) {
-            throw new SailfishException(ExceptionCode.INVOKE_ON_CLOSED_CHANNEL,
-                "current channel closed already, can't invoke anymore");
-        }
-    }
-    
     @Override
     public boolean isAvailable() {
         if(this.isClosed()){

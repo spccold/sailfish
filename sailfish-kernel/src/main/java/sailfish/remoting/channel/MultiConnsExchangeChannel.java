@@ -32,11 +32,10 @@ import sailfish.remoting.future.ResponseFuture;
  * @author spccold
  * @version $Id: MultiConnsExchangeChannel.java, v 0.1 2016年10月26日 下午9:25:00 jileng Exp $
  */
-public class MultiConnsExchangeChannel implements ExchangeChannel{
+public class MultiConnsExchangeChannel extends AbstractExchangeChannel{
     private final SimpleExchangeChannel[] allChannels;
     private final SimpleExchangeChannel[] deadChannels;
     private final int                     connections;
-    private volatile boolean              closed       = false;
     private final AtomicInteger           channelIndex = new AtomicInteger(0);
 
     public MultiConnsExchangeChannel(ExchangeClientConfig clientConfig) throws SailfishException {
@@ -55,20 +54,17 @@ public class MultiConnsExchangeChannel implements ExchangeChannel{
 
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         next().oneway(data, requestControl);
     }
 
     @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         return next().request(data, requestControl);
     }
 
     @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback,
                         RequestControl requestControl) throws SailfishException {
-        channelStatusCheck();
         next().request(data, callback, requestControl);
     }
 
@@ -97,18 +93,6 @@ public class MultiConnsExchangeChannel implements ExchangeChannel{
         }
     }
 
-    @Override
-    public boolean isClosed() {
-        return this.closed;
-    }
-
-    private void channelStatusCheck() throws SailfishException {
-        if (isClosed()) {
-            throw new SailfishException(ExceptionCode.INVOKE_ON_CLOSED_CHANNEL,
-                "current channel closed already, can't invoke anymore");
-        }
-    }
-    
     @Override
     public boolean isAvailable() {
         if(this.isClosed()){

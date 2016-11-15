@@ -17,40 +17,16 @@
  */
 package sailfish.remoting.channel;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import sailfish.remoting.NettyPlatformIndependent;
-import sailfish.remoting.RequestControl;
-import sailfish.remoting.configuration.ExchangeClientConfig;
-import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.protocol.RequestProtocol;
-import sailfish.remoting.utils.PacketIdGenerator;
-
 /**
  * 
  * @author spccold
  * @version $Id: AbstractExchangeChannel.java, v 0.1 2016年10月27日 上午11:42:58 jileng Exp $
  */
-public abstract class AbstractExchangeChannel{
+public abstract class AbstractExchangeChannel implements ExchangeChannel {
+    protected volatile boolean closed = false;
 
-    protected Bootstrap newBootstrap(){
-        Bootstrap boot = new Bootstrap();
-        boot.channel(NettyPlatformIndependent.channelClass());
-        boot.option(ChannelOption.TCP_NODELAY, true);
-        //replace by heart beat
-        boot.option(ChannelOption.SO_KEEPALIVE, false);
-        boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
-        return boot;
+    @Override
+    public boolean isClosed() {
+        return this.closed;
     }
-    
-    protected RequestProtocol newRequest(RequestControl requestControl){
-        RequestProtocol protocol = new RequestProtocol();
-        protocol.packetId(PacketIdGenerator.nextId());
-        protocol.opcode(requestControl.opcode());
-        protocol.compressType(requestControl.compressType());
-        protocol.serializeType(requestControl.serializeType());
-        return protocol;
-    }
-    protected abstract Channel doConnect(ExchangeClientConfig config) throws SailfishException;
 }
