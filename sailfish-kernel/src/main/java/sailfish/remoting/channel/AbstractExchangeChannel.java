@@ -40,6 +40,7 @@ public abstract class AbstractExchangeChannel{
         boot.option(ChannelOption.TCP_NODELAY, true);
         //replace by heart beat
         boot.option(ChannelOption.SO_KEEPALIVE, false);
+        boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return boot;
     }
     

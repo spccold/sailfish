@@ -87,8 +87,9 @@ public class ExchangeServer implements Endpoint{
         serverBoot.option(ChannelOption.SO_BACKLOG, 1024);
         serverBoot.option(ChannelOption.SO_REUSEADDR, true);
         //replace by heart beat
-        serverBoot.option(ChannelOption.SO_KEEPALIVE, false);
+        serverBoot.childOption(ChannelOption.SO_KEEPALIVE, false);
         serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
+        serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return serverBoot;
     }
 
