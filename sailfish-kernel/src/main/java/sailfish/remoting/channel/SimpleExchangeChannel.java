@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.locks.LockSupport;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -106,16 +107,19 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
         RequestProtocol protocol = newRequest(requestControl);
         protocol.oneway(true);
         protocol.body(data);
-        //TODO write or writeAndFlush?
-        ChannelFuture future = nettyChannel.writeAndFlush(protocol);
         try {
             if (requestControl.sent()) {
+            	//TODO write or writeAndFlush?
+            	ChannelFuture future = nettyChannel.writeAndFlush(protocol);
                 boolean ret = future.await(requestControl.timeout());
                 if (!ret) {
                     future.cancel(true);
                     throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
                 }
+                return;
             }
+            //reduce memory consumption
+            nettyChannel.writeAndFlush(protocol, nettyChannel.voidPromise());
         } catch (InterruptedException cause) {
             throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
         }
@@ -143,34 +147,43 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
         respFuture.setCallback(callback, requestControl.timeout());
         //trace before write
         Tracer.trace(this, protocol.packetId(), respFuture);
-        ChannelFuture future = nettyChannel.writeAndFlush(protocol).addListener(new ChannelFutureListener() {
-            @Override
-            public void operationComplete(ChannelFuture future) throws Exception {
-                if (!future.isSuccess()) {
-                    String errorMsg = "write fail!";
-                    if (null != future.cause()) {
-                        errorMsg = StrUtils.exception2String(future.cause());
-                    }
-                    //FIXME maybe need more concrete error, like WriteOverFlowException or some other special exceptions
-                    Tracer.erase(ResponseProtocol.newErrorResponse(protocol.packetId(), errorMsg,
-                        RemotingConstants.RESULT_FAIL));
-                }
-            }
-        });
         try {
             if (requestControl.sent()) {
+            	ChannelFuture future = nettyChannel.writeAndFlush(protocol).addListener(new SimpleChannelFutureListener(protocol.packetId()));
                 boolean ret = future.await(requestControl.timeout());
                 if (!ret) {
                     future.cancel(true);
                     throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
                 }
+                return respFuture;
             }
+            nettyChannel.writeAndFlush(protocol, nettyChannel.voidPromise());
         } catch (InterruptedException cause) {
             throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
         }
         return respFuture;
     }
-
+    
+    //reduce class create
+    static class SimpleChannelFutureListener implements ChannelFutureListener{
+    	private int packetId;
+		public SimpleChannelFutureListener(int packetId) {
+			this.packetId = packetId;
+		}
+		@Override
+		public void operationComplete(ChannelFuture future) throws Exception {
+            if (!future.isSuccess()) {
+                String errorMsg = "write fail!";
+                if (null != future.cause()) {
+                    errorMsg = StrUtils.exception2String(future.cause());
+                }
+                //FIXME maybe need more concrete error, like WriteOverFlowException or some other special exceptions
+                Tracer.erase(ResponseProtocol.newErrorResponse(packetId, errorMsg,
+                    RemotingConstants.RESULT_FAIL));
+            }
+		}
+    }
+    
     @Override
     public void close() {
         close(0);
@@ -307,6 +320,11 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
         boot.option(ChannelOption.TCP_NODELAY, true);
         //replace by heart beat
         boot.option(ChannelOption.SO_KEEPALIVE, false);
+        boot.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        // 32kb(for massive long connections, suggests from http://www.infoq.com/cn/articles/netty-million-level-push-service-design-points) 
+        // 64kb(RocketMq remoting default value)
+        boot.option(ChannelOption.SO_SNDBUF, 32 * 1024);
+        boot.option(ChannelOption.SO_RCVBUF, 32 * 1024);
         boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return boot;
     }

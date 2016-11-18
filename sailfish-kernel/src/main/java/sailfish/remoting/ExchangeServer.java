@@ -18,6 +18,7 @@
 package sailfish.remoting;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -89,6 +90,9 @@ public class ExchangeServer implements Endpoint{
         //replace by heart beat
         serverBoot.childOption(ChannelOption.SO_KEEPALIVE, false);
         serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
+        serverBoot.childOption(ChannelOption.SO_SNDBUF, 32 * 1024);
+        serverBoot.childOption(ChannelOption.SO_RCVBUF, 32 * 1024);
+        serverBoot.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return serverBoot;
     }
