@@ -23,8 +23,11 @@ package sailfish.remoting.channel;
  * @version $Id: ChannelMode.java, v 0.1 2016年10月27日 上午11:09:58 jileng Exp $
  */
 public enum ChannelMode {
+	/** with only one eager or lazy connection*/
     simple,
+    /** with multiple simple exchange channel*/
     multiconns,
+    /** with multiple simple exchange channel, but support read write splitting */
     readwrite,
     ;
 }

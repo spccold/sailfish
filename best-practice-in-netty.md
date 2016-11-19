@@ -1,5 +1,5 @@
 # best practice in netty
-* writeAndFlush不要一直调用， 是否可以通过调用write，并且在适当的时间flush，因为每次系统flush都是一次系统调用，如果可以的话write的调用次数也应该减少，因为它会经过整个pipeline
+* writeAndFlush不要一直调用， 是否可以通过调用write，并且在适当的时间flush，因为每次系统flush都是一次系统调用，如果可以的话write的调用次数也应该减少，因为它会经过整个pipeline(https://github.com/netty/netty/issues/1759)
 * 如果你不是很关注write的结果，可以使用channel.voidPromise(),可以减少对象的创建
 * 一直写对于处理能力较弱的接受者来说，可能会引起OutMemoryError，关注channel.isWritable()和channelhandler中的cahnnelWritabilityChanged()将会很有帮助，channel.bytesBeforeUnwritable和channel.bytesBeforeWritable()同样值得关注
 * 关注write_buffer_high_water_mark和write_buffer_low_water_mark的配置， 例如high:32kb(default 64kb), low:8kb(default 32kb)
@@ -48,7 +48,7 @@
 * perfer to use ChannelHandlerContext to writeAndFlush than Channel, because shortest path as possible to get maximal performance
 * Share ChannelHandlers if stateless(@ChannelHandler.Shareable)
 * Remove ChannelHandler once not needed anymore, this keep the channelPipeline as short as possible and so eliminate overhead of traversing as much as possible(e.g. UniPortHandler)
-* channel auto-read option? i can't understand
+* channel auto-read option? when did the channelReadComplete occur? i can't understand
 * epoll for linux 
 	* 	Less gc as NIO
 	* 	Less synchronization
