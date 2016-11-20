@@ -15,38 +15,39 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.eventloopgroup;
+package sailfish.remoting.eventgroup;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import io.netty.channel.EventLoopGroup;
 import io.netty.util.internal.SystemPropertyUtil;
 import sailfish.remoting.constants.RemotingConstants;
 
 /**
  * @author spccold
- * @version $Id: ServerEventLoopGroup.java, v 0.1 2016年11月20日 下午7:29:27 spccold Exp $
+ * @version $Id: ServerEventGroup.java, v 0.1 2016年11月20日 下午7:29:27 spccold Exp
+ *          $
  */
-public class ServerEventLoopGroup extends AbstractReusedEventLoopGroup{
-	public static final Logger logger = LoggerFactory.getLogger(ServerEventLoopGroup.class);
-	public static final ServerEventLoopGroup INSTANCE = new ServerEventLoopGroup();
-	
+public class ServerEventGroup extends AbstractReusedEventGroup {
+	public static final Logger logger = LoggerFactory.getLogger(ServerEventGroup.class);
+
 	private static final int IO_THREADS;
-	static{
+	private static final int EVENT_THREADS;
+	public static final ServerEventGroup INSTANCE;
+	static {
 		IO_THREADS = Math.max(1,
 				SystemPropertyUtil.getInt("sailfish.remoting.server.ioThreads", RemotingConstants.DEFAULT_IO_THREADS));
+		EVENT_THREADS = Math.max(1, SystemPropertyUtil.getInt("sailfish.remoting.server.eventThreads",
+				RemotingConstants.DEFAULT_EVENT_THREADS));
 		if (logger.isDebugEnabled()) {
 			logger.debug("-Dsailfish.remoting.server.ioThreads: {}", IO_THREADS);
+			logger.debug("-Dsailfish.remoting.server.eventThreads: {}", EVENT_THREADS);
 		}
-	}
-	
-	private ServerEventLoopGroup(){
-		super(IO_THREADS, RemotingConstants.SERVER_IO_THREADNAME);
+		INSTANCE = new ServerEventGroup();
 	}
 
-	@Override
-	public EventLoopGroup get() {
-		return reusedEventLoopGroup;
+	private ServerEventGroup() {
+		super(IO_THREADS, RemotingConstants.SERVER_IO_THREADNAME, EVENT_THREADS,
+				RemotingConstants.SERVER_EVENT_THREADNAME);
 	}
 }

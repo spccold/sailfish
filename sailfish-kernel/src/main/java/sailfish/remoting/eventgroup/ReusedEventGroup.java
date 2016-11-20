@@ -15,15 +15,17 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.eventloopgroup;
+package sailfish.remoting.eventgroup;
 
 import io.netty.channel.EventLoopGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 /**
  * @author spccold
- * @version $Id: ReusedEventLoopGroup.java, v 0.1 2016年11月20日 下午7:26:51 spccold Exp $
+ * @version $Id: ReusedEventGroup.java, v 0.1 2016年11月20日 下午7:26:51 spccold Exp $
  */
-public interface ReusedEventLoopGroup {
-	EventLoopGroup get();
+public interface ReusedEventGroup {
+	EventLoopGroup getLoopGroup();
+	EventExecutorGroup getExecutorGroup();
 	void destory();
 }

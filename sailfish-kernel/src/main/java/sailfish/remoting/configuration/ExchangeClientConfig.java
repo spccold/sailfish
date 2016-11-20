@@ -19,7 +19,6 @@ package sailfish.remoting.configuration;
 
 import java.util.UUID;
 
-import sailfish.remoting.Address;
 import sailfish.remoting.channel.ChannelMode;
 import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
 import sailfish.remoting.constants.RemotingConstants;
@@ -32,7 +31,6 @@ import sailfish.remoting.utils.StrUtils;
  * @version $Id: ExchangeClientConfig.java, v 0.1 2016年10月26日 下午10:55:22 jileng Exp $
  */
 public class ExchangeClientConfig extends AbstractExchangeConfig {
-    private Address localAddress;
     //milliseconds
     private int     connectTimeout           = RemotingConstants.DEFAULT_CONNECT_TIMEOUT;
     private int     reconnectInterval        = RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
@@ -84,9 +82,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
                 throw new IllegalArgumentException("writeConnections:" + this.writeConnections
                                                    + ", you should specify an appropriate writeConnections or writeRatio");
             }
-        }
-        if (StrUtils.isBlank(ioThreadName)) {
-            this.ioThreadName = "sailfish-client-io";
         }
         if (StrUtils.isBlank(codecThreadName)) {
             this.codecThreadName = "sailfish-client-codec";
@@ -160,14 +155,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
         this.writeConnection = writeConnection;
     }
 
-    public Address localAddress() {
-        return localAddress;
-    }
-
-    public void localAddress(Address localAddress) {
-        this.localAddress = ParameterChecker.checkNotNull(localAddress, "localAddress");
-    }
-
     public UUID uuid() {
         return uuid;
     }
@@ -190,17 +177,12 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
         copy.address(this.address);
         copy.idleTimeout(this.idleTimeout);
         copy.maxIdleTimeout(this.maxIdleTimeout);
-        copy.iothreads(this.ioThreads);
-        copy.iothreadName(this.ioThreadName);
         copy.codecThreads(this.codecThreads);
         copy.codecThreadName(this.codecThreadName);
         //from self
         copy.connectTimeout(this.connectTimeout);
         copy.connections(this.connections);
         copy.setLazyConnection(this.lazyConnection);
-        if(null != this.localAddress){
-            copy.localAddress(this.localAddress);
-        }
         if(this.enableReadWriteSplitting){
             copy.enableReadWriteSplitting(this.enableReadWriteSplitting);
             copy.writeConnections(this.writeConnections);

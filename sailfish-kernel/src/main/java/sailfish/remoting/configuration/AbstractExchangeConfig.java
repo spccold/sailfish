@@ -35,9 +35,6 @@ public abstract class AbstractExchangeConfig {
     protected int idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
     protected int maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
     
-    protected int ioThreads = Runtime.getRuntime().availableProcessors();
-    protected String ioThreadName;
-    
     protected int codecThreads = 1;
     protected String codecThreadName;
     
@@ -70,18 +67,7 @@ public abstract class AbstractExchangeConfig {
     public void maxIdleTimeout(int maxIdleTimeout) {
         this.maxIdleTimeout = ParameterChecker.checkBytePositive(maxIdleTimeout);
     }
-    public int iothreads() {
-        return ioThreads;
-    }
-    public void iothreads(int ioThreads) {
-        this.ioThreads = ParameterChecker.checkPositive(ioThreads, "ioThreads");
-    }
-    public String iothreadName() {
-        return ioThreadName;
-    }
-    public void iothreadName(String ioThreadName) {
-        this.ioThreadName = ParameterChecker.checkNotBlank(ioThreadName, "ioThreadName");
-    }
+
     public String codecThreadName() {
         return codecThreadName;
     }

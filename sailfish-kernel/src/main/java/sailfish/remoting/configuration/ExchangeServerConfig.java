@@ -25,30 +25,11 @@ import sailfish.remoting.utils.StrUtils;
  * @version $Id: ExchangeServerConfig.java, v 0.1 2016年10月27日 下午5:42:01 jileng Exp $
  */
 public class ExchangeServerConfig extends AbstractExchangeConfig{
-    private int bossThreads = 1;
-    private String bossThreadName = "sailfish-server-boss";
-   
     @Override
     public void check() {
         super.check();
-        if(StrUtils.isBlank(ioThreadName)){
-            this.ioThreadName = "sailfish-server-io";
-        }
         if(StrUtils.isBlank(codecThreadName)){
             this.codecThreadName= "sailfish-server-codec";
         }
-    }
-    
-    public int bossThreads() {
-        return bossThreads;
-    }
-    public void bossThreads(int bossThreads) {
-        this.bossThreads = bossThreads;
-    }
-    public String bossThreadName() {
-        return bossThreadName;
-    }
-    public void bossThreadName(String bossThreadName) {
-        this.bossThreadName = bossThreadName;
     }
 }

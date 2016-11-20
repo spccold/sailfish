@@ -26,7 +26,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.codec.RemotingDecoder;
@@ -34,7 +33,7 @@ import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.RemotingConstants;
-import sailfish.remoting.eventloopgroup.ServerEventLoopGroup;
+import sailfish.remoting.eventgroup.ServerEventGroup;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.handler.MsgHandler;
@@ -59,8 +58,8 @@ public class ExchangeServer implements Endpoint{
     public void start() throws SailfishException{
         ServerBootstrap boot = newServerBootstrap();
         EventLoopGroup accept = NettyPlatformIndependent.newEventLoopGroup(1, new DefaultThreadFactory(RemotingConstants.SERVER_ACCEPT_THREADNAME));
-        final EventExecutorGroup executor = new DefaultEventExecutorGroup(config.codecThreads(), new DefaultThreadFactory(config.codecThreadName()));
-        boot.group(accept, ServerEventLoopGroup.INSTANCE.get());
+        boot.group(accept, ServerEventGroup.INSTANCE.getLoopGroup());
+        final EventExecutorGroup executor = ServerEventGroup.INSTANCE.getExecutorGroup();
         boot.localAddress(config.address().host(), config.address().port());
         boot.childHandler(new ChannelInitializer<SocketChannel>() {
             @Override

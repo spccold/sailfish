@@ -32,8 +32,6 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.NettyPlatformIndependent;
 import sailfish.remoting.ReconnectManager;
@@ -45,7 +43,7 @@ import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.RemotingConstants;
-import sailfish.remoting.eventloopgroup.ClientEventLoopGroup;
+import sailfish.remoting.eventgroup.ClientEventGroup;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
@@ -283,14 +281,9 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
     private Bootstrap configureBoostrap(final ExchangeClientConfig config, final MsgHandler<Protocol> handler) {
         Bootstrap boot = newBootstrap();
         boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.connectTimeout());
-        if (config.mode() == ChannelMode.simple && null != config.localAddress()) {
-            boot.localAddress(config.localAddress().host(), config.localAddress().port());
-        }
         boot.remoteAddress(config.address().host(), config.address().port());
-        boot.group(ClientEventLoopGroup.INSTANCE.get());
-
-        final EventExecutorGroup executorGroup = new DefaultEventExecutorGroup(config.codecThreads(),
-            new DefaultThreadFactory(config.codecThreadName()));
+        boot.group(ClientEventGroup.INSTANCE.getLoopGroup());
+        final EventExecutorGroup executorGroup = ClientEventGroup.INSTANCE.getExecutorGroup();
         boot.handler(new ChannelInitializer<SocketChannel>() {
             @Override
             protected void initChannel(SocketChannel ch) throws Exception {

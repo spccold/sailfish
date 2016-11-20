@@ -53,7 +53,10 @@ public interface RemotingConstants {
 	byte READ_CHANNEL = 1;
 	
 	int DEFAULT_IO_THREADS = Runtime.getRuntime().availableProcessors() + 1;
+	int DEFAULT_EVENT_THREADS = 1;
 	String CLIENT_IO_THREADNAME = "sailfish-client-io";
+	String CLIENT_EVENT_THREADNAME = "sailfish-client-event";
 	String SERVER_IO_THREADNAME = "sailfish-server-io";
+	String SERVER_EVENT_THREADNAME = "sailfish-server-event";
 	String SERVER_ACCEPT_THREADNAME = "sailfish-server-accept";
 }
