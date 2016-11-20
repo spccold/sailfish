@@ -29,7 +29,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
@@ -45,6 +45,7 @@ import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.eventloopgroup.ClientEventLoopGroup;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
@@ -136,7 +137,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
         requestWithFuture(data, callback, requestControl);
     }
 
-    public ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
+    private ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
                                                     RequestControl requestControl) throws SailfishException {
         initChannel();
         final RequestProtocol protocol = newRequest(requestControl);
@@ -286,9 +287,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
             boot.localAddress(config.localAddress().host(), config.localAddress().port());
         }
         boot.remoteAddress(config.address().host(), config.address().port());
-        EventLoopGroup eventLoopGroup = NettyPlatformIndependent.newEventLoopGroup(config.iothreads(),
-            new DefaultThreadFactory(config.iothreadName()));
-        boot.group(eventLoopGroup);
+        boot.group(ClientEventLoopGroup.INSTANCE.get());
 
         final EventExecutorGroup executorGroup = new DefaultEventExecutorGroup(config.codecThreads(),
             new DefaultThreadFactory(config.codecThreadName()));
@@ -320,11 +319,15 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
         boot.option(ChannelOption.TCP_NODELAY, true);
         //replace by heart beat
         boot.option(ChannelOption.SO_KEEPALIVE, false);
+        //default is pooled direct ByteBuf(io.netty.util.internal.PlatformDependent.DIRECT_BUFFER_PREFERRED)
         boot.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         // 32kb(for massive long connections, suggests from http://www.infoq.com/cn/articles/netty-million-level-push-service-design-points) 
         // 64kb(RocketMq remoting default value)
         boot.option(ChannelOption.SO_SNDBUF, 32 * 1024);
         boot.option(ChannelOption.SO_RCVBUF, 32 * 1024);
+        //temporary settings, need more tests
+        //TODO what's happen if exceed high water without channel.isWritable?
+        boot.option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
         boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return boot;
     }

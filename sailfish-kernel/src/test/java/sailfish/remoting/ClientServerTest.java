@@ -39,10 +39,11 @@ import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.executor.SimpleExecutor;
 import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
+import sailfish.remoting.utils.ArrayUtils;
 import sailfish.remoting.utils.Bytes;
-import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
@@ -68,7 +69,9 @@ public class ClientServerTest {
                     RequestProtocol requestProtocol = (RequestProtocol) msg;
                     if (requestProtocol.oneway()) {
                         RECORDS.get(Bytes.bytes2int(requestProtocol.body())).countDown();
-                    } else {
+                    }else if(ArrayUtils.isEmpty(requestProtocol.body())){//test client timeout
+                    	//do nothing, request from remote peer will timeout
+                    }else {
                         Assert.assertNotNull(requestProtocol.body());
                         Assert.assertTrue(requestProtocol.body().length > 0);
                         Assert.assertArrayEquals(data, requestProtocol.body());
@@ -268,17 +271,7 @@ public class ClientServerTest {
 
     @Test
     public void testTimeout() throws Exception {
-        int port = originPort + 1;
-        ExchangeServerConfig serverConfig = new ExchangeServerConfig();
-        serverConfig.address(new Address("localhost", port));
-        ExchangeServer server = Exchanger.bind(serverConfig, new MsgHandler<Protocol>() {
-            @Override
-            public void handle(ChannelHandlerContext ctx, Protocol msg) {
-                //do nothing, request from remote peer will timeout
-            }
-        });
-        server.start();
-
+        int port = originPort;
         byte[] requestData = "".getBytes(CharsetUtil.UTF_8);
         ExchangeChannel client = new DefaultExchangeClient(newBaseConfig(port));
         //test request-response
@@ -316,6 +309,5 @@ public class ClientServerTest {
         Assert.assertTrue(latch.getCount() == 0);
 
         client.close();
-        server.close();
     }
 }

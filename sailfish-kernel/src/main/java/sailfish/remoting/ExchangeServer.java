@@ -23,6 +23,7 @@ import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
@@ -32,6 +33,8 @@ import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
+import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.eventloopgroup.ServerEventLoopGroup;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.handler.MsgHandler;
@@ -48,7 +51,6 @@ public class ExchangeServer implements Endpoint{
     private volatile boolean isClosed = false;
     private ExchangeServerConfig config;
     private MsgHandler<Protocol> handler;
-    private ServerBootstrap boot;
     public ExchangeServer(ExchangeServerConfig config, MsgHandler<Protocol> handler){
         this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
         this.handler = ParameterChecker.checkNotNull(handler, "handler");
@@ -56,10 +58,9 @@ public class ExchangeServer implements Endpoint{
     
     public void start() throws SailfishException{
         ServerBootstrap boot = newServerBootstrap();
-        EventLoopGroup boss = NettyPlatformIndependent.newEventLoopGroup(config.bossThreads(), new DefaultThreadFactory(config.bossThreadName()));
-        EventLoopGroup io = NettyPlatformIndependent.newEventLoopGroup(config.iothreads(), new DefaultThreadFactory(config.iothreadName()));
+        EventLoopGroup accept = NettyPlatformIndependent.newEventLoopGroup(1, new DefaultThreadFactory(RemotingConstants.SERVER_ACCEPT_THREADNAME));
         final EventExecutorGroup executor = new DefaultEventExecutorGroup(config.codecThreads(), new DefaultThreadFactory(config.codecThreadName()));
-        boot.group(boss, io);
+        boot.group(accept, ServerEventLoopGroup.INSTANCE.get());
         boot.localAddress(config.address().host(), config.address().port());
         boot.childHandler(new ChannelInitializer<SocketChannel>() {
             @Override
@@ -78,7 +79,6 @@ public class ExchangeServer implements Endpoint{
         }catch(Throwable cause){
             throw new SailfishException(cause);
         }
-        this.boot = boot;
     }
     
     private ServerBootstrap newServerBootstrap(){
@@ -92,6 +92,8 @@ public class ExchangeServer implements Endpoint{
         serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
         serverBoot.childOption(ChannelOption.SO_SNDBUF, 32 * 1024);
         serverBoot.childOption(ChannelOption.SO_RCVBUF, 32 * 1024);
+        //temporary settings, need more tests
+        serverBoot.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
         serverBoot.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
         serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return serverBoot;
@@ -107,14 +109,7 @@ public class ExchangeServer implements Endpoint{
         synchronized (this) {
             if(isClosed)
                 return;
-            if(null != boot){
-                try{
-                    boot.config().group().shutdownGracefully().await(timeout);
-                    boot.config().childGroup().shutdownGracefully().await(timeout);;
-                }catch(InterruptedException cause){
-                    //do nothing
-                }
-            }
+            //TODO
         }
     }
 

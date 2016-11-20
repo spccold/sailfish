@@ -21,33 +21,39 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
- * <a href="http://www.importnew.com/14410.html">different compression algorithm in java platform</a>
+ * <a href="http://www.importnew.com/14410.html">different compression algorithm
+ * in java platform</a>
  * 
  * @author spccold
  * @version $Id: RemotingConstants.java, v 0.1 2016年10月9日 下午9:58:16 jileng Exp $
  */
 public interface RemotingConstants {
-    //压缩阀值, KB
-    int     COMPRESS_THRESHOLD         = 4 * 1024;
-    //sailfish binary protocol magic
-    short   SAILFISH_MAGIC             = ByteBuffer.wrap("SH".getBytes()).getShort();
-    Charset DEFAULT_CHARSET            = Charset.forName("UTF-8");
+	// 压缩阀值, KB
+	int COMPRESS_THRESHOLD = 4 * 1024;
+	// sailfish binary protocol magic
+	short SAILFISH_MAGIC = ByteBuffer.wrap("SH".getBytes()).getShort();
+	Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
-    //max frame size, 8MB
-    int     DEFAULT_PAYLOAD            = 8 * 1024 * 1024;
+	// max frame size, 8MB
+	int DEFAULT_PAYLOAD = 8 * 1024 * 1024;
 
-    //milliseconds
-    int     DEFAULT_CONNECT_TIMEOUT    = 2000;
-    int     DEFAULT_RECONNECT_INTERVAL = 1000;
-    //seconds
-    int     DEFAULT_IDLE_TIMEOUT       = 10;
-    int     DEFAULT_MAX_IDLE_TIMEOUT   = 3 * DEFAULT_IDLE_TIMEOUT;
+	// milliseconds
+	int DEFAULT_CONNECT_TIMEOUT = 2000;
+	int DEFAULT_RECONNECT_INTERVAL = 1000;
+	// seconds
+	int DEFAULT_IDLE_TIMEOUT = 10;
+	int DEFAULT_MAX_IDLE_TIMEOUT = 3 * DEFAULT_IDLE_TIMEOUT;
 
-    //result
-    byte    RESULT_SUCCESS             = 0;
-    byte    RESULT_FAIL                = 1;
-    
-    //channel type for read write splitting
-    byte    WRITE_CHANNEL              = 0;
-    byte    READ_CHANNEL               = 1;
+	// result
+	byte RESULT_SUCCESS = 0;
+	byte RESULT_FAIL = 1;
+
+	// channel type for read write splitting
+	byte WRITE_CHANNEL = 0;
+	byte READ_CHANNEL = 1;
+	
+	int DEFAULT_IO_THREADS = Runtime.getRuntime().availableProcessors() + 1;
+	String CLIENT_IO_THREADNAME = "sailfish-client-io";
+	String SERVER_IO_THREADNAME = "sailfish-server-io";
+	String SERVER_ACCEPT_THREADNAME = "sailfish-server-accept";
 }

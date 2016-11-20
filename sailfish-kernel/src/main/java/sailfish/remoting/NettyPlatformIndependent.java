@@ -31,32 +31,35 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import sailfish.remoting.utils.PlatformUtil;
 
 /**
- * <a href="http://netty.io/wiki/native-transports.html">netty native-transports</a>
- * <a href="http://stackoverflow.com/questions/23465401/why-native-epoll-support-is-introduced-in-netty">Why native epoll support is introduced in Netty?</a>
+ * <a href="http://netty.io/wiki/native-transports.html">netty
+ * native-transports</a> <a href=
+ * "http://stackoverflow.com/questions/23465401/why-native-epoll-support-is-introduced-in-netty">Why
+ * native epoll support is introduced in Netty?</a>
  * 
  * @author spccold
- * @version $Id: NettyPlatformIndependent.java, v 0.1 2016年11月14日 下午4:51:01 jileng Exp $
+ * @version $Id: NettyPlatformIndependent.java, v 0.1 2016年11月14日 下午4:51:01
+ *          jileng Exp $
  */
 public class NettyPlatformIndependent {
-    
-    public static EventLoopGroup newEventLoopGroup(int nThreads, ThreadFactory threadFactory) {
-        if (PlatformUtil.isLinux()) {
-            return new EpollEventLoopGroup(nThreads, threadFactory);
-        }
-        return new NioEventLoopGroup(nThreads, threadFactory);
-    }
 
-    public static Class<? extends Channel> channelClass() {
-        if (PlatformUtil.isLinux()) {
-            return EpollSocketChannel.class;
-        }
-        return NioSocketChannel.class;
-    }
+	public static EventLoopGroup newEventLoopGroup(int nThreads, ThreadFactory threadFactory) {
+		if (PlatformUtil.isLinux()) {
+			return new EpollEventLoopGroup(nThreads, threadFactory);
+		}
+		return new NioEventLoopGroup(nThreads, threadFactory);
+	}
 
-    public static Class<? extends ServerChannel> serverChannelClass() {
-        if (PlatformUtil.isLinux()) {
-            return EpollServerSocketChannel.class;
-        }
-        return NioServerSocketChannel.class;
-    }
+	public static Class<? extends Channel> channelClass() {
+		if (PlatformUtil.isLinux()) {
+			return EpollSocketChannel.class;
+		}
+		return NioSocketChannel.class;
+	}
+
+	public static Class<? extends ServerChannel> serverChannelClass() {
+		if (PlatformUtil.isLinux()) {
+			return EpollServerSocketChannel.class;
+		}
+		return NioServerSocketChannel.class;
+	}
 }

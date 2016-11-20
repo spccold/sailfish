@@ -54,4 +54,18 @@ public class ArrayUtils {
     public static <T> boolean isNotEmpty(T[] array) {
         return !isEmpty(array);
     }
+    
+    /**
+     * <p>
+     * Checks if an array of primitive bytes is empty or {@code null}.
+     * </p>
+     *
+     * @param array
+     *            the array to test
+     * @return {@code true} if the array is empty or {@code null}
+     * @since 2.1
+     */
+    public static boolean isEmpty(byte[] array) {
+        return array == null || array.length == 0;
+    }
 }
