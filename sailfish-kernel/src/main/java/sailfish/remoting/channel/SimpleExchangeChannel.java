@@ -55,7 +55,6 @@ import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.CollectionUtils;
-import sailfish.remoting.utils.PacketIdGenerator;
 import sailfish.remoting.utils.ParameterChecker;
 import sailfish.remoting.utils.RemotingUtils;
 import sailfish.remoting.utils.StrUtils;
@@ -103,7 +102,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
     @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
         initChannel();
-        RequestProtocol protocol = newRequest(requestControl);
+        RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
         protocol.oneway(true);
         protocol.body(data);
         try {
@@ -138,7 +137,7 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
     private ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
                                                     RequestControl requestControl) throws SailfishException {
         initChannel();
-        final RequestProtocol protocol = newRequest(requestControl);
+        final RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
         protocol.oneway(false);
         protocol.body(data);
 
@@ -323,14 +322,5 @@ public class SimpleExchangeChannel extends AbstractExchangeChannel {
         boot.option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
         boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
         return boot;
-    }
-    
-    private RequestProtocol newRequest(RequestControl requestControl){
-        RequestProtocol protocol = new RequestProtocol();
-        protocol.packetId(PacketIdGenerator.nextId());
-        protocol.opcode(requestControl.opcode());
-        protocol.compressType(requestControl.compressType());
-        protocol.serializeType(requestControl.serializeType());
-        return protocol;
     }
 }

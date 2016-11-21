@@ -34,10 +34,6 @@ public abstract class AbstractExchangeConfig {
     //seconds
     protected int idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
     protected int maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
-    
-    protected int codecThreads = 1;
-    protected String codecThreadName;
-    
     //check parameters
     protected void check(){
         ParameterChecker.checkNotNull(this.address, "remoteAddress can not be null");
@@ -66,18 +62,5 @@ public abstract class AbstractExchangeConfig {
     }
     public void maxIdleTimeout(int maxIdleTimeout) {
         this.maxIdleTimeout = ParameterChecker.checkBytePositive(maxIdleTimeout);
-    }
-
-    public String codecThreadName() {
-        return codecThreadName;
-    }
-    public void codecThreadName(String codecThreadName) {
-        this.codecThreadName = ParameterChecker.checkNotBlank(codecThreadName, "codecThreadName");
-    }
-    public int codecThreads() {
-        return codecThreads;
-    }
-    public void codecThreads(int codecThreads) {
-        this.codecThreads = ParameterChecker.checkPositive(codecThreads, "codecThreads");
     }
 }

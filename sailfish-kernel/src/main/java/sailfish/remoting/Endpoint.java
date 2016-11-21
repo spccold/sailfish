@@ -25,13 +25,13 @@ package sailfish.remoting;
  */
 public interface Endpoint {
     /**
-     * close current Endpoint
+     * close this {@link Endpoint}
      */
     void close();
     
     /**
-     * graceful close current Endpoint
-     * @param timeout millisecond
+     * graceful close this {@link Endpoint}
+     * @param timeout milliseconds
      */
     void close(int timeout);
     

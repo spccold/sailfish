@@ -23,7 +23,6 @@ import sailfish.remoting.channel.ChannelMode;
 import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
-import sailfish.remoting.utils.StrUtils;
 
 /**
  * 
@@ -82,9 +81,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
                 throw new IllegalArgumentException("writeConnections:" + this.writeConnections
                                                    + ", you should specify an appropriate writeConnections or writeRatio");
             }
-        }
-        if (StrUtils.isBlank(codecThreadName)) {
-            this.codecThreadName = "sailfish-client-codec";
         }
     }
 
@@ -177,8 +173,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
         copy.address(this.address);
         copy.idleTimeout(this.idleTimeout);
         copy.maxIdleTimeout(this.maxIdleTimeout);
-        copy.codecThreads(this.codecThreads);
-        copy.codecThreadName(this.codecThreadName);
         //from self
         copy.connectTimeout(this.connectTimeout);
         copy.connections(this.connections);

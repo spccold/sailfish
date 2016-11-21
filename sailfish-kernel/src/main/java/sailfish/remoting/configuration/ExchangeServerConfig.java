@@ -17,8 +17,6 @@
  */
 package sailfish.remoting.configuration;
 
-import sailfish.remoting.utils.StrUtils;
-
 /**
  * 
  * @author spccold
@@ -28,8 +26,5 @@ public class ExchangeServerConfig extends AbstractExchangeConfig{
     @Override
     public void check() {
         super.check();
-        if(StrUtils.isBlank(codecThreadName)){
-            this.codecThreadName= "sailfish-server-codec";
-        }
     }
 }

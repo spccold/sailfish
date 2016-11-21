@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
+import sailfish.remoting.RequestControl;
 import sailfish.remoting.constants.LangType;
 import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.constants.RemotingConstants;
@@ -210,6 +211,15 @@ public class RequestProtocol implements Protocol {
     
     public boolean heartbeat() {
         return this.heartbeat;
+    }
+    
+    public static RequestProtocol newRequest(RequestControl requestControl){
+        RequestProtocol protocol = new RequestProtocol();
+        protocol.packetId(PacketIdGenerator.nextId());
+        protocol.opcode(requestControl.opcode());
+        protocol.compressType(requestControl.compressType());
+        protocol.serializeType(requestControl.serializeType());
+        return protocol;
     }
     
     public static RequestProtocol newHeartbeat(){
