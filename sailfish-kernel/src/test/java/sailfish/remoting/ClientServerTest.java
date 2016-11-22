@@ -31,7 +31,6 @@ import org.junit.Test;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.CharsetUtil;
-import sailfish.remoting.channel.ExchangeChannel;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.ExceptionCode;
@@ -101,7 +100,7 @@ public class ClientServerTest {
         return clientConfig;
     }
 
-    private void testSendAndReceive(ExchangeChannel client, RequestControl control) throws Exception {
+    private void testSendAndReceive(DefaultExchangeClient client, RequestControl control) throws Exception {
         //sync oneway invoke
         CountDownLatch onewayLatch = new CountDownLatch(1);
         int payload = ONEWAY_PAYLOAD_GENERATOR.getAndIncrement();
@@ -154,7 +153,7 @@ public class ClientServerTest {
     public void testSimpleChannel() throws Exception {
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections(1);
-        ExchangeChannel client = new DefaultExchangeClient(config);
+        DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -170,7 +169,7 @@ public class ClientServerTest {
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections(1);
         config.setLazyConnection(true);
-        ExchangeChannel client = new DefaultExchangeClient(config);
+        DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -186,7 +185,7 @@ public class ClientServerTest {
         int conns = 3;
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections(conns);
-        ExchangeChannel client = new DefaultExchangeClient(config);
+        DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -207,7 +206,7 @@ public class ClientServerTest {
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections(conns);
         config.setLazyConnection(true);
-        ExchangeChannel client = new DefaultExchangeClient(config);
+        DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -230,7 +229,7 @@ public class ClientServerTest {
         config.enableReadWriteSplitting(true);
         config.connections(writeConns + readConns);
         config.writeConnections(writeConns);
-        ExchangeChannel client = new DefaultExchangeClient(config);
+        DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -254,7 +253,7 @@ public class ClientServerTest {
         config.setLazyConnection(true);
         config.connections(writeConns + readConns);
         config.writeConnections(writeConns);
-        ExchangeChannel client = new DefaultExchangeClient(config);
+        DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -273,7 +272,7 @@ public class ClientServerTest {
     public void testTimeout() throws Exception {
         int port = originPort;
         byte[] requestData = "".getBytes(CharsetUtil.UTF_8);
-        ExchangeChannel client = new DefaultExchangeClient(newBaseConfig(port));
+        DefaultExchangeClient client = new DefaultExchangeClient(newBaseConfig(port));
         //test request-response
         RequestControl control = new RequestControl();
         ResponseFuture<byte[]> future = client.request(requestData, control);

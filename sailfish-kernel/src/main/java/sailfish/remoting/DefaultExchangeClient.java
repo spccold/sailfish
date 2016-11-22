@@ -17,7 +17,7 @@
  */
 package sailfish.remoting;
 
-import sailfish.remoting.channel.ExchangeChannel;
+import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
@@ -28,48 +28,41 @@ import sailfish.remoting.future.ResponseFuture;
  * @author spccold
  * @version $Id: DefaultExchangeClient.java, v 0.1 2016年10月31日 上午10:47:17 jileng Exp $
  */
-public class DefaultExchangeClient implements ExchangeChannel{
+public class DefaultExchangeClient{
 
-    private ExchangeChannel exchanger;
+    private ExchangeChannelGroup exchanger;
     
     public DefaultExchangeClient(ExchangeClientConfig config) throws SailfishException{
         this.exchanger = Exchanger.connect(config);
     }
     
-    @Override
     public void oneway(byte[] data, RequestControl requestControl) throws SailfishException{
         checkAvailable();
         exchanger.oneway(data, requestControl);
     }
 
-    @Override
     public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException{
         checkAvailable();
         return exchanger.request(data, requestControl);
     }
 
-    @Override
     public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException{
         checkAvailable();
         exchanger.request(data, callback, requestControl);
     }
 
-    @Override
     public void close(){
         this.exchanger.close();
     }
     
-    @Override
     public void close(int timeout){
         this.exchanger.close(timeout);
     }
 
-    @Override
     public boolean isClosed() {
         return exchanger.isClosed();
     }
 
-    @Override
     public boolean isAvailable() {
         return exchanger.isAvailable();
     }

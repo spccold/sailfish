@@ -17,37 +17,51 @@
  */
 package sailfish.remoting.channel;
 
-import sailfish.remoting.Endpoint;
-import sailfish.remoting.RequestControl;
-import sailfish.remoting.ResponseCallback;
+import java.net.SocketAddress;
+
+import io.netty.channel.Channel;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.future.ResponseFuture;
 
 /**
- * communication channel for exchange client
- * <p>
- *  <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
- *  <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
- * </p>
+ * <pre>
+ * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
+ * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
+ * </pre>
+ * 
  * @author spccold
- * @version $Id: ExchangeChannel.java, v 0.1 2016年10月26日 下午8:34:37 jileng Exp $
+ * @version $Id: ExchangeChannel.java, v 0.1 2016年11月21日 下午7:26:12 spccold Exp $
  */
-public interface ExchangeChannel extends Endpoint{
-    
-    boolean isAvailable();
+public interface ExchangeChannel extends ExchangeChannelGroup{
+	/**
+     * Returns a reference to itself.
+     */
+    @Override
+    ExchangeChannel next();
+
+    /**
+     * Return the {@link ExchangeChannelGroup} which is the parent of this {@link ExchangeChannel},
+     */
+    ExchangeChannelGroup parent();
     
     /**
-     * one-way pattern
+     * update this {@link ExchangeChannel} underlying {@link Channel}
+     * @param newChannel
+     * @return old {@link Channel}
      */
-    void oneway(byte[] data, RequestControl requestControl) throws SailfishException;
+    Channel update(Channel newChannel);
     
     /**
-     * request–response pattern
+     * connect to remote peer 
+     * @returnSailfishException
+     * @throws SailfishException
      */
-    ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException;
+    Channel doConnect() throws SailfishException;
     
     /**
-     * callback invoke
+     * recover this {@link ExchangeChannel} if {@link #isAvailable()} return false
      */
-    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException;
+    void recover();
+    
+    SocketAddress localAddress();
+    SocketAddress remoteAdress();
 }

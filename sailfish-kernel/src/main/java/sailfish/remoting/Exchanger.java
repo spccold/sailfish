@@ -17,10 +17,11 @@
  */
 package sailfish.remoting;
 
-import sailfish.remoting.channel.ExchangeChannel;
-import sailfish.remoting.channel.MultiConnsExchangeChannel;
-import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
-import sailfish.remoting.channel.SimpleExchangeChannel;
+import sailfish.remoting.channel.DefaultExchangeChannelGroup;
+import sailfish.remoting.channel.EagerExchangeChannel;
+import sailfish.remoting.channel.ExchangeChannelGroup;
+import sailfish.remoting.channel.LazyExchangeChannel;
+import sailfish.remoting.channel.ReadWriteExchangeChannelGroup;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.SailfishException;
@@ -34,28 +35,40 @@ import sailfish.remoting.utils.ParameterChecker;
  * @version $Id: Exchanger.java, v 0.1 2016年10月26日 下午11:40:38 jileng Exp $
  */
 public class Exchanger {
-    public static ExchangeChannel connect(ExchangeClientConfig config) throws SailfishException {
-        ParameterChecker.checkNotNull(config, "ExchangeClientConfig");
-        config.check();
-        ExchangeChannel channel = null;
-        switch (config.mode()) {
-            case simple:
-                channel = new SimpleExchangeChannel(config);
-                break;
-            case multiconns:
-                channel = new MultiConnsExchangeChannel(config);
-                break;
-            case readwrite:
-                channel = new ReadWriteSplittingExchangeChannel(config);
-                break;
-            default:
-                throw new IllegalArgumentException("invalid channel mode");
-        }
-        return channel;
-    }
+	public static ExchangeChannelGroup connect(ExchangeClientConfig config) throws SailfishException {
+		ParameterChecker.checkNotNull(config, "ExchangeClientConfig");
+		config.check();
+		ExchangeChannelGroup channelGroup = null;
+		switch (config.mode()) {
+		case simple:
+			if (config.isLazyConnection()) {
+				channelGroup = new LazyExchangeChannel(null, config.address(), config.connectTimeout(),
+						config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(), null);
+			} else {
+				channelGroup = new EagerExchangeChannel(null, config.address(), config.connectTimeout(),
+						config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(), null);
+			}
+			break;
+		case multiconns:
+			channelGroup = new DefaultExchangeChannelGroup(config.address(), config.connections(),
+					config.connectTimeout(), config.reconnectInterval(), config.idleTimeout(), config.idleTimeout(),
+					config.isLazyConnection(), null);
+			break;
+		case readwrite:
+			channelGroup = new ReadWriteExchangeChannelGroup(config.address(), config.connectTimeout(),
+					config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(),
+					config.isLazyConnection(), config.connections() - config.writeConnections(),
+					config.writeConnections());
+			break;
+		default:
+			throw new IllegalArgumentException("invalid channel mode");
+		}
+		return channelGroup;
+	}
 
-    public static ExchangeServer bind(ExchangeServerConfig config, MsgHandler<Protocol> handler) throws SailfishException{
-        config.check();
-        return new ExchangeServer(config, handler);
-    }
+	public static ExchangeServer bind(ExchangeServerConfig config, MsgHandler<Protocol> handler)
+			throws SailfishException {
+		config.check();
+		return new ExchangeServer(config, handler);
+	}
 }

@@ -24,8 +24,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sailfish.remoting.channel.SimpleExchangeChannel;
-import sailfish.remoting.configuration.ExchangeClientConfig;
+import sailfish.remoting.channel.ExchangeChannel;
 
 /**
  * 
@@ -49,16 +48,16 @@ public class ReconnectManager {
         reconnectExecutor.setKeepAliveTime(1, TimeUnit.MINUTES);
     }
     
-    public void addReconnectTask(SimpleExchangeChannel reconnectedChannel){
-        reconnectExecutor.schedule(new ReconnectTask(reconnectedChannel), 0, TimeUnit.MILLISECONDS);
+    public void addReconnectTask(ExchangeChannel reconnectedChannel, int reconnectInterval){
+        reconnectExecutor.schedule(new ReconnectTask(reconnectedChannel, reconnectInterval), 0, TimeUnit.MILLISECONDS);
     }
     
     private class ReconnectTask implements Runnable{
-        private final SimpleExchangeChannel reconnectedChannel;
-        private final ExchangeClientConfig clientConfig;
-        public ReconnectTask(SimpleExchangeChannel reconnectedChannel) {
+        private final ExchangeChannel reconnectedChannel;
+        private final int reconnectInterval;
+        public ReconnectTask(ExchangeChannel reconnectedChannel, int reconnectInterval) {
             this.reconnectedChannel = reconnectedChannel;
-            this.clientConfig = reconnectedChannel.getConfig();
+            this.reconnectInterval = reconnectInterval;
         }
 
         @Override
@@ -67,12 +66,12 @@ public class ReconnectManager {
                 return;
             }
             try{
-                reconnectedChannel.reset(reconnectedChannel.doConnect(this.clientConfig));
+                reconnectedChannel.update(reconnectedChannel.doConnect());
             }catch(Throwable cause){
                 String msg = "reconnect to remoteAddress[%s] fail";
-                logger.error(String.format(msg, clientConfig.address().toString()), cause);
+                logger.error(String.format(msg, reconnectedChannel.remoteAdress().toString(), cause));
                 //reconnect next time
-                ReconnectManager.this.reconnectExecutor.schedule(this, this.clientConfig.reconnectInterval(), TimeUnit.MILLISECONDS);
+                ReconnectManager.this.reconnectExecutor.schedule(this, reconnectInterval, TimeUnit.MILLISECONDS);
             }
         }
     }

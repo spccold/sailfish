@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sailfish.remoting.channel.SimpleExchangeChannel;
+import sailfish.remoting.channel.ExchangeChannel;
 import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.CollectionUtils;
@@ -40,18 +40,18 @@ public class Tracer {
     private static final Logger logger = LoggerFactory.getLogger(Tracer.class);
     private static final Object EMPTY_VALUE = new Object();
     private static final ConcurrentMap<Integer , TraceContext> TRACES = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<SimpleExchangeChannel, ConcurrentMap<Integer, Object>> 
+    private static final ConcurrentMap<ExchangeChannel, ConcurrentMap<Integer, Object>> 
                                             SINGLE_CHANNEL_TRACES = new ConcurrentHashMap<>();
     
-    public static Map<Integer, Object> popPendingRequests(SimpleExchangeChannel channel){
+    public static Map<Integer, Object> popPendingRequests(ExchangeChannel channel){
         return SINGLE_CHANNEL_TRACES.remove(channel);
     }
 
-    public static Map<Integer, Object> peekPendingRequests(SimpleExchangeChannel channel){
+    public static Map<Integer, Object> peekPendingRequests(ExchangeChannel channel){
         return SINGLE_CHANNEL_TRACES.get(channel);
     }
     
-    public static void trace(SimpleExchangeChannel channel ,int packageId, ResponseFuture<byte[]> future){
+    public static void trace(ExchangeChannel channel ,int packageId, ResponseFuture<byte[]> future){
         TRACES.putIfAbsent(packageId, new TraceContext(channel, future));
         
         ConcurrentMap<Integer, Object> packetIds = SINGLE_CHANNEL_TRACES.get(channel);
@@ -82,9 +82,9 @@ public class Tracer {
     }
     
     static class TraceContext{
-        SimpleExchangeChannel channel;
+        ExchangeChannel channel;
         ResponseFuture<byte[]> respFuture;
-        public TraceContext(SimpleExchangeChannel channel, ResponseFuture<byte[]> respFuture) {
+        public TraceContext(ExchangeChannel channel, ResponseFuture<byte[]> respFuture) {
             this.channel = ParameterChecker.checkNotNull(channel, "channel");
             this.respFuture = ParameterChecker.checkNotNull(respFuture, "respFuture");
         }

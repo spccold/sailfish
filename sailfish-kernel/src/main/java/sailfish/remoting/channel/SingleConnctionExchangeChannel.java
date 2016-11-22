@@ -15,7 +15,7 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.channel2;
+package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -25,15 +25,20 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.Address;
 import sailfish.remoting.NettyPlatformIndependent;
 import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.Tracer;
+import sailfish.remoting.codec.RemotingDecoder;
+import sailfish.remoting.codec.RemotingEncoder;
+import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.eventgroup.ClientEventGroup;
 import sailfish.remoting.exceptions.ExceptionCode;
@@ -42,6 +47,7 @@ import sailfish.remoting.future.BytesResponseFuture;
 import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
@@ -53,13 +59,11 @@ import sailfish.remoting.utils.StrUtils;
  *          下午11:05:58 spccold Exp $
  */
 public abstract class SingleConnctionExchangeChannel extends AbstractExchangeChannel {
-	
-	private final Address remoteAddress;
 	private final int connectTimeout;
-	protected final int reconnectInterval;
-	protected final int idleTimeout;
-	protected final int maxIdleTimeOut;
 
+	private final int idleTimeout;
+	private final int maxIdleTimeOut;
+	private final ReadWriteChannelConfig config;
 	/**
 	 * Create a new instance
 	 * 
@@ -71,9 +75,10 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	 * @param doConnect
 	 *            connect to remote peer or not when initial
 	 */
-	public SingleConnctionExchangeChannel(ExchangeChannelGroup parent, Address address, boolean doConnect) {
+	public SingleConnctionExchangeChannel(ExchangeChannelGroup parent, Address address, ReadWriteChannelConfig config, boolean doConnect)
+			throws SailfishException {
 		this(parent, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
-				RemotingConstants.DEFAULT_IDLE_TIMEOUT, RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, doConnect);
+				RemotingConstants.DEFAULT_IDLE_TIMEOUT, RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, config, doConnect);
 	}
 
 	/**
@@ -93,9 +98,9 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	 *            connect to remote peer or not when initial
 	 */
 	public SingleConnctionExchangeChannel(ExchangeChannelGroup parent, Address address, int connectTimeout,
-			int reconnectInterval, boolean doConnect) {
+			int reconnectInterval, ReadWriteChannelConfig config, boolean doConnect) throws SailfishException {
 		this(parent, address, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, doConnect);
+				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, config, doConnect);
 	}
 
 	/**
@@ -114,9 +119,9 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	 *            connect to remote peer or not when initial
 	 */
 	public SingleConnctionExchangeChannel(ExchangeChannelGroup parent, int idleTimeout, int maxIdleTimeOut,
-			Address address, boolean doConnect) {
+			Address address, ReadWriteChannelConfig config, boolean doConnect) throws SailfishException {
 		this(parent, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
-				idleTimeout, maxIdleTimeOut, doConnect);
+				idleTimeout, maxIdleTimeOut, config, doConnect);
 	}
 
 	/**
@@ -140,13 +145,15 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	 *            connect to remote peer or not when initial
 	 */
 	public SingleConnctionExchangeChannel(ExchangeChannelGroup parent, Address address, int connectTimeout,
-			int reconnectInterval, int idleTimeout, int maxIdleTimeOut, boolean doConnect) {
-		super(parent);
-		this.remoteAddress = address;
+			int reconnectInterval, int idleTimeout, int maxIdleTimeOut, ReadWriteChannelConfig config, boolean doConnect) throws SailfishException {
+		super(parent, address, reconnectInterval);
 		this.connectTimeout = connectTimeout;
-		this.reconnectInterval = reconnectInterval;
 		this.idleTimeout = idleTimeout;
 		this.maxIdleTimeOut = maxIdleTimeOut;
+		this.config = config;
+		if (doConnect) {
+			this.channel = doConnect();
+		}
 	}
 
 	@Override
@@ -192,7 +199,7 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 		ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
 		respFuture.setCallback(callback, requestControl.timeout());
 		// trace before write
-		// TODO Tracer.trace(this, protocol.packetId(), respFuture);
+		Tracer.trace(this, protocol.packetId(), respFuture);
 		try {
 			if (requestControl.sent()) {
 				ChannelFuture future = channel.writeAndFlush(protocol)
@@ -211,18 +218,6 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 		return respFuture;
 	}
 
-	protected void initChannel() throws SailfishException {
-		if (null != channel) {
-			return;
-		}
-		synchronized (this) {
-			if (null != channel) {
-				return;
-			}
-			this.channel = doConnect();
-		}
-	}
-
 	@Override
 	public Channel doConnect() throws SailfishException {
 		MsgHandler<Protocol> handler = new MsgHandler<Protocol>() {
@@ -237,7 +232,9 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 		};
 		Bootstrap boot = configureBoostrap(handler);
 		try {
-			return boot.connect().syncUninterruptibly().channel();
+			Channel channel = boot.connect().syncUninterruptibly().channel();
+			this.localAddress = channel.localAddress();
+			return channel;
 		} catch (Throwable cause) {
 			throw new SailfishException(cause);
 		}
@@ -246,15 +243,51 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	private Bootstrap configureBoostrap(final MsgHandler<Protocol> handler) {
 		Bootstrap boot = newBootstrap();
 		boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
-		boot.remoteAddress(remoteAddress.host(), remoteAddress.port());
+		boot.remoteAddress(((Address)remoteAddress).host(), ((Address)remoteAddress).port());
 		boot.group(ClientEventGroup.INSTANCE.getLoopGroup());
 		boot.handler(newChannelInitializer(handler));
 		return boot;
 	}
 
-	protected abstract ChannelInitializer<SocketChannel> newChannelInitializer(MsgHandler<Protocol> handler);
+	protected ChannelInitializer<SocketChannel> newChannelInitializer(final MsgHandler<Protocol> handler) {
+		final EventExecutorGroup executorGroup = ClientEventGroup.INSTANCE.getExecutorGroup();
+		return new ChannelInitializer<SocketChannel>() {
+			@Override
+			protected void initChannel(SocketChannel ch) throws Exception {
+				ChannelPipeline pipeline = ch.pipeline();
+				ch.attr(ChannelAttrKeys.idleTimeout).set(idleTimeout);
+				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(maxIdleTimeOut);
+				if (null != config) {
+					ch.attr(ChannelAttrKeys.writeChannel).set(config.write());
+					ch.attr(ChannelAttrKeys.channelIndex).set(config.index());
+					ch.attr(ChannelAttrKeys.uuid).set(config.uuid());
+				}
+				// TODO should increase ioRatio when every ChannelHandler bind
+				// to executorGroup?
+				pipeline.addLast(executorGroup, new RemotingEncoder());
+				pipeline.addLast(executorGroup, new RemotingDecoder());
+				pipeline.addLast(executorGroup, new IdleStateHandler(idleTimeout, 0, 0));
+				pipeline.addLast(executorGroup, new ChannelEventsHandler(true));
+				pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler, true));
+			}
+		};
+	}
 
-	protected boolean available() {
+	@Override
+	public boolean isAvailable() {
+		boolean isAvailable = false;
+		if (!reconnectting && !(isAvailable = underlyingAvailable())) {
+			synchronized (this) {
+				if (!reconnectting && !(isAvailable = underlyingAvailable())) {
+					recover();
+					this.reconnectting = true;
+				}
+			}
+		}
+		return isAvailable;
+	}
+
+	private boolean underlyingAvailable() {
 		return null != channel && channel.isOpen() && channel.isActive();
 	}
 

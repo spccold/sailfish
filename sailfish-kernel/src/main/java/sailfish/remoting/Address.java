@@ -17,6 +17,8 @@
  */
 package sailfish.remoting;
 
+import java.net.SocketAddress;
+
 import sailfish.remoting.utils.ParameterChecker;
 
 /**
@@ -24,8 +26,10 @@ import sailfish.remoting.utils.ParameterChecker;
  * @author spccold
  * @version $Id: RemoteAddress.java, v 0.1 2016年10月26日 下午11:48:58 jileng Exp $
  */
-public class Address {
-    private String host;
+public class Address extends SocketAddress{
+	private static final long serialVersionUID = 1L;
+
+	private String host;
     private int    port;
 
     public Address(String host, int port) {

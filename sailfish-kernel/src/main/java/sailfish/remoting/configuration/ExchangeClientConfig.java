@@ -17,10 +17,7 @@
  */
 package sailfish.remoting.configuration;
 
-import java.util.UUID;
-
 import sailfish.remoting.channel.ChannelMode;
-import sailfish.remoting.channel.ReadWriteSplittingExchangeChannel;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -44,18 +41,6 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
     private int     writeRatio               = 50;
     private int     writeConnections;
     private boolean lazyConnection           = false;
-    /**
-     * inner use, user should't set this field
-     * identify current connection is write connection when enableReadWriteSplitting is true
-     */
-    private boolean writeConnection          = false;
-    /**
-     * inner use, user should't set this field
-     * identify current {@link ReadWriteSplittingExchangeChannel} when enableReadWriteSplitting is true
-     */
-    private UUID  uuid;
-    //inner use, user should't set this field
-    private int channelIndex;
     
     public ChannelMode mode() {
         if (connections == 1) {
@@ -141,50 +126,5 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 
     public void setLazyConnection(boolean lazyConnection) {
         this.lazyConnection = lazyConnection;
-    }
-
-    public boolean isWriteConnection() {
-        return writeConnection;
-    }
-
-    public void setWriteConnection(boolean writeConnection) {
-        this.writeConnection = writeConnection;
-    }
-
-    public UUID uuid() {
-        return uuid;
-    }
-
-    public void uuid(UUID uuid) {
-        this.uuid = uuid;
-    }
-
-    public int channelIndex() {
-        return channelIndex;
-    }
-
-    public void channelIndex(int channelIndex) {
-        this.channelIndex = channelIndex;
-    }
-    
-    public ExchangeClientConfig deepCopy(){
-        ExchangeClientConfig copy = new ExchangeClientConfig();
-        //from parent
-        copy.address(this.address);
-        copy.idleTimeout(this.idleTimeout);
-        copy.maxIdleTimeout(this.maxIdleTimeout);
-        //from self
-        copy.connectTimeout(this.connectTimeout);
-        copy.connections(this.connections);
-        copy.setLazyConnection(this.lazyConnection);
-        if(this.enableReadWriteSplitting){
-            copy.enableReadWriteSplitting(this.enableReadWriteSplitting);
-            copy.writeConnections(this.writeConnections);
-            copy.setWriteConnection(this.writeConnection);
-            copy.writeRatio(this.writeRatio);
-            copy.channelIndex(this.channelIndex);
-            copy.uuid(this.uuid);
-        }
-        return copy;
     }
 }

@@ -15,10 +15,11 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.channel2;
+package sailfish.remoting.channel;
 
-import java.util.Iterator;
+import java.util.UUID;
 
+import io.netty.channel.Channel;
 import sailfish.remoting.Endpoint;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
@@ -34,14 +35,16 @@ import sailfish.remoting.future.ResponseFuture;
  * @version $Id: ExchangeChannelGroup.java, v 0.1 2016年11月21日 下午2:18:34 spccold
  *          Exp $
  */
-public interface ExchangeChannelGroup extends Endpoint, Iterable<ExchangeChannel>{
+public interface ExchangeChannelGroup extends Endpoint{
     /**
      * Returns one of the {@link ExchangeChannel}s managed by this {@link ExchangeChannelGroup}.
      */
-    ExchangeChannel next();
+    ExchangeChannel next() throws SailfishException;
 
-    @Override
-    Iterator<ExchangeChannel> iterator();
+    /**
+     * like {@link Channel#id()}
+     */
+    UUID id();
     
     boolean isAvailable();
     
