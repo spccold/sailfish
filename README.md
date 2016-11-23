@@ -15,3 +15,8 @@
 * Something Else (You Should Pay Attention ?)
 	* initial implementation without any refactor and check
 	* i will spent a lot of time on this exciting project, i require your constant focus!
+
+## some articles about netty 
+* http://netty.io/wiki/using-as-a-generic-library.html
+* http://www.antonkharenko.com/2015/08/netty-best-practices-distilled.html
+* https://github.com/netty/netty/issues/1759
