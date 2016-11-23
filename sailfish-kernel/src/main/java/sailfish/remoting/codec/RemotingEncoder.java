@@ -18,6 +18,7 @@
 package sailfish.remoting.codec;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import sailfish.remoting.protocol.Protocol;
@@ -27,7 +28,13 @@ import sailfish.remoting.protocol.Protocol;
  * @author spccold
  * @version $Id: RemotingEncoder.java, v 0.1 2016年10月9日 下午9:44:43 jileng Exp $
  */
+@ChannelHandler.Sharable
 public class RemotingEncoder extends MessageToByteEncoder<Protocol>{
+	
+	public static final RemotingEncoder INSTANCE = new RemotingEncoder();
+	
+	private RemotingEncoder(){}
+	
     //all write exceptions will be manage by Promise
     @Override
     protected void encode(ChannelHandlerContext ctx, Protocol msg, ByteBuf out) throws Exception {

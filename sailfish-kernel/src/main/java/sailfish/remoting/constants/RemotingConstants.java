@@ -21,8 +21,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
- * <a href="http://www.importnew.com/14410.html">different compression algorithm
- * in java platform</a>
+ * <a href="http://www.importnew.com/14410.html">different compression algorithm in java platform</a>
  * 
  * @author spccold
  * @version $Id: RemotingConstants.java, v 0.1 2016年10月9日 下午9:58:16 jileng Exp $

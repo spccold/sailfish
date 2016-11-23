@@ -32,8 +32,9 @@ import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.eventgroup.ClientEventGroup;
-import sailfish.remoting.handler.ChannelEventsHandler;
+import sailfish.remoting.handler.HeartbeatChannelHandler;
 import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.handler.NegotiateChannelHandler;
 import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 
@@ -82,6 +83,7 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception {
 				ChannelPipeline pipeline = ch.pipeline();
+				ch.attr(ChannelAttrKeys.clientSide).set(true);
 				ch.attr(ChannelAttrKeys.idleTimeout).set(idleTimeout);
 				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(maxIdleTimeOut);
 				if (null != config) {
@@ -90,11 +92,12 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 					ch.attr(ChannelAttrKeys.uuid).set(config.uuid());
 				}
 				// TODO should increase ioRatio when every ChannelHandler bind to executorGroup?
-				pipeline.addLast(executorGroup, new RemotingEncoder());
+				pipeline.addLast(executorGroup, RemotingEncoder.INSTANCE);
 				pipeline.addLast(executorGroup, new RemotingDecoder());
 				pipeline.addLast(executorGroup, new IdleStateHandler(idleTimeout, 0, 0));
-				pipeline.addLast(executorGroup, new ChannelEventsHandler(true));
-				pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler, true));
+				pipeline.addLast(executorGroup, HeartbeatChannelHandler.INSTANCE);
+				pipeline.addLast(executorGroup, NegotiateChannelHandler.INSTANCE);
+				pipeline.addLast(executorGroup, new ShareableSimpleChannelInboundHandler(handler));
 			}
 		};
 	}

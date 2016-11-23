@@ -32,7 +32,6 @@ import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
 import sailfish.remoting.future.ResponseFuture;
-import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.StrUtils;
@@ -62,6 +61,31 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 		if (doConnect) {
 			this.channel = doConnect();
 		}
+	}
+	
+	@Override
+	public Channel doConnect() throws SailfishException {
+		try {
+			Channel channel = reusedBootstrap.connect().syncUninterruptibly().channel();
+			this.localAddress = channel.localAddress();
+			return channel;
+		} catch (Throwable cause) {
+			throw new SailfishException(cause);
+		}
+	}
+
+	@Override
+	public boolean isAvailable() {
+		boolean isAvailable = false;
+		if (!reconnectting && !(isAvailable = underlyingAvailable())) {
+			synchronized (this) {
+				if (!reconnectting && !(isAvailable = underlyingAvailable())) {
+					recover();
+					this.reconnectting = true;
+				}
+			}
+		}
+		return isAvailable;
 	}
 
 	@Override
@@ -124,31 +148,6 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 			throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
 		}
 		return respFuture;
-	}
-
-	@Override
-	public Channel doConnect() throws SailfishException {
-		try {
-			Channel channel = reusedBootstrap.connect().syncUninterruptibly().channel();
-			this.localAddress = channel.localAddress();
-			return channel;
-		} catch (Throwable cause) {
-			throw new SailfishException(cause);
-		}
-	}
-
-	@Override
-	public boolean isAvailable() {
-		boolean isAvailable = false;
-		if (!reconnectting && !(isAvailable = underlyingAvailable())) {
-			synchronized (this) {
-				if (!reconnectting && !(isAvailable = underlyingAvailable())) {
-					recover();
-					this.reconnectting = true;
-				}
-			}
-		}
-		return isAvailable;
 	}
 
 	private boolean underlyingAvailable() {

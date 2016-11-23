@@ -32,7 +32,10 @@ public interface ChannelAttrKeys {
 	AttributeKey<Long> lastReadTimeMillis = AttributeKey.valueOf("lastReadTimeMillis");
 	
 	//for read write splitting
-	AttributeKey<Boolean> writeChannel = AttributeKey.valueOf("readwrite.writeChannel");
 	AttributeKey<UUID> uuid = AttributeKey.valueOf("readwrite.uuid");
+	AttributeKey<Boolean> writeChannel = AttributeKey.valueOf("readwrite.writeChannel");
 	AttributeKey<Integer> channelIndex = AttributeKey.valueOf("readwrite.channelIndex");
+	
+	//side
+	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("side");
 }

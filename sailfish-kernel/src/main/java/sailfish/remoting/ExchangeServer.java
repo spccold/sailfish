@@ -35,8 +35,9 @@ import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.eventgroup.ServerEventGroup;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.handler.ChannelEventsHandler;
+import sailfish.remoting.handler.HeartbeatChannelHandler;
 import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.handler.NegotiateChannelHandler;
 import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
@@ -66,11 +67,13 @@ public class ExchangeServer implements Endpoint{
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
                 ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
+
+                pipeline.addLast(executor, RemotingEncoder.INSTANCE);
                 pipeline.addLast(executor, new RemotingDecoder());
-                pipeline.addLast(executor, new RemotingEncoder());
                 pipeline.addLast(executor, "idleStateHandler", new IdleStateHandler(config.idleTimeout(), 0, 0));
-                pipeline.addLast(executor, new ChannelEventsHandler(false));
-                pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler, false));
+                pipeline.addLast(executor, HeartbeatChannelHandler.INSTANCE);
+                pipeline.addLast(executor, NegotiateChannelHandler.INSTANCE);
+                pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler));
             }
         });
         try{

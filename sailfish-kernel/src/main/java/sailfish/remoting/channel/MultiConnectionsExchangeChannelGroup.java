@@ -25,7 +25,6 @@ import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.handler.ChannelEventsHandler;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.ResponseProtocol;

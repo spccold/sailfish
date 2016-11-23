@@ -15,18 +15,21 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.configuration;
+package sailfish.remoting.utils;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.util.Attribute;
+import sailfish.remoting.constants.ChannelAttrKeys;
 
 /**
- * 
  * @author spccold
- * @version $Id: ExchangeServerConfig.java, v 0.1 2016年10月27日 下午5:42:01 jileng Exp $
+ * @version $Id: ChannelUtil.java, v 0.1 2016年11月23日 下午11:13:40 spccold Exp $
  */
-public class ExchangeServerConfig extends AbstractExchangeConfig{
+public class ChannelUtil {
 
-	@Override
-	public void check() {
-		super.check();
+	public static boolean clientSide(ChannelHandlerContext ctx) {
+		Attribute<Boolean> clientSideAttr = ctx.channel().attr(ChannelAttrKeys.clientSide);
+		return (null != clientSideAttr && null != clientSideAttr.get() && clientSideAttr.get());
 	}
-	
+
 }

@@ -31,15 +31,15 @@ public abstract class AbstractExchangeConfig {
      * remote address for client, local address for server
      */
     protected Address address;
-    //seconds
+    // in seconds
     protected int idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
     protected int maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
     //check parameters
     protected void check(){
-        ParameterChecker.checkNotNull(this.address, "remoteAddress can not be null");
-        ParameterChecker.checkBytePositive(this.idleTimeout);
-        ParameterChecker.checkBytePositive(this.maxIdleTimeout);
-        if(this.idleTimeout > this.maxIdleTimeout){
+        ParameterChecker.checkNotNull(address, "address");
+        ParameterChecker.checkBytePositive(idleTimeout);
+        ParameterChecker.checkBytePositive(maxIdleTimeout);
+        if(idleTimeout > maxIdleTimeout){
             throw new IllegalArgumentException("maxIdleTimeout must be greater than idleTimeout");
         }
     }
