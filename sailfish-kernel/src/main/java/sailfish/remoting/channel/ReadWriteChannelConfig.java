@@ -25,16 +25,16 @@ import java.util.UUID;
  *          spccold Exp $
  */
 public class ReadWriteChannelConfig {
+	private UUID uuid;
+	private int index;
+	private boolean write;
+
 	public ReadWriteChannelConfig(boolean write, UUID uuid, int index) {
 		this.write = write;
 		this.uuid = uuid;
 		this.index = index;
 	}
 
-	private boolean write;
-	private UUID uuid;
-	private int index;
-	
 	public ReadWriteChannelConfig write(boolean write){
 		this.write = write;
 		return this;

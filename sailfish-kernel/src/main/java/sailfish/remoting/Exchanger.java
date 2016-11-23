@@ -18,9 +18,7 @@
 package sailfish.remoting;
 
 import sailfish.remoting.channel.DefaultExchangeChannelGroup;
-import sailfish.remoting.channel.EagerExchangeChannel;
 import sailfish.remoting.channel.ExchangeChannelGroup;
-import sailfish.remoting.channel.LazyExchangeChannel;
 import sailfish.remoting.channel.ReadWriteExchangeChannelGroup;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
@@ -41,14 +39,6 @@ public class Exchanger {
 		ExchangeChannelGroup channelGroup = null;
 		switch (config.mode()) {
 		case simple:
-			if (config.isLazyConnection()) {
-				channelGroup = new LazyExchangeChannel(null, config.address(), config.connectTimeout(),
-						config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(), null);
-			} else {
-				channelGroup = new EagerExchangeChannel(null, config.address(), config.connectTimeout(),
-						config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(), null);
-			}
-			break;
 		case multiconns:
 			channelGroup = new DefaultExchangeChannelGroup(config.address(), config.connections(),
 					config.connectTimeout(), config.reconnectInterval(), config.idleTimeout(), config.idleTimeout(),

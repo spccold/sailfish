@@ -70,6 +70,7 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 		} catch (SailfishException cause) {
 			logger.warn("writeGroup not available, try to choose readGroup", cause);
 		}
+		//try readGroup if writeGroup no available
 		return readGroup.next();
 	}
 

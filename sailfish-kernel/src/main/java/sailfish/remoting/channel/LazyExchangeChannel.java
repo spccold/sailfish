@@ -17,6 +17,7 @@
  */
 package sailfish.remoting.channel;
 
+import io.netty.bootstrap.Bootstrap;
 import sailfish.remoting.Address;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
@@ -25,29 +26,15 @@ import sailfish.remoting.future.ResponseFuture;
 
 /**
  * @author spccold
- * @version $Id: LazyExchangeChannel.java, v 0.1 2016年11月21日 下午11:18:11 spccold
- *          Exp $
+ * @version $Id: LazyExchangeChannel.java, v 0.1 2016年11月21日 下午11:18:11 spccold Exp $
  */
-public class LazyExchangeChannel extends SingleConnctionExchangeChannel {
+public final class LazyExchangeChannel extends SingleConnctionExchangeChannel {
+	
 	private volatile boolean lazyWithOutInit = true;
 
-	public LazyExchangeChannel(ExchangeChannelGroup parent, Address address, ReadWriteChannelConfig config) throws SailfishException {
-		super(parent, address, config, false);
-	}
-
-	public LazyExchangeChannel(ExchangeChannelGroup parent, Address address, int connectTimeout, int reconnectInterval, ReadWriteChannelConfig config)
+	LazyExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, Address address, int reconnectInterval)
 			throws SailfishException {
-		super(parent, address, connectTimeout, reconnectInterval, config, false);
-	}
-
-	public LazyExchangeChannel(ExchangeChannelGroup parent, int idleTimeout, int maxIdleTimeOut, Address address, ReadWriteChannelConfig config)
-			throws SailfishException {
-		super(parent, address, idleTimeout, maxIdleTimeOut, config, false);
-	}
-
-	public LazyExchangeChannel(ExchangeChannelGroup parent, Address address, int connectTimeout, int reconnectInterval,
-			int idleTimeout, int maxIdleTimeOut, ReadWriteChannelConfig config) throws SailfishException {
-		super(parent, address, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut, config, false);
+		super(bootstrap, parent, address, reconnectInterval, false);
 	}
 
 	@Override

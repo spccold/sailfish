@@ -48,7 +48,7 @@ public abstract class AbstractExchangeChannelGroup implements ExchangeChannelGro
 
 	@Override
 	public boolean isClosed() {
-		return this.closed;
+		return closed;
 	}
 
 	@Override

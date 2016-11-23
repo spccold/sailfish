@@ -90,6 +90,10 @@ public class DefaultExchangeChannelChooserFactory implements ExchangeChannelChoo
 
 		@Override
 		public ExchangeChannel next() throws SailfishException {
+			if(channels.length == 1){//one connection check
+				return channels[0];
+			}
+			
 			int arrayIndex = 0;
 			int currentIndex = idx.getAndIncrement();
 			for (int i = 0; i < channels.length; i++) {

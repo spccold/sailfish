@@ -17,26 +17,12 @@
  */
 package sailfish.remoting.channel;
 
-import io.netty.bootstrap.Bootstrap;
-import sailfish.remoting.Address;
-import sailfish.remoting.exceptions.SailfishException;
+import io.netty.channel.Channel;
 
 /**
  * @author spccold
- * @version $Id: EagerExchangeChannel.java, v 0.1 2016年11月21日 下午11:17:02 spccold Exp $
+ * @version $Id: ChannelAttributesConfigureHandler.java, v 0.1 2016年11月23日 下午4:33:39 spccold Exp $
  */
-public final class EagerExchangeChannel extends SingleConnctionExchangeChannel {
-
-	EagerExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, Address address, int reconnectInterval)
-			throws SailfishException {
-		super(bootstrap, parent, address, reconnectInterval, true);
-	}
-
-	@Override
-	public boolean isAvailable() {
-		if (isClosed()) {
-			return false;
-		}
-		return super.isAvailable();
-	}
+public interface ChannelAttributesConfigureHandler {
+	void configure(Channel channel);
 }

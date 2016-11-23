@@ -17,6 +17,7 @@
  */
 package sailfish.remoting.channel;
 
+import io.netty.bootstrap.Bootstrap;
 import sailfish.remoting.Address;
 import sailfish.remoting.exceptions.SailfishException;
 
@@ -52,14 +53,15 @@ public class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannel
 		super(address, connections, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, config);
 	}
 
+	/**
+	 * {@link ReadWriteExchangeChannelGroup}'s read connections must be initialed eagerly whether lazy is true or false
+	 */
 	@Override
-	protected ExchangeChannel newChild(Address address, int connectTimeout, int reconnectInterval, int idleTimeout,
-			int maxIdleTimeOut, boolean lazy, ReadWriteChannelConfig config) throws SailfishException {
+	protected ExchangeChannel newChild(Bootstrap bootstrap, Address address, int reconnectInterval,
+			boolean lazy, ReadWriteChannelConfig config) throws SailfishException {
 		if (lazy && (null == config || config.write())) {
-			return new LazyExchangeChannel(this, address, connectTimeout, reconnectInterval, idleTimeout,
-					maxIdleTimeOut, config);
+			return new LazyExchangeChannel(bootstrap, this, address, reconnectInterval);
 		} 
-		return new EagerExchangeChannel(this, address, connectTimeout, reconnectInterval, idleTimeout,
-				maxIdleTimeOut, config);
+		return new EagerExchangeChannel(bootstrap, this, address, reconnectInterval);
 	}
 }
