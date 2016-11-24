@@ -18,19 +18,22 @@
 package sailfish.remoting.channel;
 
 import java.net.SocketAddress;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.locks.LockSupport;
 
 import io.netty.channel.Channel;
-import sailfish.remoting.Address;
-import sailfish.remoting.ReconnectManager;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import sailfish.remoting.RequestControl;
+import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.exceptions.ExceptionCode;
+import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.future.BytesResponseFuture;
+import sailfish.remoting.future.ResponseFuture;
+import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
-import sailfish.remoting.utils.CollectionUtils;
-import sailfish.remoting.utils.ParameterChecker;
-import sailfish.remoting.utils.RemotingUtils;
+import sailfish.remoting.utils.StrUtils;
 
 /**
  * @author spccold
@@ -40,20 +43,15 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 	private final UUID id;
 	/** underlying channel */
 	protected volatile Channel channel;
-	protected volatile boolean reconnectting;
 	protected volatile boolean closed = false;
-
-	protected final int reconnectInterval;
-
+	
 	private final ExchangeChannelGroup parent;
 	protected final SocketAddress remoteAddress;
-	protected SocketAddress localAddress;
 
-	protected AbstractExchangeChannel(ExchangeChannelGroup parent, Address remoteAddress, int reconnectInterval) {
-		this.id = UUID.randomUUID();
+	protected AbstractExchangeChannel(ExchangeChannelGroup parent, SocketAddress remoteAddress, UUID id) {
+		this.id = id;
 		this.parent = parent;
 		this.remoteAddress = remoteAddress;
-		this.reconnectInterval = reconnectInterval;
 	}
 
 	@Override
@@ -73,71 +71,116 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 
 	@Override
 	public SocketAddress localAddress() {
-		return localAddress;
+		if(null == channel){
+			return null;
+		}
+		return channel.localAddress();
 	}
 
 	@Override
 	public SocketAddress remoteAdress() {
-		return remoteAddress;
-	}
-
-	@Override
-	public void recover() {
-		// add reconnect task
-		ReconnectManager.INSTANCE.addReconnectTask(this, reconnectInterval);
-	}
-
-	@Override
-	public Channel update(Channel newChannel) {
-		synchronized (this) {
-			this.reconnectting = false;
-			if (this.isClosed()) {
-				RemotingUtils.closeChannel(newChannel);
-				return channel;
-			}
-			Channel old = channel;
-			this.channel = newChannel;
-			return old;
+		if(null == channel){
+			return remoteAddress;
 		}
+		return channel.remoteAddress();
+	}
+	
+	@Override
+	public boolean isAvailable() {
+		return null != channel && channel.isOpen() && channel.isActive();
 	}
 
 	@Override
 	public void close() {
 		close(0);
 	}
-
+	
 	@Override
-	public void close(int timeout) {
-		ParameterChecker.checkNotNegative(timeout, "timeout");
-		if (this.isClosed()) {
-			return;
-		}
-		synchronized (this) {
-			if (this.isClosed()) {
+	public boolean isClosed() {
+		return closed;
+	}
+	
+	@Override
+	public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
+		RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
+		protocol.oneway(true);
+		protocol.body(data);
+		try {
+			if (requestControl.sent()) {
+				// TODO write or writeAndFlush?
+				ChannelFuture future = channel.writeAndFlush(protocol);
+				boolean ret = future.await(requestControl.timeout());
+				if (!ret) {
+					future.cancel(true);
+					throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
+				}
 				return;
 			}
-			this.closed = true;
-			// deal unfinished requests, response with channel closed exception
-			long start = System.currentTimeMillis();
-			while (CollectionUtils.isNotEmpty(Tracer.peekPendingRequests(this))
-					&& (System.currentTimeMillis() - start < timeout)) {
-				LockSupport.parkNanos(1000 * 1000 * 10L);
-			}
-			Map<Integer, Object> pendingRequests = Tracer.popPendingRequests(this);
-			if (CollectionUtils.isEmpty(pendingRequests)) {
-				return;
-			}
-			for (Integer packetId : pendingRequests.keySet()) {
-				Tracer.erase(ResponseProtocol.newErrorResponse(packetId,
-						"unfinished request because of channel:" + channel.toString() + " be closed",
-						RemotingConstants.RESULT_FAIL));
-			}
-			RemotingUtils.closeChannel(channel);
+			// reduce memory consumption
+			channel.writeAndFlush(protocol, channel.voidPromise());
+		} catch (InterruptedException cause) {
+			throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
 		}
 	}
 
 	@Override
-	public boolean isClosed() {
-		return closed;
+	public ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException {
+		return requestWithFuture(data, null, requestControl);
+	}
+
+	@Override
+	public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl)
+			throws SailfishException {
+		requestWithFuture(data, callback, requestControl);
+	}
+
+	private ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
+			RequestControl requestControl) throws SailfishException {
+		final RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
+		protocol.oneway(false);
+		protocol.body(data);
+
+		ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
+		respFuture.setCallback(callback, requestControl.timeout());
+		// trace before write
+		Tracer.trace(this, protocol.packetId(), respFuture);
+		try {
+			if (requestControl.sent()) {
+				ChannelFuture future = channel.writeAndFlush(protocol)
+						.addListener(new SimpleChannelFutureListener(protocol.packetId()));
+				boolean ret = future.await(requestControl.timeout());
+				if (!ret) {
+					future.cancel(true);
+					throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
+				}
+				return respFuture;
+			}
+			channel.writeAndFlush(protocol, channel.voidPromise());
+		} catch (InterruptedException cause) {
+			throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
+		}
+		return respFuture;
+	}
+
+	// reduce class create
+	static class SimpleChannelFutureListener implements ChannelFutureListener {
+		private int packetId;
+
+		public SimpleChannelFutureListener(int packetId) {
+			this.packetId = packetId;
+		}
+
+		@Override
+		public void operationComplete(ChannelFuture future) throws Exception {
+			if (!future.isSuccess()) {
+				String errorMsg = "write fail!";
+				if (null != future.cause()) {
+					errorMsg = StrUtils.exception2String(future.cause());
+				}
+				// FIXME maybe need more concrete error, like
+				// WriteOverFlowException or some other special exceptions
+				Tracer.erase(ResponseProtocol.newErrorResponse(packetId, errorMsg, RemotingConstants.RESULT_FAIL));
+			}
+		}
 	}
 }

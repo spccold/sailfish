@@ -32,8 +32,8 @@ public abstract class AbstractExchangeConfig {
      */
     protected Address address;
     // in seconds
-    protected int idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
-    protected int maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
+    protected byte idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
+    protected byte maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
     //check parameters
     protected void check(){
         ParameterChecker.checkNotNull(address, "address");
@@ -50,17 +50,17 @@ public abstract class AbstractExchangeConfig {
     public void address(Address address) {
         this.address = ParameterChecker.checkNotNull(address, "address");
     }
-    public int idleTimeout() {
+    public byte idleTimeout() {
         return idleTimeout;
     }
 
-    public void idleTimeout(int idleTimeout) {
-        this.idleTimeout = ParameterChecker.checkBytePositive(idleTimeout);
+    public void idleTimeout(byte idleTimeout) {
+        this.idleTimeout = idleTimeout;
     }
-    public int maxIdleTimeout() {
+    public byte maxIdleTimeout() {
         return maxIdleTimeout;
     }
-    public void maxIdleTimeout(int maxIdleTimeout) {
-        this.maxIdleTimeout = ParameterChecker.checkBytePositive(maxIdleTimeout);
+    public void maxIdleTimeout(byte maxIdleTimeout) {
+        this.maxIdleTimeout = maxIdleTimeout;
     }
 }

@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.channel;
 
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,19 +50,23 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, readConnections, writeConnections);
 	}
 
-	public ReadWriteExchangeChannelGroup(Address address, boolean lazy, int idleTimeout, int maxIdleTimeOut,
+	public ReadWriteExchangeChannelGroup(Address address, boolean lazy, byte idleTimeout, byte maxIdleTimeOut,
 			int readConnections, int writeConnections) throws SailfishException {
 		this(address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
 				idleTimeout, maxIdleTimeOut, lazy, readConnections, writeConnections);
 	}
 
-	public ReadWriteExchangeChannelGroup(Address address, int connectTimeout, int reconnectInterval, int idleTimeout,
-			int maxIdleTimeOut, boolean lazy, int readConnections, int writeConnections) throws SailfishException {
-		ReadWriteChannelConfig config = new ReadWriteChannelConfig(false, id(), 0);
+	public ReadWriteExchangeChannelGroup(Address address, int connectTimeout, int reconnectInterval, byte idleTimeout,
+			byte maxIdleTimeOut, boolean lazy, int readConnections, int writeConnections) throws SailfishException {
+		super(UUID.randomUUID());
+		
+		ChannelConfig readConfig = new ChannelConfig(id(), ChannelType.read.code(), (short)readConnections, (short)0);
 		this.readGroup = new DefaultExchangeChannelGroup(address, readConnections, connectTimeout, reconnectInterval,
-				idleTimeout, maxIdleTimeOut, lazy, config);
+				idleTimeout, maxIdleTimeOut, lazy, readConfig);
+
+		ChannelConfig writeConfig = new ChannelConfig(id(), ChannelType.write.code(), (short)readConnections, (short)0);
 		this.writeGroup = new DefaultExchangeChannelGroup(address, writeConnections, connectTimeout, reconnectInterval,
-				idleTimeout, maxIdleTimeOut, lazy, config.deepCopy().write(true));
+				idleTimeout, maxIdleTimeOut, lazy, writeConfig);
 	}
 
 	@Override

@@ -21,10 +21,7 @@ import java.util.UUID;
 
 import io.netty.channel.Channel;
 import sailfish.remoting.Endpoint;
-import sailfish.remoting.RequestControl;
-import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
-import sailfish.remoting.future.ResponseFuture;
 
 /**
  * 
@@ -35,7 +32,7 @@ import sailfish.remoting.future.ResponseFuture;
  * @version $Id: ExchangeChannelGroup.java, v 0.1 2016年11月21日 下午2:18:34 spccold
  *          Exp $
  */
-public interface ExchangeChannelGroup extends Endpoint{
+public interface ExchangeChannelGroup extends Endpoint, MessageExchangePattern{
     /**
      * Returns one of the {@link ExchangeChannel}s managed by this {@link ExchangeChannelGroup}.
      */
@@ -47,19 +44,4 @@ public interface ExchangeChannelGroup extends Endpoint{
     UUID id();
     
     boolean isAvailable();
-    
-    /**
-     * one-way pattern
-     */
-    void oneway(byte[] data, RequestControl requestControl) throws SailfishException;
-    
-    /**
-     * request–response pattern
-     */
-    ResponseFuture<byte[]> request(byte[] data, RequestControl requestControl) throws SailfishException;
-    
-    /**
-     * callback request via request–response pattern
-     */
-    void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException;
 }

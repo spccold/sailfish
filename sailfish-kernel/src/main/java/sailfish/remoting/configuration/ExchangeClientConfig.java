@@ -17,7 +17,7 @@
  */
 package sailfish.remoting.configuration;
 
-import sailfish.remoting.channel.ChannelMode;
+import sailfish.remoting.channel.ChannelGroupMode;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -42,14 +42,14 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 	private int writeConnections;
 	private boolean lazyConnection = false;
 
-	public ChannelMode mode() {
+	public ChannelGroupMode mode() {
 		if (connections == 1) {
-			return ChannelMode.simple;
+			return ChannelGroupMode.simple;
 		}
 		if (enableReadWriteSplitting) {
-			return ChannelMode.readwrite;
+			return ChannelGroupMode.readwrite;
 		}
-		return ChannelMode.multiconns;
+		return ChannelGroupMode.multiconns;
 	}
 
 	@Override

@@ -26,30 +26,30 @@ import sailfish.remoting.exceptions.SailfishException;
  * @version $Id: DefaultExchangeChannelGroup.java, v 0.1 2016年11月22日 下午4:10:23
  *          spccold Exp $
  */
-public class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannelGroup {
+public final class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannelGroup {
 
 	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy)
 			throws SailfishException {
 		this(address, connections, lazy, null);
 	}
 
-	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy, ReadWriteChannelConfig config)
+	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy, ChannelConfig config)
 			throws SailfishException {
 		super(address, connections, lazy, config);
 	}
 
 	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy, int connectTimeout,
-			int reconnectInterval, ReadWriteChannelConfig config) throws SailfishException {
+			int reconnectInterval, ChannelConfig config) throws SailfishException {
 		super(address, connections, lazy, connectTimeout, reconnectInterval, config);
 	}
 
-	public DefaultExchangeChannelGroup(Address address, int connections, int idleTimeout, int maxIdleTimeOut,
-			boolean lazy, ReadWriteChannelConfig config) throws SailfishException {
+	public DefaultExchangeChannelGroup(Address address, int connections, byte idleTimeout, byte maxIdleTimeOut,
+			boolean lazy, ChannelConfig config) throws SailfishException {
 		super(address, connections, idleTimeout, maxIdleTimeOut, lazy, config);
 	}
 
 	public DefaultExchangeChannelGroup(Address address, int connections, int connectTimeout, int reconnectInterval,
-			int idleTimeout, int maxIdleTimeOut, boolean lazy, ReadWriteChannelConfig config) throws SailfishException {
+			byte idleTimeout, byte maxIdleTimeOut, boolean lazy, ChannelConfig config) throws SailfishException {
 		super(address, connections, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, config);
 	}
 
@@ -58,8 +58,8 @@ public class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannel
 	 */
 	@Override
 	protected ExchangeChannel newChild(Bootstrap bootstrap, Address address, int reconnectInterval,
-			boolean lazy, ReadWriteChannelConfig config) throws SailfishException {
-		if (lazy && (null == config || config.write())) {
+			boolean lazy, ChannelConfig config) throws SailfishException {
+		if (lazy && (!config.isRead())) {
 			return new LazyExchangeChannel(bootstrap, this, address, reconnectInterval);
 		} 
 		return new EagerExchangeChannel(bootstrap, this, address, reconnectInterval);

@@ -27,15 +27,16 @@ import io.netty.util.AttributeKey;
  */
 public interface ChannelAttrKeys {
     //for idle handle and heart beat
-	AttributeKey<Integer> idleTimeout = AttributeKey.valueOf("idleTimeout");
-	AttributeKey<Integer> maxIdleTimeout = AttributeKey.valueOf("maxIdleTimeout");
-	AttributeKey<Long> lastReadTimeMillis = AttributeKey.valueOf("lastReadTimeMillis");
+	AttributeKey<Byte> idleTimeout = AttributeKey.valueOf("sailfish.idleTimeout");
+	AttributeKey<Byte> maxIdleTimeout = AttributeKey.valueOf("sailfish.maxIdleTimeout");
+	AttributeKey<Long> lastReadTimeMillis = AttributeKey.valueOf("sailfish.lastReadTimeMillis");
 	
-	//for read write splitting
-	AttributeKey<UUID> uuid = AttributeKey.valueOf("readwrite.uuid");
-	AttributeKey<Boolean> writeChannel = AttributeKey.valueOf("readwrite.writeChannel");
-	AttributeKey<Integer> channelIndex = AttributeKey.valueOf("readwrite.channelIndex");
+	//for negotiate with remote peer
+	AttributeKey<UUID> uuid = AttributeKey.valueOf("sailfish.uuid");
+	AttributeKey<Byte> channelType = AttributeKey.valueOf("sailfish.channelType");
+	AttributeKey<Short> connections = AttributeKey.valueOf("sailfish.connections");
+	AttributeKey<Short> channelIndex = AttributeKey.valueOf("sailfish.channelIndex");
 	
 	//side
-	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("side");
+	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("sailfish.side");
 }

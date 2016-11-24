@@ -35,7 +35,7 @@ import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 
 /**
- * 
+ * XXX
  * @author spccold
  * @version $Id: ChannelHandlerContexts.java, v 0.1 2016年11月9日 下午5:17:33 jileng Exp $
  */

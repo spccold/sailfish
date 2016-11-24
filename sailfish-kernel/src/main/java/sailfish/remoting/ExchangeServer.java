@@ -70,7 +70,7 @@ public class ExchangeServer implements Endpoint{
 
                 pipeline.addLast(executor, RemotingEncoder.INSTANCE);
                 pipeline.addLast(executor, new RemotingDecoder());
-                pipeline.addLast(executor, "idleStateHandler", new IdleStateHandler(config.idleTimeout(), 0, 0));
+                pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
                 pipeline.addLast(executor, HeartbeatChannelHandler.INSTANCE);
                 pipeline.addLast(executor, NegotiateChannelHandler.INSTANCE);
                 pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler));

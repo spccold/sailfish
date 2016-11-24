@@ -20,9 +20,9 @@ package sailfish.remoting.channel;
 /**
  * 
  * @author spccold
- * @version $Id: ChannelMode.java, v 0.1 2016年10月27日 上午11:09:58 jileng Exp $
+ * @version $Id: ChannelGroupMode.java, v 0.1 2016年10月27日 上午11:09:58 jileng Exp $
  */
-public enum ChannelMode {
+public enum ChannelGroupMode {
 	/** with only one eager or lazy connection*/
     simple,
     /** with multiple simple exchange channel*/

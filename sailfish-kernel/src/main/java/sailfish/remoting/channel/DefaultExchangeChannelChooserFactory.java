@@ -66,7 +66,7 @@ public class DefaultExchangeChannelChooserFactory implements ExchangeChannelChoo
 			int currentIndex = idx.getAndIncrement();
 			for (int i = 0; i < channels.length; i++) {
 				ExchangeChannel currentChannel = channels[arrayIndex = ((currentIndex++) & channels.length - 1)];
-				if (currentChannel.isAvailable()) {
+				if (null != currentChannel && currentChannel.isAvailable()) {
 					if (null != deadChannels[arrayIndex]) {
 						deadChannels[arrayIndex] = null;
 					}
@@ -91,6 +91,9 @@ public class DefaultExchangeChannelChooserFactory implements ExchangeChannelChoo
 		@Override
 		public ExchangeChannel next() throws SailfishException {
 			if(channels.length == 1){//one connection check
+				if(null == channels[0]){
+					throw new SailfishException(ExceptionCode.EXCHANGER_NOT_AVAILABLE, "exchanger is not available!");
+				}
 				return channels[0];
 			}
 			
@@ -98,7 +101,7 @@ public class DefaultExchangeChannelChooserFactory implements ExchangeChannelChoo
 			int currentIndex = idx.getAndIncrement();
 			for (int i = 0; i < channels.length; i++) {
 				ExchangeChannel currentChannel = channels[arrayIndex = Math.abs((currentIndex++) % channels.length)];
-				if (currentChannel.isAvailable()) {
+				if (null != currentChannel && currentChannel.isAvailable()) {
 					if (null != deadChannels[arrayIndex]) {
 						deadChannels[arrayIndex] = null;
 					}

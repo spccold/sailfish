@@ -21,42 +21,52 @@ import java.util.UUID;
 
 /**
  * @author spccold
- * @version $Id: ReadWriteChannelConfig.java, v 0.1 2016年11月22日 下午2:58:33
+ * @version $Id: ChannelConfig.java, v 0.1 2016年11月22日 下午2:58:33
  *          spccold Exp $
  */
-public class ReadWriteChannelConfig {
-	private UUID uuid;
-	private int index;
-	private boolean write;
+public class ChannelConfig {
+	private final UUID uuid;
+	private final byte type;
+	private final short connections;
 
-	public ReadWriteChannelConfig(boolean write, UUID uuid, int index) {
-		this.write = write;
+	private short index;
+	public ChannelConfig(UUID uuid, byte type, short connections, short index) {
 		this.uuid = uuid;
+		this.type = type;
+		this.connections = connections;
+		
 		this.index = index;
-	}
-
-	public ReadWriteChannelConfig write(boolean write){
-		this.write = write;
-		return this;
-	}
-	public boolean write(){
-		return this.write;
 	}
 
 	public UUID uuid(){
 		return this.uuid;
 	}
+
+	public byte type(){
+		return this.type;
+	}
+
+	public short connections(){
+		return this.connections;
+	}
 	
-	public ReadWriteChannelConfig index(int index){
+	public ChannelConfig index(short index){
 		this.index = index;
 		return this;
 	}
-	public int index(){
+	public short index(){
 		return this.index;
 	}
 	
-	public ReadWriteChannelConfig deepCopy(){
-		ReadWriteChannelConfig copy = new ReadWriteChannelConfig(write, uuid, index);
-		return copy;
+	public boolean isRead(){
+		return ChannelType.read.code == type;
+	}
+	
+	public boolean isWrite(){
+		return ChannelType.write.code == type;
+	}
+	
+	public ChannelConfig deepCopy(){
+		return new ChannelConfig(uuid, type, connections, index);
 	}
 }

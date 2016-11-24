@@ -32,8 +32,8 @@ public abstract class AbstractExchangeChannelGroup implements ExchangeChannelGro
 	private final UUID id;
 	protected volatile boolean closed = false;
 	
-	protected AbstractExchangeChannelGroup() {
-		this.id = UUID.randomUUID();
+	protected AbstractExchangeChannelGroup(UUID id) {
+		this.id = id;
 	}
 	
 	@Override

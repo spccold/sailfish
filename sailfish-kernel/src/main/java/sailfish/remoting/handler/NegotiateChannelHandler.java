@@ -34,7 +34,8 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.Attribute;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.PlatformDependent;
-import sailfish.remoting.channel.ReadWriteChannelConfig;
+import sailfish.remoting.channel.ChannelConfig;
+import sailfish.remoting.channel.ChannelType;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.constants.RemotingConstants;
@@ -44,7 +45,7 @@ import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.ChannelUtil;
 
 /**
- * negotiate idleTimeout, maxIdleTimeout and settings about {@link ReadWriteChannelConfig} with
+ * negotiate idleTimeout, maxIdleTimeout and settings about {@link ChannelConfig} with
  * remote peer
  * 
  * @author spccold
@@ -77,6 +78,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 			dealNegotiate(ctx, msg);
 			return;
 		}
+		//no sense to Protocol in fact
 		ReferenceCountUtil.retain(msg);
 		ctx.fireChannelRead(msg);
 	}
@@ -93,18 +95,13 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				int idleTimeout = ctx.channel().attr(ChannelAttrKeys.idleTimeout).get();
 				int maxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
 				Attribute<UUID> uuidAttr = ctx.channel().attr(ChannelAttrKeys.uuid);
-				if (null != uuidAttr.get()) {
-					// only one byte
-					boolean writeChannel = ctx.channel().attr(ChannelAttrKeys.writeChannel).get();
-					int channelIndex = ctx.channel().attr(ChannelAttrKeys.channelIndex).get();
-					// negotiate idle timeout and read write splitting settings with remote peer
-					ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte) idleTimeout, (byte) maxIdleTimeout,
-							uuidAttr.get(), writeChannel, channelIndex));
-					return true;
-				}
-				// negotiate idle timeout with remote peer
-				ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte) idleTimeout, (byte) maxIdleTimeout, null,
-						false, 0));
+				// only one byte
+				byte channelType = ctx.channel().attr(ChannelAttrKeys.channelType).get();
+				short connections = ctx.channel().attr(ChannelAttrKeys.connections).get();
+				short channelIndex = ctx.channel().attr(ChannelAttrKeys.channelIndex).get();
+				// negotiate idle timeout and read write splitting settings with remote peer
+				ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte) idleTimeout, (byte) maxIdleTimeout,
+						uuidAttr.get(), channelType, connections, channelIndex));
 			} catch (Throwable cause) {
 				exceptionCaught(ctx, cause);
 			} finally {
@@ -120,33 +117,24 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 			RequestProtocol requestProtocol = (RequestProtocol) msg;
 			if (requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE) {// negotiate idle timeout
 				byte[] body = requestProtocol.body();
-				int idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
-				int idleMaxTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
-
-				UUID uuid = null;
-				boolean writeChannel = false;
-				int channelIndex = 0;
-				if (body.length == 2) {
-					idleTimeout = requestProtocol.body()[0];
-					idleMaxTimeout = requestProtocol.body()[1];
-				} else {
-					DataInputStream dis = new DataInputStream(new ByteArrayInputStream(body));
-					idleTimeout = dis.readByte();
-					idleMaxTimeout = dis.readByte();
-					writeChannel = dis.readBoolean();
-					channelIndex = dis.readInt();
-					// no sense to dis(ByteArrayInputStream) in fact
-					dis.close();
-					uuid = new UUID(dis.readLong(), dis.readLong());
-				}
-				IdleStateHandler old = ctx.pipeline().get(IdleStateHandler.class);
-				if (null != old) {
-					ctx.pipeline().replace(IdleStateHandler.class, "idleStateHandler",
+				DataInputStream dis = new DataInputStream(new ByteArrayInputStream(body));
+				byte idleTimeout = dis.readByte();
+				byte idleMaxTimeout = dis.readByte();
+				UUID uuid = new UUID(dis.readLong(), dis.readLong());
+				byte channelType = dis.readByte();
+				short connections = dis.readShort();
+				short channelIndex = dis.readShort();
+				// no sense to dis(ByteArrayInputStream) in fact
+				dis.close();
+				
+				ChannelHandlerContext idleHandlerContext = ctx.pipeline().context(IdleStateHandler.class);
+				if (null != idleHandlerContext) {
+					ctx.pipeline().replace(IdleStateHandler.class, idleHandlerContext.name(),
 							new IdleStateHandler(idleTimeout, 0, 0));
 					ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(idleMaxTimeout);
 				}
 
-				if (null != uuid) {// negotiate read write splitting settings
+				if (channelType != ChannelType.readwrite.code()) {// negotiate read write splitting settings
 					String uuidStr = uuid.toString();
 					ChannelHandlerContexts contexts = readWriteContexts.get(uuidStr);
 					if (null == contexts) {
@@ -157,9 +145,9 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 						}
 					}
 					// contrary to remote peer, read to write, write to read
-					if (writeChannel) {
+					if (channelType == ChannelType.write.code()) {
 						contexts.addReadChannelHandlerContext(ctx, channelIndex);
-					} else {
+					} else if(channelType == ChannelType.read.code()){
 						contexts.addWriteChannelHandlerContext(ctx, channelIndex);
 					}
 					context2Uuid.put(ctx, uuidStr);

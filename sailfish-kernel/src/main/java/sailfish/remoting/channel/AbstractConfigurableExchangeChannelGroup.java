@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.channel;
 
+import java.util.UUID;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
@@ -45,8 +47,12 @@ import sailfish.remoting.protocol.Protocol;
  */
 public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractExchangeChannelGroup {
 
+	protected AbstractConfigurableExchangeChannelGroup() {
+		super(UUID.randomUUID());
+	}
+
 	protected Bootstrap configureBoostrap(MsgHandler<Protocol> handler, Address remoteAddress, int connectTimeout,
-			int idleTimeout, int maxIdleTimeOut, ReadWriteChannelConfig config) {
+			byte idleTimeout, byte maxIdleTimeOut, ChannelConfig config) {
 		Bootstrap boot = newBootstrap();
 		boot.group(ClientEventGroup.INSTANCE.getLoopGroup());
 		boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
@@ -77,7 +83,7 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 	}
 
 	private ChannelInitializer<SocketChannel> newChannelInitializer(final MsgHandler<Protocol> handler,
-			final int idleTimeout, final int maxIdleTimeOut, final ReadWriteChannelConfig config) {
+			final byte idleTimeout, final byte maxIdleTimeOut, final ChannelConfig config) {
 		final EventExecutorGroup executorGroup = ClientEventGroup.INSTANCE.getExecutorGroup();
 		return new ChannelInitializer<SocketChannel>() {
 			@Override
@@ -86,11 +92,10 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 				ch.attr(ChannelAttrKeys.clientSide).set(true);
 				ch.attr(ChannelAttrKeys.idleTimeout).set(idleTimeout);
 				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(maxIdleTimeOut);
-				if (null != config) {
-					ch.attr(ChannelAttrKeys.writeChannel).set(config.write());
-					ch.attr(ChannelAttrKeys.channelIndex).set(config.index());
-					ch.attr(ChannelAttrKeys.uuid).set(config.uuid());
-				}
+				ch.attr(ChannelAttrKeys.uuid).set(config.uuid());
+				ch.attr(ChannelAttrKeys.channelType).set(config.type());
+				ch.attr(ChannelAttrKeys.connections).set(config.connections());
+				ch.attr(ChannelAttrKeys.channelIndex).set(config.index());
 				// TODO should increase ioRatio when every ChannelHandler bind to executorGroup?
 				pipeline.addLast(executorGroup, RemotingEncoder.INSTANCE);
 				pipeline.addLast(executorGroup, new RemotingDecoder());

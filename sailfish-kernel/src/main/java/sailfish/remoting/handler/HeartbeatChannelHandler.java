@@ -27,7 +27,6 @@ import io.netty.handler.timeout.IdleStateEvent;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.utils.ChannelUtil;
-import sailfish.remoting.utils.RemotingUtils;
 
 /**
  * @author spccold
@@ -76,7 +75,7 @@ public class HeartbeatChannelHandler extends ChannelDuplexHandler {
 			if (expireTime >= maxIdleTimeout * 1000) {
 				logger.warn("readIdleTimeout exceed maxIdleTimeout, real timeout {}, this channel[{}] will be closed",
 						expireTime, ctx.channel().toString());
-				RemotingUtils.closeChannel(ctx.channel());
+				ChannelUtil.closeChannel(ctx.channel());
 			} else if (ChannelUtil.clientSide(ctx)) {
 				// send heart beat to remote peer
 				ctx.writeAndFlush(RequestProtocol.newHeartbeat());

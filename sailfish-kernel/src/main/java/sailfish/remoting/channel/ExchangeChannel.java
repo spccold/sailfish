@@ -23,11 +23,6 @@ import io.netty.channel.Channel;
 import sailfish.remoting.exceptions.SailfishException;
 
 /**
- * <pre>
- * <a href="https://en.wikipedia.org/wiki/Messaging_pattern">Messaging_pattern</a>
- * <a href="https://en.wikipedia.org/wiki/Request%E2%80%93response">Request–response</a>
- * </pre>
- * 
  * @author spccold
  * @version $Id: ExchangeChannel.java, v 0.1 2016年11月21日 下午7:26:12 spccold Exp $
  */
