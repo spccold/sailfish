@@ -31,7 +31,7 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 	private int connectTimeout = RemotingConstants.DEFAULT_CONNECT_TIMEOUT;
 	private int reconnectInterval = RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
 
-	private int connections = 1;
+	private short connections = 1;
 	// enable channels Read/Write Splitting or not when connections greater than one
 	private boolean enableReadWriteSplitting = false;
 	/**
@@ -39,7 +39,7 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 	 * you don't specify writeConnections, writeRatio will be used
 	 */
 	private int writeRatio = 50;
-	private int writeConnections;
+	private short writeConnections;
 	private boolean lazyConnection = false;
 
 	public ChannelGroupMode mode() {
@@ -61,7 +61,7 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 						"connections must greater than one when enableReadWriteSplitting is true");
 			}
 			if (writeConnections == 0) {
-				writeConnections = connections * (writeRatio / 100);
+				writeConnections = (short)(connections * (writeRatio / 100));
 			}
 			if (writeConnections == 0 || writeConnections == connections) {
 				throw new IllegalArgumentException("writeConnections:" + writeConnections
@@ -70,19 +70,19 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 		}
 	}
 
-	public int connections() {
+	public short connections() {
 		return connections;
 	}
 
-	public void connections(int connections) {
+	public void connections(short connections) {
 		this.connections = ParameterChecker.checkPositive(connections, "connections");
 	}
 
-	public int writeConnections() {
+	public short writeConnections() {
 		return writeConnections;
 	}
 
-	public void writeConnections(int writeConnections) {
+	public void writeConnections(short writeConnections) {
 		this.writeConnections = ParameterChecker.checkPositive(writeConnections, "writeConnections");
 	}
 

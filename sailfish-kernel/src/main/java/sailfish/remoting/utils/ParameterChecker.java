@@ -52,6 +52,13 @@ public class ParameterChecker {
         return number;
     }
 
+    public static short checkPositive(short number, String hint){
+    	if(number <= 0){
+    		throw new IllegalArgumentException(hint + ": " + number + " (expected: > 0)");
+    	}
+    	return number;
+    }
+
     public static long checkPositive(long number, String hint){
         if(number <= 0){
             throw new IllegalArgumentException(hint + ": " + number + " (expected: > 0)");

@@ -138,7 +138,7 @@ public class ClientServerTest {
     @Test
     public void testSimpleChannel() throws Exception {
         ExchangeClientConfig config = newBaseConfig(originPort);
-        config.connections(1);
+        config.connections((short)1);
         DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
@@ -153,7 +153,7 @@ public class ClientServerTest {
     @Test
     public void testSimpleLazyChannel() throws Exception {
         ExchangeClientConfig config = newBaseConfig(originPort);
-        config.connections(1);
+        config.connections((short)1);
         config.setLazyConnection(true);
         DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
@@ -170,7 +170,7 @@ public class ClientServerTest {
     public void testMultiConnsChannel() throws Exception {
         int conns = 3;
         ExchangeClientConfig config = newBaseConfig(originPort);
-        config.connections(conns);
+        config.connections((short)conns);
         DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
@@ -190,7 +190,7 @@ public class ClientServerTest {
     public void testMultiConnsWithLazyChannel() throws Exception {
         int conns = 3;
         ExchangeClientConfig config = newBaseConfig(originPort);
-        config.connections(conns);
+        config.connections((short)conns);
         config.setLazyConnection(true);
         DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
@@ -209,11 +209,11 @@ public class ClientServerTest {
 
     @Test
     public void testReadWriteSplittingChannel() throws Exception {
-        int writeConns = 2;
-        int readConns = 2;
+        short writeConns = 2;
+        short readConns = 2;
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.enableReadWriteSplitting(true);
-        config.connections(writeConns + readConns);
+        config.connections((short)(writeConns + readConns));
         config.writeConnections(writeConns);
         DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();
@@ -232,12 +232,12 @@ public class ClientServerTest {
 
     @Test
     public void testReadWriteSplittingWithLazyChannel() throws Exception {
-        int writeConns = 2;
-        int readConns = 2;
+        short writeConns = 2;
+        short readConns = 2;
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.enableReadWriteSplitting(true);
         config.setLazyConnection(true);
-        config.connections(writeConns + readConns);
+        config.connections((short)(writeConns + readConns));
         config.writeConnections(writeConns);
         DefaultExchangeClient client = new DefaultExchangeClient(config);
         RequestControl control = new RequestControl();

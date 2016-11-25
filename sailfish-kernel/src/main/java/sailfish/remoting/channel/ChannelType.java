@@ -41,17 +41,4 @@ public enum ChannelType {
 	public byte code() {
 		return code;
 	}
-
-	public ChannelType toType(byte type) {
-		switch (type) {
-		case 0:
-			return read;
-		case 1:
-			return write;
-		case 2:
-			return readwrite;
-		default:
-			return unknow;
-		}
-	}
 }

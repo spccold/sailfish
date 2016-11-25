@@ -42,7 +42,7 @@ public abstract class AbstractExchangeConfig {
     protected List<RequestProcessor> requestProcessors = new ArrayList<>(0);
     
     //check parameters
-    protected void check(){
+    public void check(){
         ParameterChecker.checkNotNull(address, "address");
         ParameterChecker.checkBytePositive(idleTimeout);
         ParameterChecker.checkBytePositive(maxIdleTimeout);

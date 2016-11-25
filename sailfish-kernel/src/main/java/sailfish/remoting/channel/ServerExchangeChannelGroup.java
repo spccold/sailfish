@@ -61,7 +61,7 @@ public final class ServerExchangeChannelGroup extends AbstractExchangeChannelGro
 	@Override
 	public boolean isAvailable() {
 		if(children.length == 1){//one connection check
-			return children[0].isAvailable();
+			return (null != children[0] && children[0].isAvailable());
 		}
 		
 		// can hit most of the time

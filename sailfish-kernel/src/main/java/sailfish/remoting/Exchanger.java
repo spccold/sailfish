@@ -20,6 +20,7 @@ package sailfish.remoting;
 import sailfish.remoting.channel.DefaultExchangeChannelGroup;
 import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.channel.ReadWriteExchangeChannelGroup;
+import sailfish.remoting.configuration.AbstractExchangeConfig;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.SailfishException;
@@ -34,35 +35,33 @@ import sailfish.remoting.utils.ParameterChecker;
  * @version $Id: Exchanger.java, v 0.1 2016年10月26日 下午11:40:38 jileng Exp $
  */
 public class Exchanger {
+
 	public static ExchangeChannelGroup connect(ExchangeClientConfig config) throws SailfishException {
-		ParameterChecker.checkNotNull(config, "ExchangeClientConfig");
-		config.check();
+		checkConfig(config);
 		MsgHandler<Protocol> msgHandler = new DefaultMsgHandler(config.getRequestProcessors());
-		ExchangeChannelGroup channelGroup = null;
 		switch (config.mode()) {
 		case simple:
 		case multiconns:
-			//TODO
-			channelGroup = new DefaultExchangeChannelGroup(null, msgHandler, config.address(), config.connections(),
+			// TODO
+			return new DefaultExchangeChannelGroup(null, msgHandler, config.address(), config.connections(),
 					config.connectTimeout(), config.reconnectInterval(), config.idleTimeout(), config.idleTimeout(),
 					config.isLazyConnection(), null);
-			break;
 		case readwrite:
-			//TODO
-			channelGroup = new ReadWriteExchangeChannelGroup(msgHandler, config.address(), config.connectTimeout(),
+			// TODO
+			return new ReadWriteExchangeChannelGroup(msgHandler, config.address(), config.connectTimeout(),
 					config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(),
-					config.isLazyConnection(), config.connections() - config.writeConnections(),
-					config.writeConnections());
-			break;
+					config.isLazyConnection(), config.connections(), config.writeConnections());
 		default:
 			throw new IllegalArgumentException("invalid channel mode");
 		}
-		return channelGroup;
 	}
 
-	public static ExchangeServer bind(ExchangeServerConfig config)
-			throws SailfishException {
-		config.check();
+	public static ExchangeServer bind(ExchangeServerConfig config) throws SailfishException {
+		checkConfig(config);
 		return new ExchangeServer(config);
+	}
+
+	private static void checkConfig(AbstractExchangeConfig config) {
+		ParameterChecker.checkNotNull(config, "exchange config").check();
 	}
 }

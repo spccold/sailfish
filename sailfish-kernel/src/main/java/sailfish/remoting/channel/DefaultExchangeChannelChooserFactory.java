@@ -62,6 +62,13 @@ public class DefaultExchangeChannelChooserFactory implements ExchangeChannelChoo
 
 		@Override
 		public ExchangeChannel next() throws SailfishException {
+			if(channels.length == 1){//one connection check
+				if(null == channels[0]  || !channels[0].isAvailable()){
+					throw new SailfishException(ExceptionCode.EXCHANGER_NOT_AVAILABLE, "exchanger is not available!");
+				}
+				return channels[0];
+			}
+			
 			int arrayIndex = 0;
 			int currentIndex = idx.getAndIncrement();
 			for (int i = 0; i < channels.length; i++) {
@@ -90,13 +97,6 @@ public class DefaultExchangeChannelChooserFactory implements ExchangeChannelChoo
 
 		@Override
 		public ExchangeChannel next() throws SailfishException {
-			if(channels.length == 1){//one connection check
-				if(null == channels[0]){
-					throw new SailfishException(ExceptionCode.EXCHANGER_NOT_AVAILABLE, "exchanger is not available!");
-				}
-				return channels[0];
-			}
-			
 			int arrayIndex = 0;
 			int currentIndex = idx.getAndIncrement();
 			for (int i = 0; i < channels.length; i++) {

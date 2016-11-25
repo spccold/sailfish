@@ -43,35 +43,35 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
 	
-	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, int readConnections, int writeConnections)
+	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, short connections, short writeConnections)
 			throws SailfishException {
 		this(msgHandler, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
 				RemotingConstants.DEFAULT_IDLE_TIMEOUT, RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy,
-				readConnections, writeConnections);
+				connections, writeConnections);
 	}
 
 	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, int connectTimeout, int reconnectInterval, boolean lazy,
-			int readConnections, int writeConnections) throws SailfishException {
+			short connections, short writeConnections) throws SailfishException {
 		this(msgHandler, address, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, readConnections, writeConnections);
+				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, connections, writeConnections);
 	}
 
 	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, byte idleTimeout, byte maxIdleTimeOut,
-			int readConnections, int writeConnections) throws SailfishException {
+			short connections, short writeConnections) throws SailfishException {
 		this(msgHandler, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
-				idleTimeout, maxIdleTimeOut, lazy, readConnections, writeConnections);
+				idleTimeout, maxIdleTimeOut, lazy, connections, writeConnections);
 	}
 
 	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, int connectTimeout, int reconnectInterval, byte idleTimeout,
-			byte maxIdleTimeOut, boolean lazy, int readConnections, int writeConnections) throws SailfishException {
+			byte maxIdleTimeOut, boolean lazy, short connections, short writeConnections) throws SailfishException {
 		super(UUID.randomUUID());
 		this.msgHandler = msgHandler;
 		this.tracer = new Tracer();
-		ChannelConfig readConfig = new ChannelConfig(id(), ChannelType.read.code(), (short)(readConnections+writeConnections), (short)(writeConnections) , (short)0);
-		this.readGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address, readConnections, connectTimeout, reconnectInterval,
+		ChannelConfig readConfig = new ChannelConfig(id(), ChannelType.read.code(), connections, writeConnections , (short)0);
+		this.readGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address, (short)(connections - writeConnections), connectTimeout, reconnectInterval,
 				idleTimeout, maxIdleTimeOut, lazy, readConfig);
 
-		ChannelConfig writeConfig = new ChannelConfig(id(), ChannelType.write.code(), (short)(readConnections+writeConnections), (short)(writeConnections), (short)0);
+		ChannelConfig writeConfig = new ChannelConfig(id(), ChannelType.write.code(), connections, writeConnections, (short)0);
 		this.writeGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address, writeConnections, connectTimeout, reconnectInterval,
 				idleTimeout, maxIdleTimeOut, lazy, writeConfig);
 	}
@@ -108,6 +108,6 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 
 	@Override
 	public Tracer getTracer() {
-		return null;
+		return tracer;
 	}
 }

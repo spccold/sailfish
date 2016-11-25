@@ -25,6 +25,7 @@ import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.protocol.ResponseProtocol;
 
 /**
  * 
@@ -36,19 +37,32 @@ import sailfish.remoting.protocol.Protocol;
  *          Exp $
  */
 public interface ExchangeChannelGroup extends Endpoint, MessageExchangePattern{
-    /**
+	/**
+	 * like {@link Channel#id()}, Returns the globally unique identifier of this {@link ExchangeChannelGroup}.
+	 */
+	UUID id();
+
+	/**
+	 * Return {@code true} if this {@link ExchangeChannelGroup} is available, this means that the {@link ExchangeChannelGroup}
+	 * can receive bytes from remote peer or write bytes to remote peer
+	 */
+	boolean isAvailable();
+
+	/**
      * Returns one of the {@link ExchangeChannel}s managed by this {@link ExchangeChannelGroup}.
      */
     ExchangeChannel next() throws SailfishException;
-
+    
     /**
-     * like {@link Channel#id()}
+     * Return the {@link MsgHandler} of this {@link ExchangeChannelGroup} which used for process {@link ResponseProtocol} 
+     * sent by the {@link ExchangeChannelGroup}
      */
-    UUID id();
-    
-    boolean isAvailable();
-    
     MsgHandler<Protocol> getMsgHander();
     
+    /**
+     * Return the {@link Tracer} of this {@link ExchangeChannelGroup} which used for trace {@link ResponseProtocol}
+     * sent by the {@link ExchangeChannelGroup}
+     * @return
+     */
     Tracer getTracer();
 }
