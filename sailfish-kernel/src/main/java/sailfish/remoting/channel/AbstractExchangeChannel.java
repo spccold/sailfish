@@ -25,7 +25,6 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
-import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
@@ -40,7 +39,6 @@ import sailfish.remoting.utils.StrUtils;
  * @version $Id: AbstractExchangeChannel.java, v 0.1 2016年11月21日 下午10:49:12 spccold Exp $
  */
 public abstract class AbstractExchangeChannel implements ExchangeChannel {
-	private final UUID id;
 	/** underlying channel */
 	protected volatile Channel channel;
 	protected volatile boolean closed = false;
@@ -48,8 +46,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 	private final ExchangeChannelGroup parent;
 	protected final SocketAddress remoteAddress;
 
-	protected AbstractExchangeChannel(ExchangeChannelGroup parent, SocketAddress remoteAddress, UUID id) {
-		this.id = id;
+	protected AbstractExchangeChannel(ExchangeChannelGroup parent, SocketAddress remoteAddress) {
 		this.parent = parent;
 		this.remoteAddress = remoteAddress;
 	}
@@ -66,7 +63,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 
 	@Override
 	public UUID id() {
-		return id;
+		return null;
 	}
 
 	@Override
@@ -134,6 +131,12 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		requestWithFuture(data, callback, requestControl);
 	}
 
+	
+	@Override
+	public void response(ResponseProtocol response) throws SailfishException{
+		channel.writeAndFlush(response, channel.voidPromise());
+	}
+
 	private ResponseFuture<byte[]> requestWithFuture(byte[] data, ResponseCallback<byte[]> callback,
 			RequestControl requestControl) throws SailfishException {
 		final RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
@@ -143,11 +146,11 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
 		respFuture.setCallback(callback, requestControl.timeout());
 		// trace before write
-		Tracer.trace(this, protocol.packetId(), respFuture);
+		getTracer().trace(this, protocol.packetId(), respFuture);
 		try {
 			if (requestControl.sent()) {
 				ChannelFuture future = channel.writeAndFlush(protocol)
-						.addListener(new SimpleChannelFutureListener(protocol.packetId()));
+						.addListener(new SimpleChannelFutureListener(this, protocol.packetId()));
 				boolean ret = future.await(requestControl.timeout());
 				if (!ret) {
 					future.cancel(true);
@@ -164,9 +167,11 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 
 	// reduce class create
 	static class SimpleChannelFutureListener implements ChannelFutureListener {
-		private int packetId;
+		private final ExchangeChannel channel;
+		private final int packetId;
 
-		public SimpleChannelFutureListener(int packetId) {
+		public SimpleChannelFutureListener(ExchangeChannel channel, int packetId) {
+			this.channel = channel;
 			this.packetId = packetId;
 		}
 
@@ -179,7 +184,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 				}
 				// FIXME maybe need more concrete error, like
 				// WriteOverFlowException or some other special exceptions
-				Tracer.erase(ResponseProtocol.newErrorResponse(packetId, errorMsg, RemotingConstants.RESULT_FAIL));
+				channel.getTracer().erase(ResponseProtocol.newErrorResponse(packetId, errorMsg, RemotingConstants.RESULT_FAIL));
 			}
 		}
 	}

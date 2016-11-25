@@ -17,7 +17,9 @@
  */
 package sailfish.remoting;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -29,7 +31,6 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.util.CharsetUtil;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
@@ -37,11 +38,10 @@ import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.executor.SimpleExecutor;
 import sailfish.remoting.future.ResponseFuture;
-import sailfish.remoting.handler.MsgHandler;
-import sailfish.remoting.protocol.Protocol;
-import sailfish.remoting.protocol.RequestProtocol;
-import sailfish.remoting.protocol.ResponseProtocol;
-import sailfish.remoting.utils.ArrayUtils;
+import sailfish.remoting.processors.ClientServerNormalRequestTestRequestProcessor;
+import sailfish.remoting.processors.ClientServerOnewayTestRequestProcessor;
+import sailfish.remoting.processors.ClientServerTimeoutTestRequestProcessor;
+import sailfish.remoting.processors.RequestProcessor;
 import sailfish.remoting.utils.Bytes;
 
 /**
@@ -50,10 +50,10 @@ import sailfish.remoting.utils.Bytes;
  * @version $Id: ClientServerTest.java, v 0.1 2016年10月26日 下午4:36:23 jileng Exp $
  */
 public class ClientServerTest {
-    private static byte                               data[]                   = "hello sailfish!"
+    public static byte                               data[]                   = "hello sailfish!"
         .getBytes(CharsetUtil.UTF_8);
     private static AtomicInteger                      ONEWAY_PAYLOAD_GENERATOR = new AtomicInteger(0);
-    private static final Map<Integer, CountDownLatch> RECORDS                  = new HashMap<>();
+    public static final Map<Integer, CountDownLatch> RECORDS                  = new HashMap<>();
     private static ExchangeServer                     server;
     private static int                                originPort               = 13141;
 
@@ -61,29 +61,13 @@ public class ClientServerTest {
     public static void beforeClass() throws Exception {
         ExchangeServerConfig serverConfig = new ExchangeServerConfig();
         serverConfig.address(new Address("localhost", originPort));
-        server = Exchanger.bind(serverConfig, new MsgHandler<Protocol>() {
-            @Override
-            public void handle(ChannelHandlerContext ctx, Protocol msg) {
-                if (msg.request()) {
-                    RequestProtocol requestProtocol = (RequestProtocol) msg;
-                    if (requestProtocol.oneway()) {
-                        RECORDS.get(Bytes.bytes2int(requestProtocol.body())).countDown();
-                    }else if(ArrayUtils.isEmpty(requestProtocol.body())){//test client timeout
-                    	//do nothing, request from remote peer will timeout
-                    }else {
-                        Assert.assertNotNull(requestProtocol.body());
-                        Assert.assertTrue(requestProtocol.body().length > 0);
-                        Assert.assertArrayEquals(data, requestProtocol.body());
+        List<RequestProcessor> processors = new ArrayList<>(3);
+        processors.add(new ClientServerOnewayTestRequestProcessor());
+        processors.add(new ClientServerNormalRequestTestRequestProcessor());
+        processors.add(new ClientServerTimeoutTestRequestProcessor());
+        serverConfig.setRequestProcessors(processors);
 
-                        ResponseProtocol responseProtocol = new ResponseProtocol();
-                        responseProtocol.body(data);
-                        responseProtocol.packetId(requestProtocol.packetId());
-                        responseProtocol.result((byte) 0);
-                        ctx.writeAndFlush(responseProtocol);
-                    }
-                }
-            }
-        });
+        server = Exchanger.bind(serverConfig);
         server.start();
     }
 
@@ -105,11 +89,13 @@ public class ClientServerTest {
         CountDownLatch onewayLatch = new CountDownLatch(1);
         int payload = ONEWAY_PAYLOAD_GENERATOR.getAndIncrement();
         RECORDS.put(payload, onewayLatch);
+        control.opcode(ClientServerOnewayTestRequestProcessor.OPCODE);
         client.oneway(Bytes.int2bytes(payload), control);
         onewayLatch.await(2, TimeUnit.SECONDS);
         Assert.assertTrue(onewayLatch.getCount() == 0);
 
         //sync request-response invoke
+        control.opcode(ClientServerNormalRequestTestRequestProcessor.OPCODE);
         ResponseFuture<byte[]> future = client.request(data, control);
         byte[] result = future.get();
         Assert.assertNotNull(result);
@@ -275,6 +261,7 @@ public class ClientServerTest {
         DefaultExchangeClient client = new DefaultExchangeClient(newBaseConfig(port));
         //test request-response
         RequestControl control = new RequestControl();
+        control.opcode(ClientServerTimeoutTestRequestProcessor.OPCODE);
         ResponseFuture<byte[]> future = client.request(requestData, control);
         try {
             future.get(2000, TimeUnit.MILLISECONDS);

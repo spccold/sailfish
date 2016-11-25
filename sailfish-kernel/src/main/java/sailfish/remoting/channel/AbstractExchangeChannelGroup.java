@@ -23,6 +23,7 @@ import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
+import sailfish.remoting.protocol.ResponseProtocol;
 
 /**
  * @author spccold
@@ -65,5 +66,10 @@ public abstract class AbstractExchangeChannelGroup implements ExchangeChannelGro
 	public void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl)
 			throws SailfishException {
 		next().request(data, callback, requestControl);
+	}
+
+	@Override
+	public void response(ResponseProtocol response) throws SailfishException {
+		next().response(response);
 	}
 }

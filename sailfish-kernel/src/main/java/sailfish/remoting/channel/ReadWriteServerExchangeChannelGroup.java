@@ -22,7 +22,10 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * @author spccold
@@ -32,17 +35,27 @@ public final class ReadWriteServerExchangeChannelGroup extends AbstractExchangeC
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadWriteServerExchangeChannelGroup.class);
 	
-	private ExchangeChannelGroup readGroup;
-	private ExchangeChannelGroup writeGroup;
-	public ReadWriteServerExchangeChannelGroup(UUID id) {
+	private ServerExchangeChannelGroup readGroup;
+	private ServerExchangeChannelGroup writeGroup;
+	
+	private final MsgHandler<Protocol> msgHandler;
+	private final Tracer tracer;
+	
+	public ReadWriteServerExchangeChannelGroup(MsgHandler<Protocol> msgHandler, UUID id, int connctions, int writeConnections) {
 		super(id);
+		this.msgHandler = msgHandler;
+		this.tracer = new Tracer();
+		
+		this.writeGroup = new ServerExchangeChannelGroup(tracer, msgHandler, id, connctions - writeConnections);
+		this.readGroup = new ServerExchangeChannelGroup(tracer, msgHandler, id, writeConnections);
 	}
-
-	public void addGroup(ExchangeChannelGroup group , boolean write){
-		if(write){
-			this.writeGroup = group;
-		}
-		this.readGroup = group;
+	
+	public ServerExchangeChannelGroup getReadGroup(){
+		return readGroup;
+	}
+	
+	public ServerExchangeChannelGroup getWriteGroup(){
+		return writeGroup;
 	}
 	
 	@Override
@@ -67,5 +80,15 @@ public final class ReadWriteServerExchangeChannelGroup extends AbstractExchangeC
 	@Override
 	public void close(int timeout) {
 		throw new UnsupportedOperationException("close with timeout: "+timeout);
+	}
+
+	@Override
+	public MsgHandler<Protocol> getMsgHander() {
+		return msgHandler;
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return tracer;
 	}
 }

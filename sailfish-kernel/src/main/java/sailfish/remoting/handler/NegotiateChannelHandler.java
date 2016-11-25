@@ -34,19 +34,22 @@ import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.Attribute;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.PlatformDependent;
+import sailfish.remoting.ExchangeServer;
+import sailfish.remoting.channel.AbstractExchangeChannelGroup;
 import sailfish.remoting.channel.ChannelConfig;
 import sailfish.remoting.channel.ChannelType;
+import sailfish.remoting.channel.ReadWriteServerExchangeChannelGroup;
+import sailfish.remoting.channel.ServerExchangeChannel;
+import sailfish.remoting.channel.ServerExchangeChannelGroup;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.Opcode;
-import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.ChannelUtil;
 
 /**
- * negotiate idleTimeout, maxIdleTimeout and settings about {@link ChannelConfig} with
- * remote peer
+ * negotiate idleTimeout, maxIdleTimeout and settings about {@link ChannelConfig} with remote peer
  * 
  * @author spccold
  * @version $Id: NegotiateChannelHandler.java, v 0.1 2016年11月23日 下午10:11:26 spccold Exp $
@@ -59,8 +62,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 	// This way we can reduce the memory usage compared to use Attributes.
 	private final ConcurrentMap<ChannelHandlerContext, Boolean> negotiateMap = PlatformDependent.newConcurrentHashMap();
 
-	public static final ConcurrentMap<String, ChannelHandlerContexts> readWriteContexts = new ConcurrentHashMap<>();
-	public static final ConcurrentMap<ChannelHandlerContext, String> context2Uuid = new ConcurrentHashMap<>();
+	public static final ConcurrentMap<String, AbstractExchangeChannelGroup> uuid2ChannelGroup = new ConcurrentHashMap<>();
 
 	private NegotiateChannelHandler() { };
 
@@ -78,7 +80,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 			dealNegotiate(ctx, msg);
 			return;
 		}
-		//no sense to Protocol in fact
+		// no sense to Protocol in fact
 		ReferenceCountUtil.retain(msg);
 		ctx.fireChannelRead(msg);
 	}
@@ -88,7 +90,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		logger.warn("Failed to negotiate. Closing: " + ctx.channel(), cause);
 		ctx.close();
 	}
-	
+
 	private boolean negotiate(ChannelHandlerContext ctx) throws Exception {
 		if (negotiateMap.putIfAbsent(ctx, Boolean.TRUE) == null) { // Guard against re-entrance.
 			try {
@@ -98,10 +100,11 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				// only one byte
 				byte channelType = ctx.channel().attr(ChannelAttrKeys.channelType).get();
 				short connections = ctx.channel().attr(ChannelAttrKeys.connections).get();
+				short writeConnections = ctx.channel().attr(ChannelAttrKeys.writeConnections).get();
 				short channelIndex = ctx.channel().attr(ChannelAttrKeys.channelIndex).get();
 				// negotiate idle timeout and read write splitting settings with remote peer
 				ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte) idleTimeout, (byte) maxIdleTimeout,
-						uuidAttr.get(), channelType, connections, channelIndex));
+						uuidAttr.get(), channelType, connections, writeConnections, channelIndex));
 			} catch (Throwable cause) {
 				exceptionCaught(ctx, cause);
 			} finally {
@@ -113,9 +116,9 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 	}
 
 	private void dealNegotiate(ChannelHandlerContext ctx, Protocol msg) throws Exception {
-		try{
+		try {
 			RequestProtocol requestProtocol = (RequestProtocol) msg;
-			if (requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE) {// negotiate idle timeout
+			if (requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE) {
 				byte[] body = requestProtocol.body();
 				DataInputStream dis = new DataInputStream(new ByteArrayInputStream(body));
 				byte idleTimeout = dis.readByte();
@@ -123,41 +126,70 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				UUID uuid = new UUID(dis.readLong(), dis.readLong());
 				byte channelType = dis.readByte();
 				short connections = dis.readShort();
+				short writeConnections = dis.readShort();
 				short channelIndex = dis.readShort();
 				// no sense to dis(ByteArrayInputStream) in fact
 				dis.close();
-				
+
 				ChannelHandlerContext idleHandlerContext = ctx.pipeline().context(IdleStateHandler.class);
 				if (null != idleHandlerContext) {
 					ctx.pipeline().replace(IdleStateHandler.class, idleHandlerContext.name(),
 							new IdleStateHandler(idleTimeout, 0, 0));
 					ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(idleMaxTimeout);
 				}
-
-				if (channelType != ChannelType.readwrite.code()) {// negotiate read write splitting settings
-					String uuidStr = uuid.toString();
-					ChannelHandlerContexts contexts = readWriteContexts.get(uuidStr);
-					if (null == contexts) {
-						ChannelHandlerContexts existed = readWriteContexts.putIfAbsent(uuidStr,
-								contexts = new ChannelHandlerContexts());
-						if (null != existed) {
-							contexts = existed;
+				
+				String uuidStr = uuid.toString();
+				ExchangeServer exchangeServer = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
+				if (channelType == ChannelType.readwrite.code()) {
+					AbstractExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
+					if (null == channelGroup) {
+						AbstractExchangeChannelGroup old = uuid2ChannelGroup.putIfAbsent(uuidStr,
+								channelGroup = new ServerExchangeChannelGroup(null, exchangeServer.getMsgHandler(), uuid, connections));
+						if (null != old) {
+							channelGroup = old;
 						}
 					}
-					// contrary to remote peer, read to write, write to read
-					if (channelType == ChannelType.write.code()) {
-						contexts.addReadChannelHandlerContext(ctx, channelIndex);
-					} else if(channelType == ChannelType.read.code()){
-						contexts.addWriteChannelHandlerContext(ctx, channelIndex);
+					//bind current channel to ExchangeChannelGroup
+					ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
+					//Reverse channel index to get better io performance
+					int reversedChannelIndex = connections - 1 - channelIndex;
+					// add child
+					((ServerExchangeChannelGroup) channelGroup)
+							.addChild(new ServerExchangeChannel(channelGroup, ctx.channel()), reversedChannelIndex);
+				} else if (channelType != ChannelType.readwrite.code()) {
+					// negotiate read write splitting settings
+					AbstractExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
+					if (null == channelGroup) {
+						AbstractExchangeChannelGroup old = uuid2ChannelGroup.putIfAbsent(uuidStr,
+								channelGroup = new ReadWriteServerExchangeChannelGroup(exchangeServer.getMsgHandler(), uuid, connections,
+										writeConnections));
+						if (null != old) {
+							channelGroup = old;
+						}
 					}
-					context2Uuid.put(ctx, uuidStr);
+					//bind current channel to ExchangeChannelGroup
+					ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
+					
+					if (channelType == ChannelType.read.code()) {
+						ServerExchangeChannelGroup writeGroup = ((ReadWriteServerExchangeChannelGroup) channelGroup)
+								.getWriteGroup();
+						//Reverse channel index to get better io performance
+						int reversedChannelIndex = connections - writeConnections - 1 - channelIndex;
+						writeGroup.addChild(new ServerExchangeChannel(writeGroup, ctx.channel()), reversedChannelIndex);
+					} else if (channelType == ChannelType.write.code()) {
+						ServerExchangeChannelGroup readGroup = ((ReadWriteServerExchangeChannelGroup) channelGroup)
+								.getReadGroup();
+						//Reverse channel index to get better io performance
+						int reversedChannelIndex = writeConnections - 1 - channelIndex;
+						readGroup.addChild(new ServerExchangeChannel(readGroup, ctx.channel()), reversedChannelIndex);
+					}
 				}
 			}
 			// normal heart beat request
 			ctx.writeAndFlush(ResponseProtocol.newHeartbeat());
-		}catch(Exception cause){
+		} catch (Exception cause) {
 			exceptionCaught(ctx, cause);
-		}finally {
+		} finally {
 			remove(ctx);
 		}
 	}

@@ -18,7 +18,6 @@
 package sailfish.remoting.channel;
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.locks.LockSupport;
 
 import io.netty.bootstrap.Bootstrap;
@@ -29,6 +28,8 @@ import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.ResponseProtocol;
 import sailfish.remoting.utils.ChannelUtil;
 import sailfish.remoting.utils.CollectionUtils;
@@ -57,7 +58,7 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	 */
 	protected SingleConnctionExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, Address address,
 			int reconnectInterval, boolean doConnect) throws SailfishException {
-		super(parent, address, UUID.randomUUID());
+		super(parent, address);
 		this.reusedBootstrap = bootstrap;
 		this.reconnectInterval = reconnectInterval;
 		if (doConnect) {
@@ -122,20 +123,30 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 			this.closed = true;
 			// deal unfinished requests, response with channel closed exception
 			long start = System.currentTimeMillis();
-			while (CollectionUtils.isNotEmpty(Tracer.peekPendingRequests(this))
+			while (CollectionUtils.isNotEmpty(getTracer().peekPendingRequests(this))
 					&& (System.currentTimeMillis() - start < timeout)) {
 				LockSupport.parkNanos(1000 * 1000 * 10L);
 			}
-			Map<Integer, Object> pendingRequests = Tracer.popPendingRequests(this);
+			Map<Integer, Object> pendingRequests = getTracer().popPendingRequests(this);
 			if (CollectionUtils.isEmpty(pendingRequests)) {
 				return;
 			}
 			for (Integer packetId : pendingRequests.keySet()) {
-				Tracer.erase(ResponseProtocol.newErrorResponse(packetId,
+				getTracer().erase(ResponseProtocol.newErrorResponse(packetId,
 						"unfinished request because of channel:" + channel.toString() + " be closed",
 						RemotingConstants.RESULT_FAIL));
 			}
 			ChannelUtil.closeChannel(channel);
 		}
+	}
+
+	@Override
+	public MsgHandler<Protocol> getMsgHander() {
+		return parent().getMsgHander();
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return parent().getTracer();
 	}
 }

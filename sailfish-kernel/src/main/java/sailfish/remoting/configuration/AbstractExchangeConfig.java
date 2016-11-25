@@ -17,8 +17,12 @@
  */
 package sailfish.remoting.configuration;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import sailfish.remoting.Address;
 import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.processors.RequestProcessor;
 import sailfish.remoting.utils.ParameterChecker;
 
 /**
@@ -34,6 +38,9 @@ public abstract class AbstractExchangeConfig {
     // in seconds
     protected byte idleTimeout = RemotingConstants.DEFAULT_IDLE_TIMEOUT;
     protected byte maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
+    
+    protected List<RequestProcessor> requestProcessors = new ArrayList<>(0);
+    
     //check parameters
     protected void check(){
         ParameterChecker.checkNotNull(address, "address");
@@ -63,4 +70,12 @@ public abstract class AbstractExchangeConfig {
     public void maxIdleTimeout(byte maxIdleTimeout) {
         this.maxIdleTimeout = maxIdleTimeout;
     }
+
+	public List<RequestProcessor> getRequestProcessors() {
+		return requestProcessors;
+	}
+
+	public void setRequestProcessors(List<RequestProcessor> requestProcessors) {
+		this.requestProcessors = ParameterChecker.checkNotNull(requestProcessors, "requestProcessors");
+	}
 }

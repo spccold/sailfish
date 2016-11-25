@@ -21,7 +21,10 @@ import java.util.UUID;
 
 import io.netty.channel.Channel;
 import sailfish.remoting.Endpoint;
+import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * 
@@ -44,4 +47,8 @@ public interface ExchangeChannelGroup extends Endpoint, MessageExchangePattern{
     UUID id();
     
     boolean isAvailable();
+    
+    MsgHandler<Protocol> getMsgHander();
+    
+    Tracer getTracer();
 }

@@ -28,12 +28,14 @@ public class ChannelConfig {
 	private final UUID uuid;
 	private final byte type;
 	private final short connections;
-
+	private final short writeConnections;
+	
 	private short index;
-	public ChannelConfig(UUID uuid, byte type, short connections, short index) {
+	public ChannelConfig(UUID uuid, byte type, short connections, short writeConnections, short index) {
 		this.uuid = uuid;
 		this.type = type;
 		this.connections = connections;
+		this.writeConnections = writeConnections;
 		
 		this.index = index;
 	}
@@ -48,6 +50,10 @@ public class ChannelConfig {
 
 	public short connections(){
 		return this.connections;
+	}
+	
+	public short writeConnections(){
+		return this.writeConnections;
 	}
 	
 	public ChannelConfig index(short index){
@@ -67,6 +73,6 @@ public class ChannelConfig {
 	}
 	
 	public ChannelConfig deepCopy(){
-		return new ChannelConfig(uuid, type, connections, index);
+		return new ChannelConfig(uuid, type, connections, writeConnections, index);
 	}
 }

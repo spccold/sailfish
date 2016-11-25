@@ -15,19 +15,29 @@
  *	limitations under the License.
  *
  */
-package sailfish.remoting.handler;
+package sailfish.remoting.processors;
 
-import sailfish.remoting.channel.ExchangeChannelGroup;
-import sailfish.remoting.protocol.Protocol;
+import java.util.concurrent.Executor;
 
 /**
- * 
  * @author spccold
- * @version $Id: MsgHandler.java, v 0.1 2016年10月26日 上午11:46:07 jileng Exp $
+ * @version $Id: RequestProcessor.java, v 0.1 2016年11月25日 上午11:55:03 spccold Exp $
  */
-public interface MsgHandler<I extends Protocol> {
-    /**
-     * I is request or response
-     */
-    void handle(ExchangeChannelGroup channelGroup, I msg);
+public interface RequestProcessor {
+	Executor executor();
+
+	short opcode();
+
+	void handleRequest(byte[] requestData, Output output);
+
+	void onRejectedExecutionException(byte[] requestData, Output output);
+
+	interface Output {
+		/**
+		 * 
+		 * @param responseData  normal data or exception stack data
+		 * @param success  
+		 */
+		void response(byte[] responseData, boolean success);
+	}
 }

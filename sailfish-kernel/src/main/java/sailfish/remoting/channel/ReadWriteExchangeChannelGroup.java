@@ -23,8 +23,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sailfish.remoting.Address;
+import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * @author spccold
@@ -36,36 +39,40 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 
 	private final ExchangeChannelGroup readGroup;
 	private final ExchangeChannelGroup writeGroup;
-
-	public ReadWriteExchangeChannelGroup(Address address, boolean lazy, int readConnections, int writeConnections)
+	
+	private final MsgHandler<Protocol> msgHandler;
+	private final Tracer tracer;
+	
+	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, int readConnections, int writeConnections)
 			throws SailfishException {
-		this(address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
+		this(msgHandler, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
 				RemotingConstants.DEFAULT_IDLE_TIMEOUT, RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy,
 				readConnections, writeConnections);
 	}
 
-	public ReadWriteExchangeChannelGroup(Address address, int connectTimeout, int reconnectInterval, boolean lazy,
+	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, int connectTimeout, int reconnectInterval, boolean lazy,
 			int readConnections, int writeConnections) throws SailfishException {
-		this(address, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
+		this(msgHandler, address, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
 				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, readConnections, writeConnections);
 	}
 
-	public ReadWriteExchangeChannelGroup(Address address, boolean lazy, byte idleTimeout, byte maxIdleTimeOut,
+	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, byte idleTimeout, byte maxIdleTimeOut,
 			int readConnections, int writeConnections) throws SailfishException {
-		this(address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
+		this(msgHandler, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
 				idleTimeout, maxIdleTimeOut, lazy, readConnections, writeConnections);
 	}
 
-	public ReadWriteExchangeChannelGroup(Address address, int connectTimeout, int reconnectInterval, byte idleTimeout,
+	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, int connectTimeout, int reconnectInterval, byte idleTimeout,
 			byte maxIdleTimeOut, boolean lazy, int readConnections, int writeConnections) throws SailfishException {
 		super(UUID.randomUUID());
-		
-		ChannelConfig readConfig = new ChannelConfig(id(), ChannelType.read.code(), (short)readConnections, (short)0);
-		this.readGroup = new DefaultExchangeChannelGroup(address, readConnections, connectTimeout, reconnectInterval,
+		this.msgHandler = msgHandler;
+		this.tracer = new Tracer();
+		ChannelConfig readConfig = new ChannelConfig(id(), ChannelType.read.code(), (short)(readConnections+writeConnections), (short)(writeConnections) , (short)0);
+		this.readGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address, readConnections, connectTimeout, reconnectInterval,
 				idleTimeout, maxIdleTimeOut, lazy, readConfig);
 
-		ChannelConfig writeConfig = new ChannelConfig(id(), ChannelType.write.code(), (short)readConnections, (short)0);
-		this.writeGroup = new DefaultExchangeChannelGroup(address, writeConnections, connectTimeout, reconnectInterval,
+		ChannelConfig writeConfig = new ChannelConfig(id(), ChannelType.write.code(), (short)(readConnections+writeConnections), (short)(writeConnections), (short)0);
+		this.writeGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address, writeConnections, connectTimeout, reconnectInterval,
 				idleTimeout, maxIdleTimeOut, lazy, writeConfig);
 	}
 
@@ -92,5 +99,15 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 	public void close(int timeout) {
 		writeGroup.close(timeout);
 		readGroup.close(timeout);
+	}
+
+	@Override
+	public MsgHandler<Protocol> getMsgHander() {
+		return msgHandler;
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return null;
 	}
 }

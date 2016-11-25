@@ -17,10 +17,11 @@
  */
 package sailfish.remoting.channel;
 
-import java.util.UUID;
-
 import io.netty.channel.Channel;
+import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * @author spccold
@@ -28,8 +29,9 @@ import sailfish.remoting.exceptions.SailfishException;
  */
 public final class ServerExchangeChannel extends AbstractExchangeChannel {
 
-	public ServerExchangeChannel(ExchangeChannelGroup parent, Channel channel, UUID id) {
-		super(parent, channel.remoteAddress(), id);
+	public ServerExchangeChannel(ExchangeChannelGroup parent, Channel channel) {
+		super(parent, channel.remoteAddress());
+		this.channel = channel;
 	}
 
 	@Override
@@ -57,5 +59,15 @@ public final class ServerExchangeChannel extends AbstractExchangeChannel {
 	@Override
 	public boolean isClosed() {
 		return false;
+	}
+
+	@Override
+	public MsgHandler<Protocol> getMsgHander() {
+		return parent().getMsgHander();
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return parent().getTracer();
 	}
 }

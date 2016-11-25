@@ -19,7 +19,10 @@ package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
 import sailfish.remoting.Address;
+import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * @author spccold
@@ -28,29 +31,29 @@ import sailfish.remoting.exceptions.SailfishException;
  */
 public final class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannelGroup {
 
-	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy)
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, boolean lazy)
 			throws SailfishException {
-		this(address, connections, lazy, null);
+		this(tracer, msgHandler, address, connections, lazy, null);
 	}
 
-	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy, ChannelConfig config)
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, boolean lazy, ChannelConfig config)
 			throws SailfishException {
-		super(address, connections, lazy, config);
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, config);
 	}
 
-	public DefaultExchangeChannelGroup(Address address, int connections, boolean lazy, int connectTimeout,
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, boolean lazy, int connectTimeout,
 			int reconnectInterval, ChannelConfig config) throws SailfishException {
-		super(address, connections, lazy, connectTimeout, reconnectInterval, config);
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, connectTimeout, reconnectInterval, config);
 	}
 
-	public DefaultExchangeChannelGroup(Address address, int connections, byte idleTimeout, byte maxIdleTimeOut,
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, byte idleTimeout, byte maxIdleTimeOut,
 			boolean lazy, ChannelConfig config) throws SailfishException {
-		super(address, connections, idleTimeout, maxIdleTimeOut, lazy, config);
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, idleTimeout, maxIdleTimeOut, lazy, config);
 	}
 
-	public DefaultExchangeChannelGroup(Address address, int connections, int connectTimeout, int reconnectInterval,
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, int connectTimeout, int reconnectInterval,
 			byte idleTimeout, byte maxIdleTimeOut, boolean lazy, ChannelConfig config) throws SailfishException {
-		super(address, connections, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, config);
+		super(null == tracer ? new Tracer() : tracer,msgHandler, address, connections, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, config);
 	}
 
 	/**

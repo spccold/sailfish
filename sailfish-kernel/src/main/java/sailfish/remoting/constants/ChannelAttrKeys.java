@@ -20,6 +20,8 @@ package sailfish.remoting.constants;
 import java.util.UUID;
 
 import io.netty.util.AttributeKey;
+import sailfish.remoting.ExchangeServer;
+import sailfish.remoting.channel.AbstractExchangeChannelGroup;
 
 /**
  * @author spccold
@@ -35,8 +37,13 @@ public interface ChannelAttrKeys {
 	AttributeKey<UUID> uuid = AttributeKey.valueOf("sailfish.uuid");
 	AttributeKey<Byte> channelType = AttributeKey.valueOf("sailfish.channelType");
 	AttributeKey<Short> connections = AttributeKey.valueOf("sailfish.connections");
+	AttributeKey<Short> writeConnections = AttributeKey.valueOf("sailfish.writeConnections");
 	AttributeKey<Short> channelIndex = AttributeKey.valueOf("sailfish.channelIndex");
 	
 	//side
 	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("sailfish.side");
+	
+	//exchange channel group
+	AttributeKey<AbstractExchangeChannelGroup> channelGroup = AttributeKey.valueOf("sailfish.channelGroup");
+	AttributeKey<ExchangeServer> exchangeServer = AttributeKey.valueOf("sailfish.exchangeServer");
 }

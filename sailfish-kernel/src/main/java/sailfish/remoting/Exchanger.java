@@ -23,6 +23,7 @@ import sailfish.remoting.channel.ReadWriteExchangeChannelGroup;
 import sailfish.remoting.configuration.ExchangeClientConfig;
 import sailfish.remoting.configuration.ExchangeServerConfig;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.DefaultMsgHandler;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
@@ -36,16 +37,19 @@ public class Exchanger {
 	public static ExchangeChannelGroup connect(ExchangeClientConfig config) throws SailfishException {
 		ParameterChecker.checkNotNull(config, "ExchangeClientConfig");
 		config.check();
+		MsgHandler<Protocol> msgHandler = new DefaultMsgHandler(config.getRequestProcessors());
 		ExchangeChannelGroup channelGroup = null;
 		switch (config.mode()) {
 		case simple:
 		case multiconns:
-			channelGroup = new DefaultExchangeChannelGroup(config.address(), config.connections(),
+			//TODO
+			channelGroup = new DefaultExchangeChannelGroup(null, msgHandler, config.address(), config.connections(),
 					config.connectTimeout(), config.reconnectInterval(), config.idleTimeout(), config.idleTimeout(),
 					config.isLazyConnection(), null);
 			break;
 		case readwrite:
-			channelGroup = new ReadWriteExchangeChannelGroup(config.address(), config.connectTimeout(),
+			//TODO
+			channelGroup = new ReadWriteExchangeChannelGroup(msgHandler, config.address(), config.connectTimeout(),
 					config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(),
 					config.isLazyConnection(), config.connections() - config.writeConnections(),
 					config.writeConnections());
@@ -56,9 +60,9 @@ public class Exchanger {
 		return channelGroup;
 	}
 
-	public static ExchangeServer bind(ExchangeServerConfig config, MsgHandler<Protocol> handler)
+	public static ExchangeServer bind(ExchangeServerConfig config)
 			throws SailfishException {
 		config.check();
-		return new ExchangeServer(config, handler);
+		return new ExchangeServer(config);
 	}
 }

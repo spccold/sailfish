@@ -18,31 +18,30 @@
 package sailfish.remoting.handler;
 
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.SimpleChannelInboundHandler;
+import sailfish.remoting.channel.ExchangeChannelGroup;
+import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.protocol.Protocol;
-import sailfish.remoting.utils.ChannelUtil;
 
 /**
  * 
  * @author spccold
  * @version $Id: ShareableSimpleChannelInboundHandler.java, v 0.1 2016年11月1日 下午2:17:59 jileng Exp $
  */
+@ChannelHandler.Sharable
 public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Protocol> {
-	private final MsgHandler<Protocol> msgHandler;
-
-	public ShareableSimpleChannelInboundHandler(MsgHandler<Protocol> msgHandler) {
-		this.msgHandler = msgHandler;
-	}
-
+	
+	public static final ShareableSimpleChannelInboundHandler INSTANCE = new ShareableSimpleChannelInboundHandler();
+	
+	private ShareableSimpleChannelInboundHandler() {}
+	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
-		String uuid = null;
-		ChannelHandlerContexts contexts = null;
-		if (!ChannelUtil.clientSide(ctx) && (null != (uuid = NegotiateChannelHandler.context2Uuid.get(ctx)))
-				&& (null != (contexts = NegotiateChannelHandler.readWriteContexts.get(uuid)))) {
-			msgHandler.handle(contexts, msg);
-		} else {
-			msgHandler.handle(ctx, msg);
+		//TODO
+		ExchangeChannelGroup channelGroup = ctx.channel().attr(ChannelAttrKeys.channelGroup).get();
+		if(null != channelGroup){
+			channelGroup.getMsgHander().handle(channelGroup, msg);
 		}
 	}
 }

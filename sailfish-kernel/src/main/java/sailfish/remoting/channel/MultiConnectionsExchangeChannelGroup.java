@@ -18,7 +18,6 @@
 package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleStateHandler;
 import sailfish.remoting.Address;
 import sailfish.remoting.ReconnectManager;
@@ -27,7 +26,6 @@ import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
-import sailfish.remoting.protocol.ResponseProtocol;
 
 /**
  * @author spccold
@@ -35,26 +33,30 @@ import sailfish.remoting.protocol.ResponseProtocol;
  *          $
  */
 public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfigurableExchangeChannelGroup {
+	
 	private final ExchangeChannel[] children;
 	private final ExchangeChannel[] deadChildren;
 	private final ExchangeChannelChooserFactory.ExchangeChannelChooser chooser;
-
-	protected MultiConnectionsExchangeChannelGroup(Address address, int connections, boolean lazy, ChannelConfig config)
+	private final MsgHandler<Protocol> msgHandler;
+	private final Tracer tracer;
+	
+	
+	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, boolean lazy, ChannelConfig config)
 			throws SailfishException {
-		this(address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
+		this(tracer, msgHandler, address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
 				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
 				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, config);
 	}
 
-	protected MultiConnectionsExchangeChannelGroup(Address address, int connections, boolean lazy, int connectTimeout,
+	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, boolean lazy, int connectTimeout,
 			int reconnectInterval, ChannelConfig config) throws SailfishException {
-		this(address, connections, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
+		this(tracer, msgHandler, address, connections, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
 				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, config);
 	}
 
-	protected MultiConnectionsExchangeChannelGroup(Address address, int connections, byte idleTimeout,
+	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, byte idleTimeout,
 			byte maxIdleTimeOut, boolean lazy, ChannelConfig config) throws SailfishException {
-		this(address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
+		this(tracer, msgHandler, address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
 				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, idleTimeout, maxIdleTimeOut, lazy, config);
 	}
 
@@ -71,31 +73,24 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	 * @param maxIdleTimeOut
 	 *            max idle timeout in seconds for {@link ChannelEventsHandler}
 	 */
-	protected MultiConnectionsExchangeChannelGroup(Address address, int connections, int connectTimeout,
+	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, int connections, int connectTimeout,
 			int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut, boolean lazy, ChannelConfig config)
 			throws SailfishException {
+		this.msgHandler = msgHandler;
+		this.tracer = tracer;
+		
 		children = new ExchangeChannel[connections];
 		deadChildren = new ExchangeChannel[connections];
 		
 		if(null == config){
-			 config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short)connections, (short)0);
+			 config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short)connections, (short)connections, (short)0);
 		}
 		// FIXME
-		MsgHandler<Protocol> handler = new MsgHandler<Protocol>() {
-			@Override
-			public void handle(ChannelHandlerContext context, Protocol msg) {
-				if (msg.request()) {
-					// TODO
-				} else {
-					Tracer.erase((ResponseProtocol) msg);
-				}
-			}
-		};
 		Bootstrap bootstrap = null;
 		for (int i = 0; i < connections; i++) {
 			boolean success = false;
 			ChannelConfig deepCopy = config.deepCopy().index((short)i);
-			bootstrap = configureBoostrap(handler, address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy);
+			bootstrap = configureBoostrap(address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy);
 			try {
 				children[i] = newChild(bootstrap, address, reconnectInterval, lazy, deepCopy);
 				success = true;
@@ -163,6 +158,16 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 			}
 		}
 		return false;
+	}
+
+	@Override
+	public MsgHandler<Protocol> getMsgHander() {
+		return msgHandler;
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return tracer;
 	}
 
 	/**

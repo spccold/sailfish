@@ -35,6 +35,7 @@ import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.eventgroup.ServerEventGroup;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.DefaultMsgHandler;
 import sailfish.remoting.handler.HeartbeatChannelHandler;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.handler.NegotiateChannelHandler;
@@ -49,11 +50,11 @@ import sailfish.remoting.utils.ParameterChecker;
  */
 public class ExchangeServer implements Endpoint{
     private volatile boolean isClosed = false;
-    private ExchangeServerConfig config;
-    private MsgHandler<Protocol> handler;
-    public ExchangeServer(ExchangeServerConfig config, MsgHandler<Protocol> handler){
+    private final ExchangeServerConfig config;
+    private final MsgHandler<Protocol> msgHandler;
+    public ExchangeServer(ExchangeServerConfig config){
         this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
-        this.handler = ParameterChecker.checkNotNull(handler, "handler");
+        this.msgHandler = new DefaultMsgHandler(config.getRequestProcessors());
     }
     
     public void start() throws SailfishException{
@@ -67,13 +68,13 @@ public class ExchangeServer implements Endpoint{
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
                 ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
-
+                ch.attr(ChannelAttrKeys.exchangeServer).set(ExchangeServer.this);
                 pipeline.addLast(executor, RemotingEncoder.INSTANCE);
                 pipeline.addLast(executor, new RemotingDecoder());
                 pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
                 pipeline.addLast(executor, HeartbeatChannelHandler.INSTANCE);
                 pipeline.addLast(executor, NegotiateChannelHandler.INSTANCE);
-                pipeline.addLast(executor, new ShareableSimpleChannelInboundHandler(handler));
+                pipeline.addLast(executor, ShareableSimpleChannelInboundHandler.INSTANCE);
             }
         });
         try{
@@ -118,5 +119,9 @@ public class ExchangeServer implements Endpoint{
     @Override
     public boolean isClosed() {
         return this.isClosed;
+    }
+    
+    public MsgHandler<Protocol> getMsgHandler(){
+    	return msgHandler;
     }
 }

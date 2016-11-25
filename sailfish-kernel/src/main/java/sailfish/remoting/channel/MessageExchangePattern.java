@@ -21,6 +21,7 @@ import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.ResponseFuture;
+import sailfish.remoting.protocol.ResponseProtocol;
 
 /**
  * 
@@ -48,4 +49,6 @@ public interface MessageExchangePattern {
      * callback request via request–response pattern
      */
     void request(byte[] data, ResponseCallback<byte[]> callback, RequestControl requestControl) throws SailfishException;
+    
+    void response(ResponseProtocol response) throws SailfishException;
 }

@@ -19,7 +19,10 @@ package sailfish.remoting.channel;
 
 import java.util.UUID;
 
+import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.handler.MsgHandler;
+import sailfish.remoting.protocol.Protocol;
 
 /**
  * @author spccold
@@ -31,8 +34,15 @@ public final class ServerExchangeChannelGroup extends AbstractExchangeChannelGro
 	private final ExchangeChannel[] deadChildren;
 	private final ExchangeChannelChooserFactory.ExchangeChannelChooser chooser;
 	
-	public ServerExchangeChannelGroup(UUID id, int connections) {
+	private final MsgHandler<Protocol> msgHandler;
+	private final Tracer tracer;
+	
+	
+	public ServerExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, UUID id, int connections) {
 		super(id);
+		this.msgHandler = msgHandler;
+		this.tracer = (null == tracer ? new Tracer() : tracer);
+		
 		children = new ExchangeChannel[connections];
 		deadChildren = new ExchangeChannel[connections];
 		
@@ -70,5 +80,15 @@ public final class ServerExchangeChannelGroup extends AbstractExchangeChannelGro
 	@Override
 	public void close(int timeout) {
 		throw new UnsupportedOperationException("close with timeout: "+timeout);
+	}
+
+	@Override
+	public MsgHandler<Protocol> getMsgHander() {
+		return msgHandler;
+	}
+
+	@Override
+	public Tracer getTracer() {
+		return tracer;
 	}
 }
