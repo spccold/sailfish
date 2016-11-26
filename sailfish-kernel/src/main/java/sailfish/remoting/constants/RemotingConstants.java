@@ -50,7 +50,7 @@ public interface RemotingConstants {
 	// channel type for read write splitting
 	byte WRITE_CHANNEL = 0;
 	byte READ_CHANNEL = 1;
-	
+
 	int DEFAULT_IO_THREADS = Runtime.getRuntime().availableProcessors() + 1;
 	int DEFAULT_EVENT_THREADS = 1;
 	String CLIENT_IO_THREADNAME = "sailfish-client-io";

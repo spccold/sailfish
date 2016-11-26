@@ -18,11 +18,16 @@
 package sailfish.remoting.handler;
 
 import io.netty.channel.ChannelHandlerContext;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.SimpleChannelInboundHandler;
 import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.utils.ChannelUtil;
 
 /**
  * 
@@ -31,6 +36,8 @@ import sailfish.remoting.protocol.Protocol;
  */
 @ChannelHandler.Sharable
 public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Protocol> {
+	
+	private static final Logger logger = LoggerFactory.getLogger(ShareableSimpleChannelInboundHandler.class);
 	
 	public static final ShareableSimpleChannelInboundHandler INSTANCE = new ShareableSimpleChannelInboundHandler();
 	
@@ -42,6 +49,8 @@ public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHa
 		ExchangeChannelGroup channelGroup = ctx.channel().attr(ChannelAttrKeys.channelGroup).get();
 		if(null != channelGroup){
 			channelGroup.getMsgHander().handle(channelGroup, msg);
+		}else{
+			logger.warn("channelGroup not exist, side[{}], protocol[{}]", ChannelUtil.clientSide(ctx) ? "client" : "server", msg);
 		}
 	}
 }

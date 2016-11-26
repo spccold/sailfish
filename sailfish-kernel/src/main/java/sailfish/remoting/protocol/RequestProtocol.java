@@ -20,6 +20,7 @@ package sailfish.remoting.protocol;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
@@ -211,6 +212,13 @@ public class RequestProtocol implements Protocol {
 
 	public boolean heartbeat() {
 		return this.heartbeat;
+	}
+
+	@Override
+	public String toString() {
+		return "RequestProtocol [heartbeat=" + heartbeat + ", oneway=" + oneway + ", serializeType=" + serializeType
+				+ ", packetId=" + packetId + ", opcode=" + opcode + ", compressType=" + compressType + ", langType="
+				+ langType + ", body=" + Arrays.toString(body) + "]";
 	}
 
 	public static RequestProtocol newRequest(RequestControl requestControl) {

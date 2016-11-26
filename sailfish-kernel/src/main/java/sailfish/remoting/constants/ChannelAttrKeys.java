@@ -18,6 +18,7 @@
 package sailfish.remoting.constants;
 
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import io.netty.util.AttributeKey;
 import sailfish.remoting.ExchangeServer;
@@ -42,6 +43,7 @@ public interface ChannelAttrKeys {
 	interface OneTime{
 		//for idle handle
 		AttributeKey<Byte> idleTimeout = AttributeKey.valueOf("sailfish.idleTimeout");
+		AttributeKey<CountDownLatch> awaitNegotiate = AttributeKey.valueOf("sailfish.awaitNegotiate");
 		
 		//for negotiate with remote peer
 		AttributeKey<UUID> uuid = AttributeKey.valueOf("sailfish.uuid");

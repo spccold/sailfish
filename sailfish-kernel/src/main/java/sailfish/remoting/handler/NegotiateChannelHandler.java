@@ -67,8 +67,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 
 	public static final ConcurrentMap<String, ExchangeChannelGroup> uuid2ChannelGroup = new ConcurrentHashMap<>();
 
-	private NegotiateChannelHandler() {
-	};
+	private NegotiateChannelHandler() { };
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -111,6 +110,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 
 	private boolean negotiate(ChannelHandlerContext ctx) throws Exception {
 		if (negotiateMap.putIfAbsent(ctx, Boolean.TRUE) == null) { // Guard against re-entrance.
+			ctx.channel().attr(OneTime.awaitNegotiate).get().countDown();
 			try {
 				int idleTimeout = ctx.channel().attr(OneTime.idleTimeout).get();
 				int maxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();

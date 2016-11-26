@@ -18,6 +18,7 @@
 package sailfish.remoting.channel;
 
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 
 import static sailfish.remoting.constants.ChannelAttrKeys.OneTime;
 
@@ -99,6 +100,7 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 				ch.attr(OneTime.connections).set(config.connections());
 				ch.attr(OneTime.writeConnections).set(config.writeConnections());
 				ch.attr(ChannelAttrKeys.channelGroup).set(channelGroup);
+				ch.attr(OneTime.awaitNegotiate).set(new CountDownLatch(1));
 				// TODO should increase ioRatio when every ChannelHandler bind to executorGroup?
 				pipeline.addLast(executorGroup, RemotingEncoder.INSTANCE);
 				pipeline.addLast(executorGroup, new RemotingDecoder());

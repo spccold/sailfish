@@ -18,11 +18,8 @@
 package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.handler.timeout.IdleStateHandler;
 import sailfish.remoting.Address;
-import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.Tracer;
-import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -40,39 +37,6 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
 	
-	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, 
-			boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
-			throws SailfishException {
-		this(tracer, msgHandler, address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
-				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, reverseIndex ,config, channelGroup);
-	}
-
-	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, int connectTimeout,
-			int reconnectInterval, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
-		this(tracer, msgHandler, address, connections, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, reverseIndex ,config, channelGroup);
-	}
-
-	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, byte idleTimeout,
-			byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
-		this(tracer, msgHandler, address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
-				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, idleTimeout, maxIdleTimeOut, lazy, reverseIndex, config, channelGroup);
-	}
-
-	/**
-	 * 
-	 * @param address
-	 *            the {@link Address} which be connected to
-	 * @param connectTimeout
-	 *            connect timeout in milliseconds
-	 * @param reconnectInterval
-	 *            reconnect interval in milliseconds for {@link ReconnectManager}
-	 * @param idleTimeout
-	 *            timeout in seconds for {@link IdleStateHandler}
-	 * @param maxIdleTimeOut
-	 *            max idle timeout in seconds for {@link ChannelEventsHandler}
-	 */
 	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, int connectTimeout,
 			int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
 			throws SailfishException {

@@ -30,32 +30,7 @@ import sailfish.remoting.protocol.Protocol;
  *          spccold Exp $
  */
 public final class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannelGroup {
-
-	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, 
-			short connections, boolean lazy, boolean reverseIndex, ExchangeChannelGroup channelGroup)
-			throws SailfishException {
-		this(tracer, msgHandler, address, connections, lazy, reverseIndex, null, channelGroup);
-	}
-
-	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, 
-			boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
-			throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, 
-				reverseIndex, config, channelGroup);
-	}
-
-	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, int connectTimeout,
-			int reconnectInterval, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, 
-				connectTimeout, reconnectInterval, reverseIndex, config, channelGroup);
-	}
-
-	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, byte idleTimeout, byte maxIdleTimeOut,
-			boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, idleTimeout,
-				maxIdleTimeOut, lazy, reverseIndex, config, channelGroup);
-	}
-
+	
 	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, int connectTimeout, int reconnectInterval,
 			byte idleTimeout, byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
 		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, connectTimeout, 

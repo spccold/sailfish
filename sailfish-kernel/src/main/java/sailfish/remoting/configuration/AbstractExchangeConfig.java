@@ -20,7 +20,10 @@ package sailfish.remoting.configuration;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.Address;
+import sailfish.remoting.NettyPlatformIndependent;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.processors.RequestProcessor;
 import sailfish.remoting.utils.ParameterChecker;
@@ -40,6 +43,12 @@ public abstract class AbstractExchangeConfig {
     protected byte maxIdleTimeout = RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT;
     
     protected List<RequestProcessor> requestProcessors = new ArrayList<>(0);
+    
+    /**
+     * should use {@link NettyPlatformIndependent#newEventLoopGroup(int, java.util.concurrent.ThreadFactory)} to create {@link EventLoopGroup}
+     */
+    private EventLoopGroup eventLoopGroup;
+    private EventExecutorGroup eventExecutorGroup;
     
     //check parameters
     public void check(){
@@ -77,5 +86,21 @@ public abstract class AbstractExchangeConfig {
 
 	public void setRequestProcessors(List<RequestProcessor> requestProcessors) {
 		this.requestProcessors = ParameterChecker.checkNotNull(requestProcessors, "requestProcessors");
+	}
+
+	public EventLoopGroup getEventLoopGroup() {
+		return eventLoopGroup;
+	}
+
+	public void setEventLoopGroup(EventLoopGroup eventLoopGroup) {
+		this.eventLoopGroup = ParameterChecker.checkNotNull(eventLoopGroup, "eventLoopGroup");
+	}
+
+	public EventExecutorGroup getEventExecutorGroup() {
+		return eventExecutorGroup;
+	}
+
+	public void setEventExecutorGroup(EventExecutorGroup eventExecutorGroup) {
+		this.eventExecutorGroup = ParameterChecker.checkNotNull(eventExecutorGroup, "eventExecutorGroup");
 	}
 }

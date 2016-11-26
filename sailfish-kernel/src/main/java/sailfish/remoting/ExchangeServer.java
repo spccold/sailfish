@@ -48,81 +48,88 @@ import sailfish.remoting.utils.ParameterChecker;
  * @author spccold
  * @version $Id: ExchangeServer.java, v 0.1 2016年10月26日 下午3:52:19 jileng Exp $
  */
-public class ExchangeServer implements Endpoint{
-    private volatile boolean isClosed = false;
-    private final ExchangeServerConfig config;
-    private final MsgHandler<Protocol> msgHandler;
-    public ExchangeServer(ExchangeServerConfig config){
-        this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
-        this.msgHandler = new DefaultMsgHandler(config.getRequestProcessors());
-    }
-    
-    public void start() throws SailfishException{
-        ServerBootstrap boot = newServerBootstrap();
-        EventLoopGroup accept = NettyPlatformIndependent.newEventLoopGroup(1, new DefaultThreadFactory(RemotingConstants.SERVER_ACCEPT_THREADNAME));
-        boot.group(accept, ServerEventGroup.INSTANCE.getLoopGroup());
-        final EventExecutorGroup executor = ServerEventGroup.INSTANCE.getExecutorGroup();
-        boot.localAddress(config.address().host(), config.address().port());
-        boot.childHandler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-                ChannelPipeline pipeline = ch.pipeline();
-                ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
-                ch.attr(ChannelAttrKeys.OneTime.idleTimeout).set(config.idleTimeout());
-                ch.attr(ChannelAttrKeys.exchangeServer).set(ExchangeServer.this);
-                pipeline.addLast(executor, RemotingEncoder.INSTANCE);
-                pipeline.addLast(executor, new RemotingDecoder());
-                pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
-                pipeline.addLast(executor, HeartbeatChannelHandler.INSTANCE);
-                pipeline.addLast(executor, NegotiateChannelHandler.INSTANCE);
-                pipeline.addLast(executor, ShareableSimpleChannelInboundHandler.INSTANCE);
-            }
-        });
-        try{
-            boot.bind().syncUninterruptibly();
-        }catch(Throwable cause){
-            throw new SailfishException(cause);
-        }
-    }
-    
-    private ServerBootstrap newServerBootstrap(){
-        ServerBootstrap serverBoot = new ServerBootstrap();
-        serverBoot.channel(NettyPlatformIndependent.serverChannelClass());
-        // connections wait for accept
-        serverBoot.option(ChannelOption.SO_BACKLOG, 1024);
-        serverBoot.option(ChannelOption.SO_REUSEADDR, true);
-        //replace by heart beat
-        serverBoot.childOption(ChannelOption.SO_KEEPALIVE, false);
-        serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
-        serverBoot.childOption(ChannelOption.SO_SNDBUF, 32 * 1024);
-        serverBoot.childOption(ChannelOption.SO_RCVBUF, 32 * 1024);
-        //temporary settings, need more tests
-        serverBoot.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
-        serverBoot.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-        serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
-        return serverBoot;
-    }
+public class ExchangeServer implements Endpoint {
+	private volatile boolean isClosed = false;
+	private final ExchangeServerConfig config;
+	private final MsgHandler<Protocol> msgHandler;
 
-    @Override
-    public void close(){
-        close(0);
-    }
+	public ExchangeServer(ExchangeServerConfig config) {
+		this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
+		this.msgHandler = new DefaultMsgHandler(config.getRequestProcessors());
+	}
 
-    @Override
-    public void close(int timeout){
-        synchronized (this) {
-            if(isClosed)
-                return;
-            //TODO
-        }
-    }
+	public void start() throws SailfishException {
+		ServerBootstrap boot = newServerBootstrap();
+		EventLoopGroup accept = NettyPlatformIndependent.newEventLoopGroup(1,
+				new DefaultThreadFactory(RemotingConstants.SERVER_ACCEPT_THREADNAME));
+		if (null != config.getEventLoopGroup()) {
+			boot.group(accept, config.getEventLoopGroup());
+		} else {
+			boot.group(accept, ServerEventGroup.INSTANCE.getLoopGroup());
+		}
+		final EventExecutorGroup executor = (null != config.getEventExecutorGroup() ? config.getEventExecutorGroup()
+				: ServerEventGroup.INSTANCE.getExecutorGroup());
+		boot.localAddress(config.address().host(), config.address().port());
+		boot.childHandler(new ChannelInitializer<SocketChannel>() {
+			@Override
+			protected void initChannel(SocketChannel ch) throws Exception {
+				ChannelPipeline pipeline = ch.pipeline();
+				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
+				ch.attr(ChannelAttrKeys.OneTime.idleTimeout).set(config.idleTimeout());
+				ch.attr(ChannelAttrKeys.exchangeServer).set(ExchangeServer.this);
+				pipeline.addLast(executor, RemotingEncoder.INSTANCE);
+				pipeline.addLast(executor, new RemotingDecoder());
+				pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
+				pipeline.addLast(executor, HeartbeatChannelHandler.INSTANCE);
+				pipeline.addLast(executor, NegotiateChannelHandler.INSTANCE);
+				pipeline.addLast(executor, ShareableSimpleChannelInboundHandler.INSTANCE);
+			}
+		});
+		try {
+			boot.bind().syncUninterruptibly();
+		} catch (Throwable cause) {
+			throw new SailfishException(cause);
+		}
+	}
 
-    @Override
-    public boolean isClosed() {
-        return this.isClosed;
-    }
-    
-    public MsgHandler<Protocol> getMsgHandler(){
-    	return msgHandler;
-    }
+	private ServerBootstrap newServerBootstrap() {
+		ServerBootstrap serverBoot = new ServerBootstrap();
+		serverBoot.channel(NettyPlatformIndependent.serverChannelClass());
+		// connections wait for accept
+		serverBoot.option(ChannelOption.SO_BACKLOG, 1024);
+		serverBoot.option(ChannelOption.SO_REUSEADDR, true);
+		// replace by heart beat
+		serverBoot.childOption(ChannelOption.SO_KEEPALIVE, false);
+		serverBoot.childOption(ChannelOption.TCP_NODELAY, true);
+		serverBoot.childOption(ChannelOption.SO_SNDBUF, 32 * 1024);
+		serverBoot.childOption(ChannelOption.SO_RCVBUF, 32 * 1024);
+		// temporary settings, need more tests
+		serverBoot.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
+		serverBoot.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+		serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
+		return serverBoot;
+	}
+
+	@Override
+	public void close() {
+		close(0);
+	}
+
+	@Override
+	public void close(int timeout) {
+		synchronized (this) {
+			if (isClosed)
+				return;
+			// TODO
+		}
+	}
+
+	@Override
+	public boolean isClosed() {
+		return this.isClosed;
+	}
+
+	public MsgHandler<Protocol> getMsgHandler() {
+		return msgHandler;
+	}
 }

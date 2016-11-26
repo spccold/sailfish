@@ -17,6 +17,8 @@
  */
 package sailfish.remoting.protocol;
 
+import java.util.Arrays;
+
 import io.netty.buffer.ByteBuf;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
@@ -183,7 +185,14 @@ public class ResponseProtocol implements Protocol{
         return this.heartbeat;
     }
     
-    public static ResponseProtocol newHeartbeat(){
+	@Override
+	public String toString() {
+		return "ResponseProtocol [heartbeat=" + heartbeat + ", serializeType=" + serializeType + ", packetId="
+				+ packetId + ", result=" + result + ", compressType=" + compressType + ", body=" + Arrays.toString(body)
+				+ "]";
+	}
+
+	public static ResponseProtocol newHeartbeat(){
         ResponseProtocol heartbeat = new ResponseProtocol();
         heartbeat.heartbeat(true);
         return heartbeat;

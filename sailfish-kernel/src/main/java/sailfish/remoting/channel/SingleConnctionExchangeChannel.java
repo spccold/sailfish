@@ -26,6 +26,7 @@ import io.netty.handler.timeout.IdleStateHandler;
 import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.constants.ChannelAttrKeys.OneTime;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -64,10 +65,13 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	@Override
 	public Channel doConnect() throws SailfishException {
 		try {
 			Channel channel = reusedBootstrap.connect().syncUninterruptibly().channel();
+		    channel.attr(OneTime.awaitNegotiate).get().await();
+		    channel.attr(OneTime.awaitNegotiate).remove();
 			return channel;
 		} catch (Throwable cause) {
 			throw new SailfishException(cause);

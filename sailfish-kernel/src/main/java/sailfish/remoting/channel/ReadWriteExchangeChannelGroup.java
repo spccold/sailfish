@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import sailfish.remoting.Address;
 import sailfish.remoting.Tracer;
-import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -42,25 +41,6 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 	
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
-	
-	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, short connections, short writeConnections, boolean reverseIndex)
-			throws SailfishException {
-		this(msgHandler, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
-				RemotingConstants.DEFAULT_IDLE_TIMEOUT, RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy,
-				connections, writeConnections, reverseIndex);
-	}
-
-	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, int connectTimeout, int reconnectInterval, boolean lazy,
-			short connections, short writeConnections, boolean reverseIndex) throws SailfishException {
-		this(msgHandler, address, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, connections, writeConnections, reverseIndex);
-	}
-
-	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, boolean lazy, byte idleTimeout, byte maxIdleTimeOut,
-			short connections, short writeConnections, boolean reverseIndex) throws SailfishException {
-		this(msgHandler, address, RemotingConstants.DEFAULT_CONNECT_TIMEOUT, RemotingConstants.DEFAULT_RECONNECT_INTERVAL,
-				idleTimeout, maxIdleTimeOut, lazy, connections, writeConnections, reverseIndex);
-	}
 
 	public ReadWriteExchangeChannelGroup(MsgHandler<Protocol> msgHandler, Address address, int connectTimeout, int reconnectInterval, byte idleTimeout,
 			byte maxIdleTimeOut, boolean lazy, short connections, short writeConnections, boolean reverseIndex) throws SailfishException {

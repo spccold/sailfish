@@ -41,7 +41,7 @@ import sailfish.remoting.utils.PlatformUtil;
  *          jileng Exp $
  */
 public class NettyPlatformIndependent {
-
+	
 	public static EventLoopGroup newEventLoopGroup(int nThreads, ThreadFactory threadFactory) {
 		if (PlatformUtil.isLinux()) {
 			return new EpollEventLoopGroup(nThreads, threadFactory);
