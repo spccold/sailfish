@@ -31,7 +31,7 @@ import sailfish.remoting.protocol.Protocol;
  * @author spccold
  * @version $Id: ReadWriteServerExchangeChannelGroup.java, v 0.1 2016年11月24日 下午6:40:27 spccold Exp $
  */
-public final class ReadWriteServerExchangeChannelGroup extends AbstractExchangeChannelGroup{
+public final class ReadWriteServerExchangeChannelGroup extends ReferenceCountedServerExchangeChannelGroup{
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadWriteServerExchangeChannelGroup.class);
 	
@@ -43,9 +43,10 @@ public final class ReadWriteServerExchangeChannelGroup extends AbstractExchangeC
 	
 	public ReadWriteServerExchangeChannelGroup(MsgHandler<Protocol> msgHandler, UUID id, int connctions, int writeConnections) {
 		super(id);
+
 		this.msgHandler = msgHandler;
 		this.tracer = new Tracer();
-		
+		//read to write, write to read
 		this.writeGroup = new ServerExchangeChannelGroup(tracer, msgHandler, id, connctions - writeConnections);
 		this.readGroup = new ServerExchangeChannelGroup(tracer, msgHandler, id, writeConnections);
 	}

@@ -18,7 +18,6 @@
 package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
-import sailfish.remoting.Address;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.SailfishException;
@@ -32,9 +31,9 @@ public final class LazyExchangeChannel extends SingleConnctionExchangeChannel {
 	
 	private volatile boolean lazyWithOutInit = true;
 
-	LazyExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, Address address, int reconnectInterval)
+	LazyExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, int reconnectInterval)
 			throws SailfishException {
-		super(bootstrap, parent, address, reconnectInterval, false);
+		super(bootstrap, parent, reconnectInterval, false);
 	}
 
 	@Override

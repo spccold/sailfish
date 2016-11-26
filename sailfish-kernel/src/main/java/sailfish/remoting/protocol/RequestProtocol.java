@@ -230,8 +230,8 @@ public class RequestProtocol implements Protocol {
 	}
 
 	public static RequestProtocol newNegotiateHeartbeat(byte idleTimeout, byte maxIdleTimeout, UUID uuid,
-			byte channelType, short connections, short writeConnections, short channelIndex) throws IOException {
-		int size = 1 + 1 + 16 + 1 + 2 + 2 + 2;
+			byte channelType, short connections, short writeConnections, short channelIndex, boolean reverseIndex) throws IOException {
+		int size = 1 + 1 + 16 + 1 + 2 + 2 + 2 + 1;
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
 				DataOutputStream dos = new DataOutputStream(baos);) {
 			dos.writeByte(idleTimeout);
@@ -243,6 +243,7 @@ public class RequestProtocol implements Protocol {
 			dos.writeShort(connections);
 			dos.writeShort(writeConnections);
 			dos.writeShort(channelIndex);
+			dos.writeBoolean(reverseIndex);
 			return newHeartbeat().opcode(Opcode.HEARTBEAT_WITH_NEGOTIATE).body(baos.toByteArray());
 		}
 	}

@@ -28,7 +28,7 @@ import sailfish.remoting.protocol.Protocol;
  * @author spccold
  * @version $Id: ServerExchangeChannelGroup.java, v 0.1 2016年11月24日 下午6:22:36 spccold Exp $
  */
-public final class ServerExchangeChannelGroup extends AbstractExchangeChannelGroup{
+public final class ServerExchangeChannelGroup extends ReferenceCountedServerExchangeChannelGroup{
 	
 	private final ExchangeChannel[] children;
 	private final ExchangeChannel[] deadChildren;
@@ -40,6 +40,7 @@ public final class ServerExchangeChannelGroup extends AbstractExchangeChannelGro
 	
 	public ServerExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, UUID id, int connections) {
 		super(id);
+		
 		this.msgHandler = msgHandler;
 		this.tracer = (null == tracer ? new Tracer() : tracer);
 		

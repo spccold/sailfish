@@ -21,7 +21,7 @@ import java.util.UUID;
 
 import io.netty.util.AttributeKey;
 import sailfish.remoting.ExchangeServer;
-import sailfish.remoting.channel.AbstractExchangeChannelGroup;
+import sailfish.remoting.channel.ExchangeChannelGroup;
 
 /**
  * @author spccold
@@ -29,21 +29,26 @@ import sailfish.remoting.channel.AbstractExchangeChannelGroup;
  */
 public interface ChannelAttrKeys {
     //for idle handle and heart beat
-	AttributeKey<Byte> idleTimeout = AttributeKey.valueOf("sailfish.idleTimeout");
 	AttributeKey<Byte> maxIdleTimeout = AttributeKey.valueOf("sailfish.maxIdleTimeout");
 	AttributeKey<Long> lastReadTimeMillis = AttributeKey.valueOf("sailfish.lastReadTimeMillis");
-	
-	//for negotiate with remote peer
-	AttributeKey<UUID> uuid = AttributeKey.valueOf("sailfish.uuid");
-	AttributeKey<Byte> channelType = AttributeKey.valueOf("sailfish.channelType");
-	AttributeKey<Short> connections = AttributeKey.valueOf("sailfish.connections");
-	AttributeKey<Short> writeConnections = AttributeKey.valueOf("sailfish.writeConnections");
-	AttributeKey<Short> channelIndex = AttributeKey.valueOf("sailfish.channelIndex");
-	
+
 	//side
 	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("sailfish.side");
 	
-	//exchange channel group
-	AttributeKey<AbstractExchangeChannelGroup> channelGroup = AttributeKey.valueOf("sailfish.channelGroup");
+	AttributeKey<ExchangeChannelGroup> channelGroup = AttributeKey.valueOf("sailfish.channelGroup");
 	AttributeKey<ExchangeServer> exchangeServer = AttributeKey.valueOf("sailfish.exchangeServer");
+	AttributeKey<String> uuidStr = AttributeKey.valueOf("sailfish.uuidStr");
+	
+	interface OneTime{
+		//for idle handle
+		AttributeKey<Byte> idleTimeout = AttributeKey.valueOf("sailfish.idleTimeout");
+		
+		//for negotiate with remote peer
+		AttributeKey<UUID> uuid = AttributeKey.valueOf("sailfish.uuid");
+		AttributeKey<Byte> channelType = AttributeKey.valueOf("sailfish.channelType");
+		AttributeKey<Short> connections = AttributeKey.valueOf("sailfish.connections");
+		AttributeKey<Short> writeConnections = AttributeKey.valueOf("sailfish.writeConnections");
+		AttributeKey<Short> channelIndex = AttributeKey.valueOf("sailfish.channelIndex");
+		AttributeKey<Boolean> reverseIndex = AttributeKey.valueOf("sailfish.reverseIndex");
+	}
 }

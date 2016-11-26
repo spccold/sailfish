@@ -31,40 +31,46 @@ import sailfish.remoting.protocol.Protocol;
  */
 public final class DefaultExchangeChannelGroup extends MultiConnectionsExchangeChannelGroup {
 
-	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy)
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, 
+			short connections, boolean lazy, boolean reverseIndex, ExchangeChannelGroup channelGroup)
 			throws SailfishException {
-		this(tracer, msgHandler, address, connections, lazy, null);
+		this(tracer, msgHandler, address, connections, lazy, reverseIndex, null, channelGroup);
 	}
 
-	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, ChannelConfig config)
+	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, 
+			boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
 			throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, config);
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, 
+				reverseIndex, config, channelGroup);
 	}
 
 	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, int connectTimeout,
-			int reconnectInterval, ChannelConfig config) throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, connectTimeout, reconnectInterval, config);
+			int reconnectInterval, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, lazy, 
+				connectTimeout, reconnectInterval, reverseIndex, config, channelGroup);
 	}
 
 	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, byte idleTimeout, byte maxIdleTimeOut,
-			boolean lazy, ChannelConfig config) throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, idleTimeout, maxIdleTimeOut, lazy, config);
+			boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, idleTimeout,
+				maxIdleTimeOut, lazy, reverseIndex, config, channelGroup);
 	}
 
 	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, int connectTimeout, int reconnectInterval,
-			byte idleTimeout, byte maxIdleTimeOut, boolean lazy, ChannelConfig config) throws SailfishException {
-		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, config);
+			byte idleTimeout, byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
+		super(null == tracer ? new Tracer() : tracer, msgHandler, address, connections, connectTimeout, 
+				reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, reverseIndex, config, channelGroup);
 	}
 
 	/**
 	 * {@link ReadWriteExchangeChannelGroup}'s read connections must be initialed eagerly whether lazy is true or false
 	 */
 	@Override
-	protected ExchangeChannel newChild(Bootstrap bootstrap, Address address, int reconnectInterval,
+	protected ExchangeChannel newChild(Bootstrap bootstrap, int reconnectInterval,
 			boolean lazy, boolean readChannel) throws SailfishException {
 		if (lazy && (!readChannel)) {
-			return new LazyExchangeChannel(bootstrap, this, address, reconnectInterval);
+			return new LazyExchangeChannel(bootstrap, this, reconnectInterval);
 		} 
-		return new EagerExchangeChannel(bootstrap, this, address, reconnectInterval);
+		return new EagerExchangeChannel(bootstrap, this, reconnectInterval);
 	}
 }

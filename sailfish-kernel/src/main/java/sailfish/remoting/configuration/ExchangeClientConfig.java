@@ -18,10 +18,69 @@
 package sailfish.remoting.configuration;
 
 import sailfish.remoting.channel.ChannelGroupMode;
+import sailfish.remoting.channel.DefaultExchangeChannelGroup;
+import sailfish.remoting.channel.ReadWriteExchangeChannelGroup;
+import sailfish.remoting.channel.ReadWriteServerExchangeChannelGroup;
+import sailfish.remoting.channel.ServerExchangeChannel;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 
 /**
+ * 
+ * <table BORDER CELLPADDING=3 CELLSPACING=1>
+ * <caption>when {@code reverseIndex} is true<caption>
+ *  <tr>
+ *    <td ALIGN=CENTER><em>client side with {@link DefaultExchangeChannelGroup}</em></td>
+ *    <td ALIGN=CENTER><em>map</em></td>
+ *    <td ALIGN=CENTER><em>server side with {@link ServerExchangeChannel}</em></td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[0] : channel0</td>
+ *    <td>=></td>
+ *    <td>channel[0] : channel2</td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[1] : channel1</td>
+ *    <td>=></td>
+ *    <td>channel[1] : channel1</td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[2] : channel2</td>
+ *    <td>=></td>
+ *    <td>channel[2] : channel0</td>
+ *  </tr>
+ * <tr>
+ *    <td ALIGN=CENTER><em>client side with {@link ReadWriteExchangeChannelGroup}</em></td>
+ *    <td ALIGN=CENTER><em>map</em></td>
+ *    <td ALIGN=CENTER><em>server side with {@link ReadWriteServerExchangeChannelGroup}</em></td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[0] : readChannel0</td>
+ *    <td>=></td>
+ *    <td>channel[0] : writeChannel1</td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[1] : readChannel1</td>
+ *    <td>=></td>
+ *    <td>channel[1] : writeChannel0</td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[0] : writeChannel0</td>
+ *    <td>=></td>
+ *    <td>channel[0] : readChannel2</td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[1] : writeChannel1</td>
+ *    <td>=></td>
+ *    <td>channel[1] : readChannel1</td>
+ *  </tr>
+ *  <tr>
+ *    <td>channel[2] : writeChannel2</td>
+ *    <td>=></td>
+ *    <td>channel[2] : readChannel0</td>
+ *  </tr>
+ * </table>
+ * 
  * 
  * @author spccold
  * @version $Id: ExchangeClientConfig.java, v 0.1 2016年10月26日 下午10:55:22 jileng Exp $
@@ -32,6 +91,7 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 	private int reconnectInterval = RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
 
 	private short connections = 1;
+	private boolean reverseIndex = true;
 	// enable channels Read/Write Splitting or not when connections greater than one
 	private boolean enableReadWriteSplitting = false;
 	/**
@@ -100,6 +160,14 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 
 	public void connectTimeout(int connectTimeout) {
 		this.connectTimeout = ParameterChecker.checkPositive(connectTimeout, "connectTimeout");
+	}
+
+	public boolean reverseIndex() {
+		return reverseIndex;
+	}
+
+	public void reverseIndex(boolean reverseIndex) {
+		this.reverseIndex = reverseIndex;
 	}
 
 	public boolean enableReadWriteSplitting() {

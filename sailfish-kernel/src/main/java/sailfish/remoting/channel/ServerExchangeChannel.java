@@ -30,7 +30,7 @@ import sailfish.remoting.protocol.Protocol;
 public final class ServerExchangeChannel extends AbstractExchangeChannel {
 
 	public ServerExchangeChannel(ExchangeChannelGroup parent, Channel channel) {
-		super(parent, channel.remoteAddress());
+		super(parent);
 		this.channel = channel;
 	}
 
@@ -54,11 +54,6 @@ public final class ServerExchangeChannel extends AbstractExchangeChannel {
 	@Override
 	public void close(int timeout) {
 		throw new UnsupportedOperationException("close with timeout: "+timeout);
-	}
-
-	@Override
-	public boolean isClosed() {
-		return false;
 	}
 
 	@Override

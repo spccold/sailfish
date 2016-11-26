@@ -40,24 +40,24 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
 	
-	
-	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, ChannelConfig config)
+	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, 
+			boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
 			throws SailfishException {
 		this(tracer, msgHandler, address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
 				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, config);
+				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, reverseIndex ,config, channelGroup);
 	}
 
 	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, boolean lazy, int connectTimeout,
-			int reconnectInterval, ChannelConfig config) throws SailfishException {
+			int reconnectInterval, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
 		this(tracer, msgHandler, address, connections, connectTimeout, reconnectInterval, RemotingConstants.DEFAULT_IDLE_TIMEOUT,
-				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, config);
+				RemotingConstants.DEFAULT_MAX_IDLE_TIMEOUT, lazy, reverseIndex ,config, channelGroup);
 	}
 
 	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, byte idleTimeout,
-			byte maxIdleTimeOut, boolean lazy, ChannelConfig config) throws SailfishException {
+			byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup) throws SailfishException {
 		this(tracer, msgHandler, address, connections, RemotingConstants.DEFAULT_CONNECT_TIMEOUT,
-				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, idleTimeout, maxIdleTimeOut, lazy, config);
+				RemotingConstants.DEFAULT_RECONNECT_INTERVAL, idleTimeout, maxIdleTimeOut, lazy, reverseIndex, config, channelGroup);
 	}
 
 	/**
@@ -74,7 +74,7 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	 *            max idle timeout in seconds for {@link ChannelEventsHandler}
 	 */
 	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, int connectTimeout,
-			int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut, boolean lazy, ChannelConfig config)
+			int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
 			throws SailfishException {
 		this.msgHandler = msgHandler;
 		this.tracer = tracer;
@@ -83,16 +83,16 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 		deadChildren = new ExchangeChannel[connections];
 		
 		if(null == config){
-			 config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short)connections, (short)connections, (short)0);
+			 config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short)connections, (short)connections, (short)0, reverseIndex);
 		}
-		// FIXME
+
 		Bootstrap bootstrap = null;
 		for (short i = 0; i < connections; i++) {
 			boolean success = false;
 			final ChannelConfig deepCopy = config.deepCopy().index(i);
-			bootstrap = configureBoostrap(address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy);
+			bootstrap = configureBoostrap(address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy, null == channelGroup ? this : channelGroup);
 			try {
-				children[i] = newChild(bootstrap, address, reconnectInterval, lazy, deepCopy.isRead());
+				children[i] = newChild(bootstrap, reconnectInterval, lazy, deepCopy.isRead());
 				success = true;
 			} catch (SailfishException cause) {
 				throw cause;
@@ -174,6 +174,6 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	 * Create a new {@link ExchangeChannel} which will later then accessible via the {@link #next()}
 	 * method.
 	 */
-	protected abstract ExchangeChannel newChild(Bootstrap bootstrap, Address address, int reconnectInterval,
+	protected abstract ExchangeChannel newChild(Bootstrap bootstrap, int reconnectInterval,
 			boolean lazy, boolean readChannel) throws SailfishException;
 }

@@ -44,11 +44,8 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 	protected volatile boolean closed = false;
 	
 	private final ExchangeChannelGroup parent;
-	protected final SocketAddress remoteAddress;
-
-	protected AbstractExchangeChannel(ExchangeChannelGroup parent, SocketAddress remoteAddress) {
+	protected AbstractExchangeChannel(ExchangeChannelGroup parent) {
 		this.parent = parent;
-		this.remoteAddress = remoteAddress;
 	}
 
 	@Override
@@ -77,7 +74,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 	@Override
 	public SocketAddress remoteAdress() {
 		if(null == channel){
-			return remoteAddress;
+			return null;
 		}
 		return channel.remoteAddress();
 	}

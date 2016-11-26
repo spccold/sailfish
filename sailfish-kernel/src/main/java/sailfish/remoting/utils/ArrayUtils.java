@@ -68,4 +68,15 @@ public class ArrayUtils {
     public static boolean isEmpty(byte[] array) {
         return array == null || array.length == 0;
     }
+    
+    /**
+     * reverse element array index
+     * 
+     * @param length  array length
+     * @param index   the element index
+     * @return
+     */
+    public static int reverseArrayIndex(int length, int index){
+    	return length - index - 1;
+    }
 }

@@ -23,7 +23,6 @@ import java.util.concurrent.locks.LockSupport;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.handler.timeout.IdleStateHandler;
-import sailfish.remoting.Address;
 import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
@@ -49,16 +48,15 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 	 * Create a new instance
 	 * 
 	 * @param parent    			the {@link ExchangeChannelGroup} which is the parent of this instance and belongs to it
-	 * @param address				the {@link Address} which be connected to
 	 * @param connectTimeout 		connect timeout in milliseconds
 	 * @param reconnectInterval 	reconnect interval in milliseconds for {@link ReconnectManager}
 	 * @param idleTimeout idle  	timeout in seconds for {@link IdleStateHandler}
 	 * @param maxIdleTimeOut 		max idle timeout in seconds for {@link ChannelEventsHandler}
 	 * @param doConnect				connect to remote peer or not when initial
 	 */
-	protected SingleConnctionExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, Address address,
+	protected SingleConnctionExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent,
 			int reconnectInterval, boolean doConnect) throws SailfishException {
-		super(parent, address);
+		super(parent);
 		this.reusedBootstrap = bootstrap;
 		this.reconnectInterval = reconnectInterval;
 		if (doConnect) {
@@ -128,13 +126,12 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 				LockSupport.parkNanos(1000 * 1000 * 10L);
 			}
 			Map<Integer, Object> pendingRequests = getTracer().popPendingRequests(this);
-			if (CollectionUtils.isEmpty(pendingRequests)) {
-				return;
-			}
-			for (Integer packetId : pendingRequests.keySet()) {
-				getTracer().erase(ResponseProtocol.newErrorResponse(packetId,
-						"unfinished request because of channel:" + channel.toString() + " be closed",
-						RemotingConstants.RESULT_FAIL));
+			if (CollectionUtils.isNotEmpty(pendingRequests)) {
+				for (Integer packetId : pendingRequests.keySet()) {
+					getTracer().erase(ResponseProtocol.newErrorResponse(packetId,
+							"unfinished request because of channel:" + channel.toString() + " be closed",
+							RemotingConstants.RESULT_FAIL));
+				}
 			}
 			ChannelUtil.closeChannel(channel);
 		}

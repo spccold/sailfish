@@ -20,6 +20,7 @@ package sailfish.remoting.channel;
 import java.util.UUID;
 
 /**
+ *
  * @author spccold
  * @version $Id: ChannelConfig.java, v 0.1 2016年11月22日 下午2:58:33
  *          spccold Exp $
@@ -29,13 +30,15 @@ public class ChannelConfig {
 	private final byte type;
 	private final short connections;
 	private final short writeConnections;
+	private final boolean reverseIndex;
 	
 	private short index;
-	public ChannelConfig(UUID uuid, byte type, short connections, short writeConnections, short index) {
+	public ChannelConfig(UUID uuid, byte type, short connections, short writeConnections, short index, boolean reverseIndex) {
 		this.uuid = uuid;
 		this.type = type;
 		this.connections = connections;
 		this.writeConnections = writeConnections;
+		this.reverseIndex = reverseIndex;
 		
 		this.index = index;
 	}
@@ -64,6 +67,10 @@ public class ChannelConfig {
 		return this.index;
 	}
 	
+	public boolean reverseIndex(){
+		return this.reverseIndex;
+	}
+	
 	public boolean isRead(){
 		return ChannelType.read.code == type;
 	}
@@ -73,6 +80,6 @@ public class ChannelConfig {
 	}
 	
 	public ChannelConfig deepCopy(){
-		return new ChannelConfig(uuid, type, connections, writeConnections, index);
+		return new ChannelConfig(uuid, type, connections, writeConnections, index, reverseIndex);
 	}
 }

@@ -68,6 +68,7 @@ public class ExchangeServer implements Endpoint{
             protected void initChannel(SocketChannel ch) throws Exception {
                 ChannelPipeline pipeline = ch.pipeline();
                 ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
+                ch.attr(ChannelAttrKeys.OneTime.idleTimeout).set(config.idleTimeout());
                 ch.attr(ChannelAttrKeys.exchangeServer).set(ExchangeServer.this);
                 pipeline.addLast(executor, RemotingEncoder.INSTANCE);
                 pipeline.addLast(executor, new RemotingDecoder());

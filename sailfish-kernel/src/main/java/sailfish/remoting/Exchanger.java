@@ -45,12 +45,12 @@ public class Exchanger {
 			// TODO
 			return new DefaultExchangeChannelGroup(null, msgHandler, config.address(), config.connections(),
 					config.connectTimeout(), config.reconnectInterval(), config.idleTimeout(), config.idleTimeout(),
-					config.isLazyConnection(), null);
+					config.isLazyConnection(), config.reverseIndex(), null, null);
 		case readwrite:
 			// TODO
 			return new ReadWriteExchangeChannelGroup(msgHandler, config.address(), config.connectTimeout(),
 					config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(),
-					config.isLazyConnection(), config.connections(), config.writeConnections());
+					config.isLazyConnection(), config.connections(), config.writeConnections(), config.reverseIndex());
 		default:
 			throw new IllegalArgumentException("invalid channel mode");
 		}

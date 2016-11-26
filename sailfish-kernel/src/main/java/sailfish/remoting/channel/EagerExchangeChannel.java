@@ -18,7 +18,6 @@
 package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
-import sailfish.remoting.Address;
 import sailfish.remoting.exceptions.SailfishException;
 
 /**
@@ -27,9 +26,9 @@ import sailfish.remoting.exceptions.SailfishException;
  */
 public final class EagerExchangeChannel extends SingleConnctionExchangeChannel {
 
-	EagerExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, Address address, int reconnectInterval)
+	EagerExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, int reconnectInterval)
 			throws SailfishException {
-		super(bootstrap, parent, address, reconnectInterval, true);
+		super(bootstrap, parent, reconnectInterval, true);
 	}
 
 	@Override

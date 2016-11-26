@@ -50,9 +50,9 @@ import sailfish.remoting.utils.Bytes;
  * @version $Id: ClientServerTest.java, v 0.1 2016年10月26日 下午4:36:23 jileng Exp $
  */
 public class ClientServerTest {
-    public static byte                               data[]                   = "hello sailfish!"
+    public volatile static byte                               data[]                   = "hello sailfish!"
         .getBytes(CharsetUtil.UTF_8);
-    private static AtomicInteger                      ONEWAY_PAYLOAD_GENERATOR = new AtomicInteger(0);
+    private volatile static AtomicInteger                      ONEWAY_PAYLOAD_GENERATOR = new AtomicInteger(0);
     public static final Map<Integer, CountDownLatch> RECORDS                  = new HashMap<>();
     private static ExchangeServer                     server;
     private static int                                originPort               = 13141;
@@ -72,9 +72,9 @@ public class ClientServerTest {
     }
 
     @AfterClass
-    public static void afterClass() {
+    public static void afterClass() throws InterruptedException {
         if (null != server) {
-            server.close();
+        	server.close();
         }
     }
 
