@@ -95,6 +95,6 @@ public abstract class ReferenceCountedServerExchangeChannelGroup extends Abstrac
 	}
 
 	private void deallocate(){
-		NegotiateChannelHandler.uuid2ChannelGroup.remove(id());
+		NegotiateChannelHandler.uuid2ChannelGroup.remove(id().toString());
 	}
 }

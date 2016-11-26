@@ -36,9 +36,7 @@ public final class ServerExchangeChannel extends AbstractExchangeChannel {
 
 	@Override
 	public Channel update(Channel newChannel) {
-		Channel old = channel;
-		this.channel = newChannel;
-		return old;
+		throw new UnsupportedOperationException("update");
 	}
 
 	@Override

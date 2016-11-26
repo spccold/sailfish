@@ -82,9 +82,11 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
 		if(!ChannelUtil.clientSide(ctx)){
 			String uuidStr = ctx.channel().attr(ChannelAttrKeys.uuidStr).get();
-			ReferenceCountedServerExchangeChannelGroup channelGroup = (ReferenceCountedServerExchangeChannelGroup)uuid2ChannelGroup.get(uuidStr);
-			if(null != channelGroup){
-				channelGroup.release();
+			synchronized (uuidStr.intern()) {
+				ReferenceCountedServerExchangeChannelGroup channelGroup = (ReferenceCountedServerExchangeChannelGroup)uuid2ChannelGroup.get(uuidStr);
+				if(null != channelGroup){
+					channelGroup.release();
+				}
 			}
 		}
 		ctx.fireChannelInactive();
@@ -165,12 +167,14 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				//bind uuidStr to Channel
 				ctx.channel().attr(ChannelAttrKeys.uuidStr).set(uuidStr);
 				ExchangeServer exchangeServer = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
-				if (channelType == ChannelType.readwrite.code()) {
-					negotiateReadWriteChannel(ctx, uuid, uuidStr, exchangeServer, connections, channelIndex,
-							reverseIndex);
-				} else if (channelType == ChannelType.read.code() || channelType == ChannelType.write.code()) {
-					negotiateReadOrWriteChannel(ctx, uuid, uuidStr, exchangeServer, connections, writeConnections,
-							channelType, channelIndex, reverseIndex);
+				synchronized (uuidStr.intern()) {
+					if (channelType == ChannelType.readwrite.code()) {
+						negotiateReadWriteChannel(ctx, uuid, uuidStr, exchangeServer, connections, channelIndex,
+								reverseIndex);
+					} else if (channelType == ChannelType.read.code() || channelType == ChannelType.write.code()) {
+						negotiateReadOrWriteChannel(ctx, uuid, uuidStr, exchangeServer, connections, writeConnections,
+								channelType, channelIndex, reverseIndex);
+					}
 				}
 			}
 			// normal heart beat request
@@ -185,13 +189,8 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, UUID uuid, String uuidStr,
 			ExchangeServer exchangeServer, int connections, int channelIndex, boolean reverseIndex) {
 		ExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
-		if (null == channelGroup) {
-			ExchangeChannelGroup old = uuid2ChannelGroup.putIfAbsent(uuidStr,
-					channelGroup = new ServerExchangeChannelGroup(null, exchangeServer.getMsgHandler(), uuid,
-							connections));
-			if (null != old) {
-				channelGroup = old;
-			}
+		if(null == channelGroup){
+			uuid2ChannelGroup.put(uuidStr,channelGroup = new ServerExchangeChannelGroup(null, exchangeServer.getMsgHandler(), uuid, connections));
 		}
 		// bind current channel to ExchangeChannelGroup
 		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
@@ -212,13 +211,9 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 			boolean reverseIndex) {
 		// negotiate read write splitting settings
 		ExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
-		if (null == channelGroup) {
-			ExchangeChannelGroup old = uuid2ChannelGroup.putIfAbsent(uuidStr,
-					channelGroup = new ReadWriteServerExchangeChannelGroup(exchangeServer.getMsgHandler(), uuid,
-							connections, writeConnections));
-			if (null != old) {
-				channelGroup = old;
-			}
+		if(null == channelGroup){
+			 uuid2ChannelGroup.putIfAbsent(uuidStr,
+						channelGroup = new ReadWriteServerExchangeChannelGroup(exchangeServer.getMsgHandler(), uuid, connections, writeConnections));
 		}
 		// bind current channel to ExchangeChannelGroup
 		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);

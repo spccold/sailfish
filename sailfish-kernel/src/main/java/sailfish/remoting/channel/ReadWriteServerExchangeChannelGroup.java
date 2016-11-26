@@ -35,8 +35,8 @@ public final class ReadWriteServerExchangeChannelGroup extends ReferenceCountedS
 	
 	private static final Logger logger = LoggerFactory.getLogger(ReadWriteServerExchangeChannelGroup.class);
 	
-	private ServerExchangeChannelGroup readGroup;
-	private ServerExchangeChannelGroup writeGroup;
+	private final ServerExchangeChannelGroup readGroup;
+	private final ServerExchangeChannelGroup writeGroup;
 	
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
