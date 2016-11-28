@@ -18,6 +18,8 @@
 package sailfish.remoting.channel;
 
 import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.EventLoopGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.Address;
 import sailfish.remoting.Tracer;
 import sailfish.remoting.exceptions.SailfishException;
@@ -30,31 +32,35 @@ import sailfish.remoting.protocol.Protocol;
  *          $
  */
 public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfigurableExchangeChannelGroup {
-	
+
 	private final ExchangeChannel[] children;
 	private final ExchangeChannel[] deadChildren;
 	private final ExchangeChannelChooserFactory.ExchangeChannelChooser chooser;
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
-	
-	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address, short connections, int connectTimeout,
-			int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut, boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup)
-			throws SailfishException {
+
+	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address,
+			short connections, int connectTimeout, int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut,
+			boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup,
+			EventLoopGroup loopGroup, EventExecutorGroup executorGroup) throws SailfishException {
 		this.msgHandler = msgHandler;
 		this.tracer = tracer;
-		
+
 		children = new ExchangeChannel[connections];
 		deadChildren = new ExchangeChannel[connections];
-		
-		if(null == config){
-			 config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short)connections, (short)connections, (short)0, reverseIndex);
+
+		if (null == config) {
+			config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short) connections, (short) connections,
+					(short) 0, reverseIndex);
 		}
 
 		Bootstrap bootstrap = null;
 		for (short i = 0; i < connections; i++) {
 			boolean success = false;
 			final ChannelConfig deepCopy = config.deepCopy().index(i);
-			bootstrap = configureBoostrap(address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy, null == channelGroup ? this : channelGroup);
+			channelGroup = (null == channelGroup ? this : channelGroup);
+			bootstrap = configureBoostrap(address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy,
+					channelGroup, loopGroup, executorGroup);
 			try {
 				children[i] = newChild(bootstrap, reconnectInterval, lazy, deepCopy.isRead());
 				success = true;
@@ -108,7 +114,7 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 		}
 
 		if (children.length == 1) {// one connection check
-			return (null !=children[0] && children[0].isAvailable());
+			return (null != children[0] && children[0].isAvailable());
 		}
 
 		// can hit most of the time
@@ -138,6 +144,6 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	 * Create a new {@link ExchangeChannel} which will later then accessible via the {@link #next()}
 	 * method.
 	 */
-	protected abstract ExchangeChannel newChild(Bootstrap bootstrap, int reconnectInterval,
-			boolean lazy, boolean readChannel) throws SailfishException;
+	protected abstract ExchangeChannel newChild(Bootstrap bootstrap, int reconnectInterval, boolean lazy,
+			boolean readChannel) throws SailfishException;
 }

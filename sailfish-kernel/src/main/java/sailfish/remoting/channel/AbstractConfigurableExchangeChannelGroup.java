@@ -27,6 +27,7 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
@@ -53,12 +54,19 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 	}
 
 	protected Bootstrap configureBoostrap(Address remoteAddress, int connectTimeout, byte idleTimeout,
-			byte maxIdleTimeOut, ChannelConfig config, ExchangeChannelGroup channelGroup) {
+			byte maxIdleTimeOut, ChannelConfig config, ExchangeChannelGroup channelGroup, EventLoopGroup loopGroup,
+			EventExecutorGroup executorGroup) {
 		Bootstrap boot = newBootstrap();
-		boot.group(ClientEventGroup.INSTANCE.getLoopGroup());
+		if(null == loopGroup){
+			loopGroup = ClientEventGroup.INSTANCE.getLoopGroup();
+		}
+		if(null == executorGroup){
+			executorGroup = ClientEventGroup.INSTANCE.getExecutorGroup();
+		}
+		boot.group(loopGroup);
 		boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
 		boot.remoteAddress(remoteAddress.host(), remoteAddress.port());
-		boot.handler(newChannelInitializer(idleTimeout, maxIdleTimeOut, config, channelGroup));
+		boot.handler(newChannelInitializer(idleTimeout, maxIdleTimeOut, config, channelGroup, executorGroup));
 		return boot;
 	}
 
@@ -84,8 +92,7 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 	}
 
 	private ChannelInitializer<SocketChannel> newChannelInitializer(final byte idleTimeout, final byte maxIdleTimeOut,
-			final ChannelConfig config, final ExchangeChannelGroup channelGroup) {
-		final EventExecutorGroup executorGroup = ClientEventGroup.INSTANCE.getExecutorGroup();
+			final ChannelConfig config, final ExchangeChannelGroup channelGroup, final EventExecutorGroup executorGroup) {
 		return new ChannelInitializer<SocketChannel>() {
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception {

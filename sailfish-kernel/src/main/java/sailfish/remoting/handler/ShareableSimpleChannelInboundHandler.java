@@ -45,7 +45,6 @@ public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHa
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {
-		//TODO
 		ExchangeChannelGroup channelGroup = ctx.channel().attr(ChannelAttrKeys.channelGroup).get();
 		if(null != channelGroup){
 			channelGroup.getMsgHander().handle(channelGroup, msg);
