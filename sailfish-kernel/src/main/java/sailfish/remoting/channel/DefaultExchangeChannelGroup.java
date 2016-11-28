@@ -22,6 +22,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.Address;
 import sailfish.remoting.Tracer;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -42,7 +43,7 @@ public final class DefaultExchangeChannelGroup extends MultiConnectionsExchangeC
 
 	public DefaultExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address,
 			short connections, int connectTimeout, int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut,
-			boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup,
+			boolean lazy, boolean reverseIndex, NegotiateConfig config, ExchangeChannelGroup channelGroup,
 			EventLoopGroup loopGroup, EventExecutorGroup executorGroup) throws SailfishException {
 		super(tracer, msgHandler, address, connections, connectTimeout, reconnectInterval, idleTimeout, maxIdleTimeOut,
 				lazy, reverseIndex, config, channelGroup, loopGroup, executorGroup);

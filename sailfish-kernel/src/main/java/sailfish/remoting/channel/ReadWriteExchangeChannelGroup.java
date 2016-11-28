@@ -26,6 +26,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.Address;
 import sailfish.remoting.Tracer;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -51,14 +52,14 @@ public class ReadWriteExchangeChannelGroup extends AbstractExchangeChannelGroup 
 		this.msgHandler = msgHandler;
 		this.tracer = new Tracer();
 
-		ChannelConfig readConfig = new ChannelConfig(id(), ChannelType.read.code(), connections, writeConnections,
-				(short) 0, reverseIndex);
+		NegotiateConfig readConfig = new NegotiateConfig(idleTimeout, maxIdleTimeOut, id(), ChannelType.read.code(),
+				connections, writeConnections, (short) 0, reverseIndex);
 		this.readGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address,
 				(short) (connections - writeConnections), connectTimeout, reconnectInterval, idleTimeout,
 				maxIdleTimeOut, lazy, reverseIndex, readConfig, this, loopGroup, executorGroup);
 
-		ChannelConfig writeConfig = new ChannelConfig(id(), ChannelType.write.code(), connections, writeConnections,
-				(short) 0, reverseIndex);
+		NegotiateConfig writeConfig = new NegotiateConfig(idleTimeout, maxIdleTimeOut, id(), ChannelType.write.code(),
+				connections, writeConnections, (short) 0, reverseIndex);
 		this.writeGroup = new DefaultExchangeChannelGroup(tracer, msgHandler, address, writeConnections, connectTimeout,
 				reconnectInterval, idleTimeout, maxIdleTimeOut, lazy, reverseIndex, writeConfig, this, loopGroup,
 				executorGroup);

@@ -17,16 +17,11 @@
  */
 package sailfish.remoting.protocol;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.UUID;
 
 import io.netty.buffer.ByteBuf;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.constants.LangType;
-import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.PacketIdGenerator;
@@ -235,24 +230,5 @@ public class RequestProtocol implements Protocol {
 		heartbeat.packetId(PacketIdGenerator.nextId());
 		heartbeat.heartbeat(true);
 		return heartbeat;
-	}
-
-	public static RequestProtocol newNegotiateHeartbeat(byte idleTimeout, byte maxIdleTimeout, UUID uuid,
-			byte channelType, short connections, short writeConnections, short channelIndex, boolean reverseIndex) throws IOException {
-		int size = 1 + 1 + 16 + 1 + 2 + 2 + 2 + 1;
-		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
-				DataOutputStream dos = new DataOutputStream(baos);) {
-			dos.writeByte(idleTimeout);
-			dos.writeByte(maxIdleTimeout);
-			//write uuid
-			dos.writeLong(uuid.getMostSignificantBits());
-			dos.writeLong(uuid.getLeastSignificantBits());
-			dos.writeByte(channelType);
-			dos.writeShort(connections);
-			dos.writeShort(writeConnections);
-			dos.writeShort(channelIndex);
-			dos.writeBoolean(reverseIndex);
-			return newHeartbeat().opcode(Opcode.HEARTBEAT_WITH_NEGOTIATE).body(baos.toByteArray());
-		}
 	}
 }

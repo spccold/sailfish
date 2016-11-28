@@ -22,6 +22,7 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import sailfish.remoting.Address;
 import sailfish.remoting.Tracer;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -41,7 +42,7 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 
 	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address,
 			short connections, int connectTimeout, int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut,
-			boolean lazy, boolean reverseIndex, ChannelConfig config, ExchangeChannelGroup channelGroup,
+			boolean lazy, boolean reverseIndex, NegotiateConfig config, ExchangeChannelGroup channelGroup,
 			EventLoopGroup loopGroup, EventExecutorGroup executorGroup) throws SailfishException {
 		this.msgHandler = msgHandler;
 		this.tracer = tracer;
@@ -50,16 +51,16 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 		deadChildren = new ExchangeChannel[connections];
 
 		if (null == config) {
-			config = new ChannelConfig(id(), ChannelType.readwrite.code(), (short) connections, (short) connections,
+			config = new NegotiateConfig(idleTimeout, maxIdleTimeOut, id(), ChannelType.readwrite.code(), (short) connections, (short) connections,
 					(short) 0, reverseIndex);
 		}
 
 		Bootstrap bootstrap = null;
 		for (short i = 0; i < connections; i++) {
 			boolean success = false;
-			final ChannelConfig deepCopy = config.deepCopy().index(i);
+			final NegotiateConfig deepCopy = config.deepCopy().index(i);
 			channelGroup = (null == channelGroup ? this : channelGroup);
-			bootstrap = configureBoostrap(address, connectTimeout, idleTimeout, maxIdleTimeOut, deepCopy,
+			bootstrap = configureBoostrap(address, connectTimeout, deepCopy,
 					channelGroup, loopGroup, executorGroup);
 			try {
 				children[i] = newChild(bootstrap, reconnectInterval, lazy, deepCopy.isRead());

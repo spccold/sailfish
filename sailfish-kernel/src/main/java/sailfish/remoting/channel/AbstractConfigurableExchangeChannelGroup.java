@@ -36,6 +36,7 @@ import sailfish.remoting.Address;
 import sailfish.remoting.NettyPlatformIndependent;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.eventgroup.ClientEventGroup;
 import sailfish.remoting.handler.HeartbeatChannelHandler;
@@ -53,20 +54,19 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 		super(UUID.randomUUID());
 	}
 
-	protected Bootstrap configureBoostrap(Address remoteAddress, int connectTimeout, byte idleTimeout,
-			byte maxIdleTimeOut, ChannelConfig config, ExchangeChannelGroup channelGroup, EventLoopGroup loopGroup,
-			EventExecutorGroup executorGroup) {
+	protected Bootstrap configureBoostrap(Address remoteAddress, int connectTimeout, NegotiateConfig config,
+			ExchangeChannelGroup channelGroup, EventLoopGroup loopGroup, EventExecutorGroup executorGroup) {
 		Bootstrap boot = newBootstrap();
-		if(null == loopGroup){
+		if (null == loopGroup) {
 			loopGroup = ClientEventGroup.INSTANCE.getLoopGroup();
 		}
-		if(null == executorGroup){
+		if (null == executorGroup) {
 			executorGroup = ClientEventGroup.INSTANCE.getExecutorGroup();
 		}
 		boot.group(loopGroup);
 		boot.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectTimeout);
 		boot.remoteAddress(remoteAddress.host(), remoteAddress.port());
-		boot.handler(newChannelInitializer(idleTimeout, maxIdleTimeOut, config, channelGroup, executorGroup));
+		boot.handler(newChannelInitializer(config, channelGroup, executorGroup));
 		return boot;
 	}
 
@@ -91,27 +91,21 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 		return boot;
 	}
 
-	private ChannelInitializer<SocketChannel> newChannelInitializer(final byte idleTimeout, final byte maxIdleTimeOut,
-			final ChannelConfig config, final ExchangeChannelGroup channelGroup, final EventExecutorGroup executorGroup) {
+	private ChannelInitializer<SocketChannel> newChannelInitializer(final NegotiateConfig config,
+			final ExchangeChannelGroup channelGroup, final EventExecutorGroup executorGroup) {
 		return new ChannelInitializer<SocketChannel>() {
 			@Override
 			protected void initChannel(SocketChannel ch) throws Exception {
 				ChannelPipeline pipeline = ch.pipeline();
 				ch.attr(ChannelAttrKeys.clientSide).set(true);
-				ch.attr(OneTime.idleTimeout).set(idleTimeout);
-				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(maxIdleTimeOut);
-				ch.attr(OneTime.uuid).set(config.uuid());
-				ch.attr(OneTime.channelIndex).set(config.index());
-				ch.attr(OneTime.reverseIndex).set(config.reverseIndex());
-				ch.attr(OneTime.channelType).set(config.type());
-				ch.attr(OneTime.connections).set(config.connections());
-				ch.attr(OneTime.writeConnections).set(config.writeConnections());
+				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
+				ch.attr(OneTime.channelConfig).set(config);
 				ch.attr(ChannelAttrKeys.channelGroup).set(channelGroup);
 				ch.attr(OneTime.awaitNegotiate).set(new CountDownLatch(1));
 				// TODO should increase ioRatio when every ChannelHandler bind to executorGroup?
 				pipeline.addLast(executorGroup, RemotingEncoder.INSTANCE);
 				pipeline.addLast(executorGroup, new RemotingDecoder());
-				pipeline.addLast(executorGroup, new IdleStateHandler(idleTimeout, 0, 0));
+				pipeline.addLast(executorGroup, new IdleStateHandler(config.idleTimeout(), 0, 0));
 				pipeline.addLast(executorGroup, HeartbeatChannelHandler.INSTANCE);
 				pipeline.addLast(executorGroup, NegotiateChannelHandler.INSTANCE);
 				pipeline.addLast(executorGroup, ShareableSimpleChannelInboundHandler.INSTANCE);

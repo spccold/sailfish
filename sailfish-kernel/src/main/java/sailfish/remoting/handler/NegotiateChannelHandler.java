@@ -17,9 +17,6 @@
  */
 package sailfish.remoting.handler;
 
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,17 +28,15 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.Attribute;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.PlatformDependent;
 import sailfish.remoting.ExchangeServer;
-import sailfish.remoting.channel.ChannelConfig;
-import sailfish.remoting.channel.ChannelType;
 import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.channel.ReadWriteServerExchangeChannelGroup;
 import sailfish.remoting.channel.ReferenceCountedServerExchangeChannelGroup;
 import sailfish.remoting.channel.ServerExchangeChannel;
 import sailfish.remoting.channel.ServerExchangeChannelGroup;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.constants.ChannelAttrKeys;
 import sailfish.remoting.constants.ChannelAttrKeys.OneTime;
 import sailfish.remoting.constants.Opcode;
@@ -52,7 +47,7 @@ import sailfish.remoting.utils.ArrayUtils;
 import sailfish.remoting.utils.ChannelUtil;
 
 /**
- * negotiate idleTimeout, maxIdleTimeout and settings about {@link ChannelConfig} with remote peer
+ * negotiate idleTimeout, maxIdleTimeout and settings about {@link NegotiateConfig} with remote peer
  * 
  * @author spccold
  * @version $Id: NegotiateChannelHandler.java, v 0.1 2016年11月23日 下午10:11:26 spccold Exp $
@@ -67,7 +62,8 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 
 	public static final ConcurrentMap<String, ExchangeChannelGroup> uuid2ChannelGroup = new ConcurrentHashMap<>();
 
-	private NegotiateChannelHandler() { };
+	private NegotiateChannelHandler() {
+	};
 
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -79,11 +75,12 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-		if(!ChannelUtil.clientSide(ctx)){
+		if (!ChannelUtil.clientSide(ctx)) {
 			String uuidStr = ctx.channel().attr(ChannelAttrKeys.uuidStr).get();
 			synchronized (uuidStr.intern()) {
-				ReferenceCountedServerExchangeChannelGroup channelGroup = (ReferenceCountedServerExchangeChannelGroup)uuid2ChannelGroup.get(uuidStr);
-				if(null != channelGroup){
+				ReferenceCountedServerExchangeChannelGroup channelGroup = (ReferenceCountedServerExchangeChannelGroup) uuid2ChannelGroup
+						.get(uuidStr);
+				if (null != channelGroup) {
 					channelGroup.release();
 				}
 			}
@@ -112,17 +109,8 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		if (negotiateMap.putIfAbsent(ctx, Boolean.TRUE) == null) { // Guard against re-entrance.
 			ctx.channel().attr(OneTime.awaitNegotiate).get().countDown();
 			try {
-				int idleTimeout = ctx.channel().attr(OneTime.idleTimeout).get();
-				int maxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
-				Attribute<UUID> uuidAttr = ctx.channel().attr(OneTime.uuid);
-				byte channelType = ctx.channel().attr(OneTime.channelType).get();
-				short connections = ctx.channel().attr(OneTime.connections).get();
-				short writeConnections = ctx.channel().attr(OneTime.writeConnections).get();
-				short channelIndex = ctx.channel().attr(OneTime.channelIndex).get();
-				boolean reverseIndex = ctx.channel().attr(OneTime.reverseIndex).get();
-				// negotiate idle timeout and read write splitting settings with remote peer
-				ctx.writeAndFlush(RequestProtocol.newNegotiateHeartbeat((byte) idleTimeout, (byte) maxIdleTimeout,
-						uuidAttr.get(), channelType, connections, writeConnections, channelIndex, reverseIndex));
+				NegotiateConfig channelConfig = ctx.channel().attr(OneTime.channelConfig).get();
+				ctx.writeAndFlush(channelConfig.toNegotiateRequest());
 			} catch (Throwable cause) {
 				exceptionCaught(ctx, cause);
 			} finally {
@@ -138,42 +126,29 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		try {
 			RequestProtocol requestProtocol = (RequestProtocol) msg;
 			if (requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE) {
-				byte[] body = requestProtocol.body();
-				DataInputStream dis = new DataInputStream(new ByteArrayInputStream(body));
-				byte idleTimeout = dis.readByte();
-				byte idleMaxTimeout = dis.readByte();
-				UUID uuid = new UUID(dis.readLong(), dis.readLong());
-				byte channelType = dis.readByte();
-				short connections = dis.readShort();
-				short writeConnections = dis.readShort();
-				short channelIndex = dis.readShort();
-				boolean reverseIndex = dis.readBoolean();
-				// no sense to dis(ByteArrayInputStream) in fact
-				dis.close();
+				NegotiateConfig config = NegotiateConfig.fromNegotiate(requestProtocol.body());
 
 				// the client side shall prevail
 				byte serverSideIdleTimeout = ctx.channel().attr(OneTime.idleTimeout).get();
 				byte serverSideIdleMaxTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
-				if (idleTimeout != serverSideIdleTimeout) {
+				if (config.idleTimeout() != serverSideIdleTimeout) {
 					ChannelHandlerContext idleHandlerContext = ctx.pipeline().context(IdleStateHandler.class);
 					ctx.pipeline().replace(IdleStateHandler.class, idleHandlerContext.name(),
-							new IdleStateHandler(idleTimeout, 0, 0));
+							new IdleStateHandler(config.idleTimeout(), 0, 0));
 				}
-				if (idleMaxTimeout != serverSideIdleMaxTimeout) {
-					ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(idleMaxTimeout);
+				if (config.maxIdleTimeout() != serverSideIdleMaxTimeout) {
+					ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
 				}
 
-				String uuidStr = uuid.toString();
-				//bind uuidStr to Channel
+				String uuidStr = config.uuid().toString();
+				// bind uuidStr to Channel
 				ctx.channel().attr(ChannelAttrKeys.uuidStr).set(uuidStr);
 				ExchangeServer exchangeServer = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
 				synchronized (uuidStr.intern()) {
-					if (channelType == ChannelType.readwrite.code()) {
-						negotiateReadWriteChannel(ctx, uuid, uuidStr, exchangeServer, connections, channelIndex,
-								reverseIndex);
-					} else if (channelType == ChannelType.read.code() || channelType == ChannelType.write.code()) {
-						negotiateReadOrWriteChannel(ctx, uuid, uuidStr, exchangeServer, connections, writeConnections,
-								channelType, channelIndex, reverseIndex);
+					if (config.isReadWrite()) {
+						negotiateReadWriteChannel(ctx, uuidStr, exchangeServer, config);
+					} else if (config.isRead() || config.isWrite()) {
+						negotiateReadOrWriteChannel(ctx, uuidStr, exchangeServer, config);
 					}
 				}
 			}
@@ -186,18 +161,19 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		}
 	}
 
-	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, UUID uuid, String uuidStr,
-			ExchangeServer exchangeServer, int connections, int channelIndex, boolean reverseIndex) {
+	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer exchangeServer,
+			NegotiateConfig config) {
 		ExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
-		if(null == channelGroup){
-			uuid2ChannelGroup.put(uuidStr,channelGroup = new ServerExchangeChannelGroup(null, exchangeServer.getMsgHandler(), uuid, connections));
+		if (null == channelGroup) {
+			uuid2ChannelGroup.put(uuidStr, channelGroup = new ServerExchangeChannelGroup(null,
+					exchangeServer.getMsgHandler(), config.uuid(), config.connections()));
 		}
 		// bind current channel to ExchangeChannelGroup
 		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
-		int finalChannelIndex = channelIndex;
-		if (reverseIndex) {
+		int finalChannelIndex = config.index();
+		if (config.reverseIndex()) {
 			// Reverse channel index to get better io performance
-			finalChannelIndex = ArrayUtils.reverseArrayIndex(connections, channelIndex);
+			finalChannelIndex = ArrayUtils.reverseArrayIndex(config.connections(), finalChannelIndex);
 		}
 
 		// add child
@@ -206,35 +182,36 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				finalChannelIndex);
 	}
 
-	private void negotiateReadOrWriteChannel(ChannelHandlerContext ctx, UUID uuid, String uuidStr,
-			ExchangeServer exchangeServer, int connections, int writeConnections, int channelType, int channelIndex,
-			boolean reverseIndex) {
+	private void negotiateReadOrWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer exchangeServer,
+			NegotiateConfig config) {
 		// negotiate read write splitting settings
 		ExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
-		if(null == channelGroup){
-			 uuid2ChannelGroup.putIfAbsent(uuidStr,
-						channelGroup = new ReadWriteServerExchangeChannelGroup(exchangeServer.getMsgHandler(), uuid, connections, writeConnections));
+		if (null == channelGroup) {
+			uuid2ChannelGroup.putIfAbsent(uuidStr,
+					channelGroup = new ReadWriteServerExchangeChannelGroup(exchangeServer.getMsgHandler(),
+							config.uuid(), config.connections(), config.writeConnections()));
 		}
 		// bind current channel to ExchangeChannelGroup
 		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
 
-		int finalChannelIndex = channelIndex;
-		if (channelType == ChannelType.read.code()) {// read to write
+		int finalChannelIndex = config.index();
+		if (config.isRead()) {// read to write
 			ServerExchangeChannelGroup writeGroup = ((ReadWriteServerExchangeChannelGroup) channelGroup)
 					.getWriteGroup();
-			if (reverseIndex) {
+			if (config.reverseIndex()) {
 				// Reverse channel index to get better io performance
-				finalChannelIndex = ArrayUtils.reverseArrayIndex(connections - writeConnections, finalChannelIndex);
+				finalChannelIndex = ArrayUtils.reverseArrayIndex(config.connections() - config.writeConnections(),
+						finalChannelIndex);
 			}
-			((ReadWriteServerExchangeChannelGroup)channelGroup).retain();
+			((ReadWriteServerExchangeChannelGroup) channelGroup).retain();
 			writeGroup.addChild(new ServerExchangeChannel(writeGroup, ctx.channel()), finalChannelIndex);
-		} else if (channelType == ChannelType.write.code()) {// write to read
+		} else if (config.isWrite()) {// write to read
 			ServerExchangeChannelGroup readGroup = ((ReadWriteServerExchangeChannelGroup) channelGroup).getReadGroup();
-			if (reverseIndex) {
+			if (config.reverseIndex()) {
 				// Reverse channel index to get better io performance
-				finalChannelIndex = ArrayUtils.reverseArrayIndex(writeConnections, finalChannelIndex);
+				finalChannelIndex = ArrayUtils.reverseArrayIndex(config.writeConnections(), finalChannelIndex);
 			}
-			((ReadWriteServerExchangeChannelGroup)channelGroup).retain();
+			((ReadWriteServerExchangeChannelGroup) channelGroup).retain();
 			readGroup.addChild(new ServerExchangeChannel(readGroup, ctx.channel()), finalChannelIndex);
 		}
 	}
@@ -242,19 +219,13 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 	@SuppressWarnings("deprecation")
 	private void remove(ChannelHandlerContext ctx) {
 		try {
-			//remove onetime attrs
-			ctx.channel().attr(OneTime.uuid).remove();
-			ctx.channel().attr(OneTime.channelType).remove();
-			ctx.channel().attr(OneTime.connections).remove();
-			ctx.channel().attr(OneTime.writeConnections).remove();
-			ctx.channel().attr(OneTime.channelIndex).remove();
-			ctx.channel().attr(OneTime.reverseIndex).remove();
-			
+			// remove onetime attrs
+			ctx.channel().attr(OneTime.channelConfig).remove();
+
 			ChannelPipeline pipeline = ctx.pipeline();
 			if (pipeline.context(this) != null) {
 				pipeline.remove(this);
 			}
-			
 		} finally {
 			negotiateMap.remove(ctx);
 		}

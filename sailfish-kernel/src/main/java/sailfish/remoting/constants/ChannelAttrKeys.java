@@ -17,12 +17,12 @@
  */
 package sailfish.remoting.constants;
 
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 
 import io.netty.util.AttributeKey;
 import sailfish.remoting.ExchangeServer;
 import sailfish.remoting.channel.ExchangeChannelGroup;
+import sailfish.remoting.configuration.NegotiateConfig;
 
 /**
  * @author spccold
@@ -45,12 +45,6 @@ public interface ChannelAttrKeys {
 		AttributeKey<Byte> idleTimeout = AttributeKey.valueOf("sailfish.idleTimeout");
 		AttributeKey<CountDownLatch> awaitNegotiate = AttributeKey.valueOf("sailfish.awaitNegotiate");
 		
-		//for negotiate with remote peer
-		AttributeKey<UUID> uuid = AttributeKey.valueOf("sailfish.uuid");
-		AttributeKey<Byte> channelType = AttributeKey.valueOf("sailfish.channelType");
-		AttributeKey<Short> connections = AttributeKey.valueOf("sailfish.connections");
-		AttributeKey<Short> writeConnections = AttributeKey.valueOf("sailfish.writeConnections");
-		AttributeKey<Short> channelIndex = AttributeKey.valueOf("sailfish.channelIndex");
-		AttributeKey<Boolean> reverseIndex = AttributeKey.valueOf("sailfish.reverseIndex");
+		AttributeKey<NegotiateConfig> channelConfig = AttributeKey.valueOf("sailfish.channelConfig");
 	}
 }
