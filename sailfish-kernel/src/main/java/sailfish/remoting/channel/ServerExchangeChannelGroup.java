@@ -20,6 +20,7 @@ package sailfish.remoting.channel;
 import java.util.UUID;
 
 import sailfish.remoting.Tracer;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -37,12 +38,15 @@ public final class ServerExchangeChannelGroup extends ReferenceCountedServerExch
 	private final MsgHandler<Protocol> msgHandler;
 	private final Tracer tracer;
 	
+	public ServerExchangeChannelGroup(MsgHandler<Protocol> msgHandler, UUID id, int connections){
+		this(new Tracer(), msgHandler, id, connections);
+	}
 	
 	public ServerExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, UUID id, int connections) {
 		super(id);
 		
 		this.msgHandler = msgHandler;
-		this.tracer = (null == tracer ? new Tracer() : tracer);
+		this.tracer = tracer;
 		
 		children = new ExchangeChannel[connections];
 		deadChildren = new ExchangeChannel[connections];
@@ -50,10 +54,6 @@ public final class ServerExchangeChannelGroup extends ReferenceCountedServerExch
 		chooser = DefaultExchangeChannelChooserFactory.INSTANCE.newChooser(children, deadChildren);
 	}
 
-	public void addChild(ExchangeChannel channel, int index){
-		children[index] = channel;
-	}
-	
 	@Override
 	public ExchangeChannel next() throws SailfishException {
 		return chooser.next();
@@ -91,5 +91,10 @@ public final class ServerExchangeChannelGroup extends ReferenceCountedServerExch
 	@Override
 	public Tracer getTracer() {
 		return tracer;
+	}
+	
+	@Override
+	public void addChild(ExchangeChannel channel, NegotiateConfig config) {
+		children[config.index()] = channel;
 	}
 }

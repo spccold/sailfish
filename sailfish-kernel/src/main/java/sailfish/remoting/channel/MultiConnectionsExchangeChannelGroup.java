@@ -42,10 +42,11 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 
 	protected MultiConnectionsExchangeChannelGroup(Tracer tracer, MsgHandler<Protocol> msgHandler, Address address,
 			short connections, int connectTimeout, int reconnectInterval, byte idleTimeout, byte maxIdleTimeOut,
-			boolean lazy, boolean reverseIndex, NegotiateConfig config, ExchangeChannelGroup channelGroup,
+			boolean lazy, boolean reverseIndex, NegotiateConfig config, ExchangeChannelGroup parentGroup,
 			EventLoopGroup loopGroup, EventExecutorGroup executorGroup) throws SailfishException {
-		this.msgHandler = msgHandler;
+
 		this.tracer = tracer;
+		this.msgHandler = msgHandler;
 
 		children = new ExchangeChannel[connections];
 		deadChildren = new ExchangeChannel[connections];
@@ -59,11 +60,11 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 		for (short i = 0; i < connections; i++) {
 			boolean success = false;
 			final NegotiateConfig deepCopy = config.deepCopy().index(i);
-			channelGroup = (null == channelGroup ? this : channelGroup);
+			parentGroup = (null == parentGroup ? this : parentGroup);
 			bootstrap = configureBoostrap(address, connectTimeout, deepCopy,
-					channelGroup, loopGroup, executorGroup);
+					parentGroup, loopGroup, executorGroup);
 			try {
-				children[i] = newChild(bootstrap, reconnectInterval, lazy, deepCopy.isRead());
+				children[i] = newChild(parentGroup, bootstrap, reconnectInterval, lazy, deepCopy.isRead());
 				success = true;
 			} catch (SailfishException cause) {
 				throw cause;
@@ -145,6 +146,6 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	 * Create a new {@link ExchangeChannel} which will later then accessible via the {@link #next()}
 	 * method.
 	 */
-	protected abstract ExchangeChannel newChild(Bootstrap bootstrap, int reconnectInterval, boolean lazy,
+	protected abstract ExchangeChannel newChild(ExchangeChannelGroup parent, Bootstrap bootstrap, int reconnectInterval, boolean lazy,
 			boolean readChannel) throws SailfishException;
 }

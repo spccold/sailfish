@@ -44,12 +44,12 @@ public class Exchanger {
 		case multiconns:
 			return new DefaultExchangeChannelGroup(msgHandler, config.address(), config.connections(),
 					config.connectTimeout(), config.reconnectInterval(), config.idleTimeout(), config.idleTimeout(),
-					config.isLazyConnection(), config.reverseIndex(), config.getEventLoopGroup(),
+					config.isLazyConnection(), config.reversed(), config.getEventLoopGroup(),
 					config.getEventExecutorGroup());
 		case readwrite:
 			return new ReadWriteExchangeChannelGroup(msgHandler, config.address(), config.connectTimeout(),
 					config.reconnectInterval(), config.idleTimeout(), config.maxIdleTimeout(),
-					config.isLazyConnection(), config.connections(), config.writeConnections(), config.reverseIndex(),
+					config.isLazyConnection(), config.connections(), config.writeConnections(), config.reversed(),
 					config.getEventLoopGroup(), config.getEventExecutorGroup());
 		default:
 			throw new IllegalArgumentException("invalid channel mode");

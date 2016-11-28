@@ -28,7 +28,7 @@ import sailfish.remoting.utils.ParameterChecker;
 /**
  * 
  * <table BORDER CELLPADDING=3 CELLSPACING=1>
- * <caption>when {@code reverseIndex} is true<caption>
+ * <caption>when {@code reversed} is true<caption>
  *  <tr>
  *    <td ALIGN=CENTER><em>client side with {@link DefaultExchangeChannelGroup}</em></td>
  *    <td ALIGN=CENTER><em>map</em></td>
@@ -91,7 +91,7 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 	private int reconnectInterval = RemotingConstants.DEFAULT_RECONNECT_INTERVAL;
 
 	private short connections = 1;
-	private boolean reverseIndex = true;
+	private boolean reversed = true;
 	// enable channels Read/Write Splitting or not when connections greater than one
 	private boolean enableReadWriteSplitting = false;
 	/**
@@ -162,12 +162,12 @@ public class ExchangeClientConfig extends AbstractExchangeConfig {
 		this.connectTimeout = ParameterChecker.checkPositive(connectTimeout, "connectTimeout");
 	}
 
-	public boolean reverseIndex() {
-		return reverseIndex;
+	public boolean reversed() {
+		return reversed;
 	}
 
-	public void reverseIndex(boolean reverseIndex) {
-		this.reverseIndex = reverseIndex;
+	public void reversed(boolean reversed) {
+		this.reversed = reversed;
 	}
 
 	public boolean enableReadWriteSplitting() {

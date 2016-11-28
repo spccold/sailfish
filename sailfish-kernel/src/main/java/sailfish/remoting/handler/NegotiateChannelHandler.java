@@ -43,7 +43,6 @@ import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
-import sailfish.remoting.utils.ArrayUtils;
 import sailfish.remoting.utils.ChannelUtil;
 
 /**
@@ -105,7 +104,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		ctx.close();
 	}
 
-	private boolean negotiate(ChannelHandlerContext ctx) throws Exception {
+	private void negotiate(ChannelHandlerContext ctx) throws Exception {
 		if (negotiateMap.putIfAbsent(ctx, Boolean.TRUE) == null) { // Guard against re-entrance.
 			ctx.channel().attr(OneTime.awaitNegotiate).get().countDown();
 			try {
@@ -116,9 +115,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 			} finally {
 				remove(ctx);
 			}
-			return true;
 		}
-		return false;
 	}
 
 	@SuppressWarnings("deprecation")
@@ -127,23 +124,14 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 			RequestProtocol requestProtocol = (RequestProtocol) msg;
 			if (requestProtocol.opcode() == Opcode.HEARTBEAT_WITH_NEGOTIATE) {
 				NegotiateConfig config = NegotiateConfig.fromNegotiate(requestProtocol.body());
-
 				// the client side shall prevail
-				byte serverSideIdleTimeout = ctx.channel().attr(OneTime.idleTimeout).get();
-				byte serverSideIdleMaxTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
-				if (config.idleTimeout() != serverSideIdleTimeout) {
-					ChannelHandlerContext idleHandlerContext = ctx.pipeline().context(IdleStateHandler.class);
-					ctx.pipeline().replace(IdleStateHandler.class, idleHandlerContext.name(),
-							new IdleStateHandler(config.idleTimeout(), 0, 0));
-				}
-				if (config.maxIdleTimeout() != serverSideIdleMaxTimeout) {
-					ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
-				}
+				negotiateIdle(ctx, config.idleTimeout(), config.maxIdleTimeout());
 
 				String uuidStr = config.uuid().toString();
 				// bind uuidStr to Channel
 				ctx.channel().attr(ChannelAttrKeys.uuidStr).set(uuidStr);
 				ExchangeServer exchangeServer = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
+				config.reverseIndex();
 				synchronized (uuidStr.intern()) {
 					if (config.isReadWrite()) {
 						negotiateReadWriteChannel(ctx, uuidStr, exchangeServer, config);
@@ -152,7 +140,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 					}
 				}
 			}
-			// normal heart beat request
+			// normal heart beat response
 			ctx.writeAndFlush(ResponseProtocol.newHeartbeat());
 		} catch (Exception cause) {
 			exceptionCaught(ctx, cause);
@@ -161,67 +149,49 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		}
 	}
 
-	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer exchangeServer,
-			NegotiateConfig config) {
-		ExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
-		if (null == channelGroup) {
-			uuid2ChannelGroup.put(uuidStr, channelGroup = new ServerExchangeChannelGroup(null,
-					exchangeServer.getMsgHandler(), config.uuid(), config.connections()));
+	private void negotiateIdle(ChannelHandlerContext ctx, byte idleTimeout, byte maxIdleTimeout) {
+		byte serverSideIdleTimeout = ctx.channel().attr(OneTime.idleTimeout).get();
+		byte serverSideMaxIdleTimeout = ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).get();
+		if (idleTimeout != serverSideIdleTimeout) {
+			ChannelHandlerContext idleHandlerContext = ctx.pipeline().context(IdleStateHandler.class);
+			ctx.pipeline().replace(IdleStateHandler.class, idleHandlerContext.name(),
+					new IdleStateHandler(idleTimeout, 0, 0));
 		}
-		// bind current channel to ExchangeChannelGroup
-		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
-		int finalChannelIndex = config.index();
-		if (config.reverseIndex()) {
-			// Reverse channel index to get better io performance
-			finalChannelIndex = ArrayUtils.reverseArrayIndex(config.connections(), finalChannelIndex);
+		if (maxIdleTimeout != serverSideMaxIdleTimeout) {
+			ctx.channel().attr(ChannelAttrKeys.maxIdleTimeout).set(maxIdleTimeout);
 		}
-
-		// add child
-		((ServerExchangeChannelGroup) channelGroup).retain();
-		((ServerExchangeChannelGroup) channelGroup).addChild(new ServerExchangeChannel(channelGroup, ctx.channel()),
-				finalChannelIndex);
 	}
 
-	private void negotiateReadOrWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer exchangeServer,
+	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer server,
 			NegotiateConfig config) {
-		// negotiate read write splitting settings
-		ExchangeChannelGroup channelGroup = uuid2ChannelGroup.get(uuidStr);
+		ServerExchangeChannelGroup channelGroup = (ServerExchangeChannelGroup) uuid2ChannelGroup.get(uuidStr);
 		if (null == channelGroup) {
-			uuid2ChannelGroup.putIfAbsent(uuidStr,
-					channelGroup = new ReadWriteServerExchangeChannelGroup(exchangeServer.getMsgHandler(),
-							config.uuid(), config.connections(), config.writeConnections()));
+			uuid2ChannelGroup.put(uuidStr, channelGroup = new ServerExchangeChannelGroup(server.getMsgHandler(),
+					config.uuid(), config.connections()));
 		}
 		// bind current channel to ExchangeChannelGroup
 		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
+		channelGroup.retain().addChild(new ServerExchangeChannel(channelGroup, ctx.channel()), config);
+	}
 
-		int finalChannelIndex = config.index();
-		if (config.isRead()) {// read to write
-			ServerExchangeChannelGroup writeGroup = ((ReadWriteServerExchangeChannelGroup) channelGroup)
-					.getWriteGroup();
-			if (config.reverseIndex()) {
-				// Reverse channel index to get better io performance
-				finalChannelIndex = ArrayUtils.reverseArrayIndex(config.connections() - config.writeConnections(),
-						finalChannelIndex);
-			}
-			((ReadWriteServerExchangeChannelGroup) channelGroup).retain();
-			writeGroup.addChild(new ServerExchangeChannel(writeGroup, ctx.channel()), finalChannelIndex);
-		} else if (config.isWrite()) {// write to read
-			ServerExchangeChannelGroup readGroup = ((ReadWriteServerExchangeChannelGroup) channelGroup).getReadGroup();
-			if (config.reverseIndex()) {
-				// Reverse channel index to get better io performance
-				finalChannelIndex = ArrayUtils.reverseArrayIndex(config.writeConnections(), finalChannelIndex);
-			}
-			((ReadWriteServerExchangeChannelGroup) channelGroup).retain();
-			readGroup.addChild(new ServerExchangeChannel(readGroup, ctx.channel()), finalChannelIndex);
+	private void negotiateReadOrWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer server,
+			NegotiateConfig config) {
+		ReadWriteServerExchangeChannelGroup channelGroup = (ReadWriteServerExchangeChannelGroup) uuid2ChannelGroup
+				.get(uuidStr);
+		if (null == channelGroup) {
+			uuid2ChannelGroup.putIfAbsent(uuidStr,
+					channelGroup = new ReadWriteServerExchangeChannelGroup(server.getMsgHandler(), config.uuid(),
+							config.connections(), config.writeConnections()));
 		}
+		// bind current channel to ExchangeChannelGroup
+		ctx.channel().attr(ChannelAttrKeys.channelGroup).set(channelGroup);
+		channelGroup.retain().addChild(new ServerExchangeChannel(channelGroup, ctx.channel()), config);
 	}
 
 	@SuppressWarnings("deprecation")
 	private void remove(ChannelHandlerContext ctx) {
 		try {
-			// remove onetime attrs
 			ctx.channel().attr(OneTime.channelConfig).remove();
-
 			ChannelPipeline pipeline = ctx.pipeline();
 			if (pipeline.context(this) != null) {
 				pipeline.remove(this);

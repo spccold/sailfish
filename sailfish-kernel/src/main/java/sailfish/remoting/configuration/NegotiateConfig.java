@@ -27,6 +27,7 @@ import java.util.UUID;
 import sailfish.remoting.channel.ChannelType;
 import sailfish.remoting.constants.Opcode;
 import sailfish.remoting.protocol.RequestProtocol;
+import sailfish.remoting.utils.ArrayUtils;
 
 /**
  *
@@ -41,12 +42,12 @@ public class NegotiateConfig {
 	private final byte type;
 	private final short connections;
 	private final short writeConnections;
-	private final boolean reverseIndex;
+	private final boolean reversed;
 
 	private short index;
 
 	public NegotiateConfig(byte idleTimeout, byte maxIdleTimeout, UUID uuid, byte type, short connections,
-			short writeConnections, short index, boolean reverseIndex) {
+			short writeConnections, short index, boolean reversed) {
 		this.idleTimeout = idleTimeout;
 		this.maxIdleTimeout = maxIdleTimeout;
 
@@ -54,7 +55,7 @@ public class NegotiateConfig {
 		this.type = type;
 		this.connections = connections;
 		this.writeConnections = writeConnections;
-		this.reverseIndex = reverseIndex;
+		this.reversed = reversed;
 
 		this.index = index;
 	}
@@ -92,8 +93,8 @@ public class NegotiateConfig {
 		return this.index;
 	}
 
-	public boolean reverseIndex() {
-		return this.reverseIndex;
+	public boolean reversed() {
+		return this.reversed;
 	}
 
 	public boolean isRead() {
@@ -107,26 +108,39 @@ public class NegotiateConfig {
 	public boolean isReadWrite(){
 		return ChannelType.readwrite.code() == type;
 	}
+
+	public void reverseIndex(){
+		if(!this.reversed){
+			return;
+		}
+		if(isReadWrite()){
+			this.index = (short)ArrayUtils.reverseArrayIndex(this.connections, this.index);
+		}else if(isRead()){
+			int readConnections = this.connections - this.writeConnections;
+			this.index = (short) ArrayUtils.reverseArrayIndex(readConnections, index);
+		}else if(isWrite()){
+			this.index = (short) ArrayUtils.reverseArrayIndex(this.writeConnections, index);
+		}
+	}
 	
 	public NegotiateConfig deepCopy() {
-		return new NegotiateConfig(idleTimeout, maxIdleTimeout, uuid, type, connections, writeConnections, index,
-				reverseIndex);
+		return new NegotiateConfig(idleTimeout, maxIdleTimeout, uuid, type, connections, 
+				writeConnections, index, reversed);
 	}
 
 	public RequestProtocol toNegotiateRequest() throws IOException {
 		int size = 1 + 1 + 16 + 1 + 2 + 2 + 2 + 1;
 		try (ByteArrayOutputStream baos = new ByteArrayOutputStream(size);
 				DataOutputStream dos = new DataOutputStream(baos);) {
-			dos.writeByte(idleTimeout);
-			dos.writeByte(maxIdleTimeout);
-			// write uuid
-			dos.writeLong(uuid.getMostSignificantBits());
-			dos.writeLong(uuid.getLeastSignificantBits());
-			dos.writeByte(type);
-			dos.writeShort(connections);
-			dos.writeShort(writeConnections);
-			dos.writeShort(index);
-			dos.writeBoolean(reverseIndex);
+			dos.writeByte(this.idleTimeout);
+			dos.writeByte(this.maxIdleTimeout);
+			dos.writeLong(this.uuid.getMostSignificantBits());
+			dos.writeLong(this.uuid.getLeastSignificantBits());
+			dos.writeByte(this.type);
+			dos.writeShort(this.connections);
+			dos.writeShort(this.writeConnections);
+			dos.writeShort(this.index);
+			dos.writeBoolean(this.reversed);
 			return RequestProtocol.newHeartbeat().opcode(Opcode.HEARTBEAT_WITH_NEGOTIATE).body(baos.toByteArray());
 		}
 	}

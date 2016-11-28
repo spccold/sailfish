@@ -24,6 +24,7 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
 import io.netty.util.IllegalReferenceCountException;
 import io.netty.util.internal.PlatformDependent;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.handler.NegotiateChannelHandler;
 
 /**
@@ -97,4 +98,6 @@ public abstract class ReferenceCountedServerExchangeChannelGroup extends Abstrac
 	private void deallocate(){
 		NegotiateChannelHandler.uuid2ChannelGroup.remove(id().toString());
 	}
+	
+	public abstract void addChild(ExchangeChannel channel, NegotiateConfig config);
 }

@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import sailfish.remoting.Tracer;
+import sailfish.remoting.configuration.NegotiateConfig;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -49,14 +50,6 @@ public final class ReadWriteServerExchangeChannelGroup extends ReferenceCountedS
 		//read to write, write to read
 		this.writeGroup = new ServerExchangeChannelGroup(tracer, msgHandler, id, connctions - writeConnections);
 		this.readGroup = new ServerExchangeChannelGroup(tracer, msgHandler, id, writeConnections);
-	}
-	
-	public ServerExchangeChannelGroup getReadGroup(){
-		return readGroup;
-	}
-	
-	public ServerExchangeChannelGroup getWriteGroup(){
-		return writeGroup;
 	}
 	
 	@Override
@@ -91,5 +84,15 @@ public final class ReadWriteServerExchangeChannelGroup extends ReferenceCountedS
 	@Override
 	public Tracer getTracer() {
 		return tracer;
+	}
+
+	@Override
+	public void addChild(ExchangeChannel channel, NegotiateConfig config) {
+		//read to write, write to read
+		if(config.isRead()){
+			writeGroup.addChild(channel, config);
+		}else if(config.isWrite()){
+			readGroup.addChild(channel, config);
+		}
 	}
 }
