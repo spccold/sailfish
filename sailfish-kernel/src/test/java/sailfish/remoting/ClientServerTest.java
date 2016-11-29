@@ -54,7 +54,7 @@ public class ClientServerTest {
         .getBytes(CharsetUtil.UTF_8);
     private volatile static AtomicInteger                      ONEWAY_PAYLOAD_GENERATOR = new AtomicInteger(0);
     public static final Map<Integer, CountDownLatch> RECORDS                  = new HashMap<>();
-    private static ExchangeServer                     server;
+    private static DefaultServer                     server;
     private static int                                originPort               = 13141;
 
     @BeforeClass
@@ -84,7 +84,7 @@ public class ClientServerTest {
         return clientConfig;
     }
 
-    private void testSendAndReceive(DefaultExchangeClient client, RequestControl control) throws Exception {
+    private void testSendAndReceive(DefaultClient client, RequestControl control) throws Exception {
         //sync oneway invoke
         CountDownLatch onewayLatch = new CountDownLatch(1);
         int payload = ONEWAY_PAYLOAD_GENERATOR.getAndIncrement();
@@ -139,7 +139,7 @@ public class ClientServerTest {
     public void testSimpleChannel() throws Exception {
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections((short)1);
-        DefaultExchangeClient client = new DefaultExchangeClient(config);
+        DefaultClient client = new DefaultClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -155,7 +155,7 @@ public class ClientServerTest {
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections((short)1);
         config.setLazyConnection(true);
-        DefaultExchangeClient client = new DefaultExchangeClient(config);
+        DefaultClient client = new DefaultClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -171,7 +171,7 @@ public class ClientServerTest {
         int conns = 3;
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections((short)conns);
-        DefaultExchangeClient client = new DefaultExchangeClient(config);
+        DefaultClient client = new DefaultClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -192,7 +192,7 @@ public class ClientServerTest {
         ExchangeClientConfig config = newBaseConfig(originPort);
         config.connections((short)conns);
         config.setLazyConnection(true);
-        DefaultExchangeClient client = new DefaultExchangeClient(config);
+        DefaultClient client = new DefaultClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -215,7 +215,7 @@ public class ClientServerTest {
         config.enableReadWriteSplitting(true);
         config.connections((short)(writeConns + readConns));
         config.writeConnections(writeConns);
-        DefaultExchangeClient client = new DefaultExchangeClient(config);
+        DefaultClient client = new DefaultClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -239,7 +239,7 @@ public class ClientServerTest {
         config.setLazyConnection(true);
         config.connections((short)(writeConns + readConns));
         config.writeConnections(writeConns);
-        DefaultExchangeClient client = new DefaultExchangeClient(config);
+        DefaultClient client = new DefaultClient(config);
         RequestControl control = new RequestControl();
         control.timeout(2000);
         //sent false
@@ -258,7 +258,7 @@ public class ClientServerTest {
     public void testTimeout() throws Exception {
         int port = originPort;
         byte[] requestData = "".getBytes(CharsetUtil.UTF_8);
-        DefaultExchangeClient client = new DefaultExchangeClient(newBaseConfig(port));
+        DefaultClient client = new DefaultClient(newBaseConfig(port));
         //test request-response
         RequestControl control = new RequestControl();
         control.opcode(ClientServerTimeoutTestRequestProcessor.OPCODE);

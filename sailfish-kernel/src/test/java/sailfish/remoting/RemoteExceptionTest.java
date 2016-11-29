@@ -49,12 +49,12 @@ public class RemoteExceptionTest {
 		List<RequestProcessor> processors = new ArrayList<>();
 		processors.add(new RemoteExceptionTestRequestHandler());
 		serverConfig.setRequestProcessors(processors);
-		ExchangeServer server = Exchanger.bind(serverConfig);
+		DefaultServer server = Exchanger.bind(serverConfig);
 		server.start();
 		
 		ExchangeClientConfig clientConfig = new ExchangeClientConfig();
 		clientConfig.address(new Address("localhost", originPort));
-		DefaultExchangeClient client = new DefaultExchangeClient(clientConfig);
+		DefaultClient client = new DefaultClient(clientConfig);
 		RequestControl control = new RequestControl();
 		control.sent(false);
 		control.opcode((short)(RemoteExceptionTestRequestHandler.OPCODE-1));

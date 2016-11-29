@@ -20,7 +20,7 @@ package sailfish.remoting.constants;
 import java.util.concurrent.CountDownLatch;
 
 import io.netty.util.AttributeKey;
-import sailfish.remoting.ExchangeServer;
+import sailfish.remoting.DefaultServer;
 import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.configuration.NegotiateConfig;
 
@@ -37,7 +37,7 @@ public interface ChannelAttrKeys {
 	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("sailfish.side");
 	
 	AttributeKey<ExchangeChannelGroup> channelGroup = AttributeKey.valueOf("sailfish.channelGroup");
-	AttributeKey<ExchangeServer> exchangeServer = AttributeKey.valueOf("sailfish.exchangeServer");
+	AttributeKey<DefaultServer> exchangeServer = AttributeKey.valueOf("sailfish.exchangeServer");
 	AttributeKey<String> uuidStr = AttributeKey.valueOf("sailfish.uuidStr");
 	
 	interface OneTime{

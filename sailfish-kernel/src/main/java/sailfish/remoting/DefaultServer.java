@@ -17,8 +17,11 @@
  */
 package sailfish.remoting;
 
+import java.util.Collection;
+
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
@@ -28,6 +31,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import io.netty.util.concurrent.EventExecutorGroup;
+import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.codec.RemotingDecoder;
 import sailfish.remoting.codec.RemotingEncoder;
 import sailfish.remoting.configuration.ExchangeServerConfig;
@@ -41,6 +45,7 @@ import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.handler.NegotiateChannelHandler;
 import sailfish.remoting.handler.ConcreteRequestHandler;
 import sailfish.remoting.protocol.Protocol;
+import sailfish.remoting.utils.ChannelUtil;
 import sailfish.remoting.utils.ParameterChecker;
 
 /**
@@ -48,12 +53,14 @@ import sailfish.remoting.utils.ParameterChecker;
  * @author spccold
  * @version $Id: ExchangeServer.java, v 0.1 2016年10月26日 下午3:52:19 jileng Exp $
  */
-public class ExchangeServer implements Endpoint {
+public class DefaultServer implements Server {
+	
 	private volatile boolean isClosed = false;
 	private final ExchangeServerConfig config;
 	private final MsgHandler<Protocol> msgHandler;
+	private Channel channel;
 
-	public ExchangeServer(ExchangeServerConfig config) {
+	public DefaultServer(ExchangeServerConfig config) {
 		this.config = ParameterChecker.checkNotNull(config, "ExchangeServerConfig");
 		this.msgHandler = new DefaultMsgHandler(config.getRequestProcessors());
 	}
@@ -76,7 +83,7 @@ public class ExchangeServer implements Endpoint {
 				ChannelPipeline pipeline = ch.pipeline();
 				ch.attr(ChannelAttrKeys.OneTime.idleTimeout).set(config.idleTimeout());
 				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
-				ch.attr(ChannelAttrKeys.exchangeServer).set(ExchangeServer.this);
+				ch.attr(ChannelAttrKeys.exchangeServer).set(DefaultServer.this);
 				pipeline.addLast(executor, 
 						RemotingEncoder.INSTANCE, 
 						new RemotingDecoder(), 
@@ -87,7 +94,7 @@ public class ExchangeServer implements Endpoint {
 			}
 		});
 		try {
-			boot.bind().syncUninterruptibly();
+			channel = boot.bind().syncUninterruptibly().channel();
 		} catch (Throwable cause) {
 			throw new SailfishException(cause);
 		}
@@ -118,10 +125,13 @@ public class ExchangeServer implements Endpoint {
 
 	@Override
 	public void close(int timeout) {
+		if(isClosed()){
+			return;
+		}
 		synchronized (this) {
-			if (isClosed)
+			if (isClosed())
 				return;
-			// TODO
+			ChannelUtil.closeChannel(channel);
 		}
 	}
 
@@ -132,5 +142,10 @@ public class ExchangeServer implements Endpoint {
 
 	public MsgHandler<Protocol> getMsgHandler() {
 		return msgHandler;
+	}
+
+	@Override
+	public Collection<ExchangeChannelGroup> listChannelGroups() {
+		return NegotiateChannelHandler.uuid2ChannelGroup.values();
 	}
 }

@@ -30,7 +30,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleStateHandler;
 import io.netty.util.ReferenceCountUtil;
 import io.netty.util.internal.PlatformDependent;
-import sailfish.remoting.ExchangeServer;
+import sailfish.remoting.DefaultServer;
 import sailfish.remoting.channel.ExchangeChannelGroup;
 import sailfish.remoting.channel.ReadWriteServerExchangeChannelGroup;
 import sailfish.remoting.channel.ReferenceCountedServerExchangeChannelGroup;
@@ -130,7 +130,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				String uuidStr = config.uuid().toString();
 				// bind uuidStr to Channel
 				ctx.channel().attr(ChannelAttrKeys.uuidStr).set(uuidStr);
-				ExchangeServer server = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
+				DefaultServer server = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
 				config.reverseIndex();
 				synchronized (uuidStr.intern()) {
 					if (config.isReadWrite()) {
@@ -162,7 +162,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		}
 	}
 
-	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer server,
+	private void negotiateReadWriteChannel(ChannelHandlerContext ctx, String uuidStr, DefaultServer server,
 			NegotiateConfig config) {
 		ServerExchangeChannelGroup channelGroup = (ServerExchangeChannelGroup) uuid2ChannelGroup.get(uuidStr);
 		if (null == channelGroup) {
@@ -174,7 +174,7 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 		channelGroup.retain().addChild(new ServerExchangeChannel(channelGroup, ctx.channel()), config);
 	}
 
-	private void negotiateReadOrWriteChannel(ChannelHandlerContext ctx, String uuidStr, ExchangeServer server,
+	private void negotiateReadOrWriteChannel(ChannelHandlerContext ctx, String uuidStr, DefaultServer server,
 			NegotiateConfig config) {
 		ReadWriteServerExchangeChannelGroup channelGroup = (ReadWriteServerExchangeChannelGroup) uuid2ChannelGroup
 				.get(uuidStr);

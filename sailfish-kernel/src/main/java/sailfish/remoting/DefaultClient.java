@@ -26,13 +26,13 @@ import sailfish.remoting.future.ResponseFuture;
 /**
  * 
  * @author spccold
- * @version $Id: DefaultExchangeClient.java, v 0.1 2016年10月31日 上午10:47:17 jileng Exp $
+ * @version $Id: DefaultClient.java, v 0.1 2016年10月31日 上午10:47:17 jileng Exp $
  */
-public class DefaultExchangeClient{
+public class DefaultClient{
 
     private ExchangeChannelGroup exchanger;
     
-    public DefaultExchangeClient(ExchangeClientConfig config) throws SailfishException{
+    public DefaultClient(ExchangeClientConfig config) throws SailfishException{
         this.exchanger = Exchanger.connect(config);
     }
     

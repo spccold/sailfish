@@ -56,9 +56,9 @@ public class Exchanger {
 		}
 	}
 
-	public static ExchangeServer bind(ExchangeServerConfig config) throws SailfishException {
+	public static DefaultServer bind(ExchangeServerConfig config) throws SailfishException {
 		checkConfig(config);
-		return new ExchangeServer(config);
+		return new DefaultServer(config);
 	}
 
 	private static void checkConfig(AbstractExchangeConfig config) {
