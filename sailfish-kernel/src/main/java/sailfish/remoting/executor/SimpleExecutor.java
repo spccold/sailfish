@@ -29,15 +29,12 @@ import org.slf4j.LoggerFactory;
  * @version $Id: SimpleExecutor.java, v 0.1 2016年11月1日 下午3:14:52 jileng Exp $
  */
 public class SimpleExecutor implements Executor, Runnable{
-    private static final Logger logger = LoggerFactory.getLogger(SimpleExecutor.class);
-    private static final SimpleExecutor INSTANCE = new SimpleExecutor();
+
+	private static final Logger logger = LoggerFactory.getLogger(SimpleExecutor.class);
+    public static final SimpleExecutor INSTANCE = new SimpleExecutor();
     private final LinkedList<Runnable> tasks = new LinkedList<>();
     private volatile boolean isRunning = false;
     private SimpleExecutor(){}
-    
-    public static SimpleExecutor instance(){
-        return INSTANCE;
-    }
     
     @Override
     public void execute(Runnable task) {

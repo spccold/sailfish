@@ -24,6 +24,7 @@ import sailfish.remoting.RequestControl;
 import sailfish.remoting.constants.LangType;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
+import sailfish.remoting.processors.Request;
 import sailfish.remoting.utils.PacketIdGenerator;
 
 /**
@@ -209,6 +210,11 @@ public class RequestProtocol implements Protocol {
 		return this.heartbeat;
 	}
 
+	public Request toRequest(){
+		Request request = new Request(oneway, serializeType, compressType, body, langType);
+		return request;
+	}
+	
 	@Override
 	public String toString() {
 		return "RequestProtocol [heartbeat=" + heartbeat + ", oneway=" + oneway + ", serializeType=" + serializeType

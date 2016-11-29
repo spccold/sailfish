@@ -130,13 +130,13 @@ public class NegotiateChannelHandler extends SimpleChannelInboundHandler<Protoco
 				String uuidStr = config.uuid().toString();
 				// bind uuidStr to Channel
 				ctx.channel().attr(ChannelAttrKeys.uuidStr).set(uuidStr);
-				ExchangeServer exchangeServer = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
+				ExchangeServer server = ctx.channel().attr(ChannelAttrKeys.exchangeServer).get();
 				config.reverseIndex();
 				synchronized (uuidStr.intern()) {
 					if (config.isReadWrite()) {
-						negotiateReadWriteChannel(ctx, uuidStr, exchangeServer, config);
+						negotiateReadWriteChannel(ctx, uuidStr, server, config);
 					} else if (config.isRead() || config.isWrite()) {
-						negotiateReadOrWriteChannel(ctx, uuidStr, exchangeServer, config);
+						negotiateReadOrWriteChannel(ctx, uuidStr, server, config);
 					}
 				}
 			}

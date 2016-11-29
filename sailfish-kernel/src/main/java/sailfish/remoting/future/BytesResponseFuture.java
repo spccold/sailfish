@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 
 import io.netty.util.CharsetUtil;
 import sailfish.remoting.ResponseCallback;
+import sailfish.remoting.Tracer;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
@@ -37,15 +38,18 @@ import sailfish.remoting.utils.ParameterChecker;
  */
 public class BytesResponseFuture implements ResponseFuture<byte[]>{
     private static final Timer TIMER = new Timer("sailfish-callback-timeout-checker", true);
-    private final long packageId;
+    private final int packetId;
     private volatile boolean done;
     private volatile boolean successed;
     private ResponseCallback<byte[]> callback;
     private TimerTask task;
     private byte[] data;
     
-    public BytesResponseFuture(long packageId) {
-        this.packageId = packageId;
+    private volatile SailfishException cause;
+    private final Tracer tracer;
+    public BytesResponseFuture(int packetId, Tracer tracer) {
+        this.packetId = packetId;
+        this.tracer = tracer;
     }
 
     @Override
@@ -61,7 +65,10 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
             }
         }
         if(!this.successed){
-            throw new SailfishException(new String(data, CharsetUtil.UTF_8));
+        	if(null == cause){
+        		this.cause = new SailfishException(new String(data, CharsetUtil.UTF_8)).toRemoteException();
+        	}
+            throw cause;
         }
         return data;
     }
@@ -78,25 +85,26 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
             }
         }
         if(!this.done){
-            String msg = String.format("wait response for packageId[%d] timeout", packageId);
-            throw new SailfishException(ExceptionCode.TIMEOUT, msg);
+        	this.done = true;
+        	removeTrace();
+        	String msg = String.format("wait response for packetId[%d] timeout", packetId);
+            this.cause = new SailfishException(ExceptionCode.TIMEOUT, msg);
+            throw cause;
         }
         if(!this.successed){
-            throw new SailfishException(new String(data, CharsetUtil.UTF_8));
+        	if(null == cause){
+        		this.cause = new SailfishException(new String(data, CharsetUtil.UTF_8)).toRemoteException();
+        	}
+            throw cause;
         }
         return data;
     }
 
     @Override
-    public void putResponse(byte[] data, byte result) {
-        if(this.done){
-            return;
-        }
+    public void putResponse(byte[] data, byte result, SailfishException cause) {
         synchronized (this) {
-            if(this.done){
-                return;
-            }
             this.done = true;
+            this.cause = cause;
             this.data = data;
             switch(result){
                 case RemotingConstants.RESULT_SUCCESS:
@@ -121,7 +129,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     
     @Override
     public void setCallback(final ResponseCallback<byte[]> callback, final int timeout) {
-        if(null == callback){
+        if(null == callback || this.done){
             return;
         }
         this.callback = callback;
@@ -133,37 +141,42 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
         @Override
         public void run() {
             if(!BytesResponseFuture.this.done){
-                synchronized (BytesResponseFuture.this) {
-                    BytesResponseFuture.this.done = true;
-                }
-                String msg = String.format("wait response for packageId[%d] timeout", BytesResponseFuture.this.packageId);
-                BytesResponseFuture.this.callback.handleException(new SailfishException(ExceptionCode.TIMEOUT, msg));
+                BytesResponseFuture.this.done = true;
+                removeTrace();
+                String msg = String.format("wait response for packetId[%d] timeout", BytesResponseFuture.this.packetId);
+                BytesResponseFuture.this.cause = new SailfishException(ExceptionCode.TIMEOUT, msg);
+                BytesResponseFuture.this.callback.handleException(BytesResponseFuture.this.cause);
                 return;
             }
             if(BytesResponseFuture.this.successed){
                 BytesResponseFuture.this.callback.handleResponse(BytesResponseFuture.this.data);
                 return;
             }
-            BytesResponseFuture.this.callback.handleException(new SailfishException(
-                new String(BytesResponseFuture.this.data, CharsetUtil.UTF_8)));
+            if(null == BytesResponseFuture.this.cause){
+            	BytesResponseFuture.this.cause = new SailfishException(
+                        new String(BytesResponseFuture.this.data, CharsetUtil.UTF_8)).toRemoteException();
+            }
+            BytesResponseFuture.this.callback.handleException(BytesResponseFuture.this.cause);
         }
     }
     
     private class CallbackCheckTask extends TimerTask{
         @Override
         public void run() {
-            synchronized (BytesResponseFuture.this) {
-                if(BytesResponseFuture.this.done){
-                    return;
-                }
-            }
+        	if(BytesResponseFuture.this.done){
+        		return;
+        	}
             executeCallbackTask();
         }
     }
     
     private void executeCallbackTask(){
         Executor executor = null != this.callback.getExecutor() ? 
-            this.callback.getExecutor() : SimpleExecutor.instance();
+            this.callback.getExecutor() : SimpleExecutor.INSTANCE;
         executor.execute(new CallbackTask());
+    }
+    
+    private void removeTrace(){
+    	this.tracer.remove(packetId);
     }
 }

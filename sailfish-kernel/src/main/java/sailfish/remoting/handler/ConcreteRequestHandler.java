@@ -32,16 +32,16 @@ import sailfish.remoting.utils.ChannelUtil;
 /**
  * 
  * @author spccold
- * @version $Id: ShareableSimpleChannelInboundHandler.java, v 0.1 2016年11月1日 下午2:17:59 jileng Exp $
+ * @version $Id: ConcreteRequestHandler.java, v 0.1 2016年11月1日 下午2:17:59 jileng Exp $
  */
 @ChannelHandler.Sharable
-public class ShareableSimpleChannelInboundHandler extends SimpleChannelInboundHandler<Protocol> {
+public class ConcreteRequestHandler extends SimpleChannelInboundHandler<Protocol> {
 	
-	private static final Logger logger = LoggerFactory.getLogger(ShareableSimpleChannelInboundHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(ConcreteRequestHandler.class);
 	
-	public static final ShareableSimpleChannelInboundHandler INSTANCE = new ShareableSimpleChannelInboundHandler();
+	public static final ConcreteRequestHandler INSTANCE = new ConcreteRequestHandler();
 	
-	private ShareableSimpleChannelInboundHandler() {}
+	private ConcreteRequestHandler() {}
 	
 	@Override
 	protected void channelRead0(ChannelHandlerContext ctx, Protocol msg) throws Exception {

@@ -34,31 +34,33 @@ import sailfish.remoting.utils.ChannelUtil;
  * @version $Id: RemotingDecoder.java, v 0.1 2016年10月15日 上午11:20:55 jileng Exp $
  */
 public class RemotingDecoder extends LengthFieldBasedFrameDecoder {
-    private static final Logger logger = LoggerFactory.getLogger(RemotingDecoder.class);
-    public RemotingDecoder() {
-        super(RemotingConstants.DEFAULT_PAYLOAD, 2, 4);
-    }
-    
-    //all read exceptions will be fired by exceptionCaught()
-    @Override
-    protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
-        ByteBuf buffer = (ByteBuf) super.decode(ctx, in);
-        if (null == buffer) {
-            return null;
-        }
-        try {
-            return DefaultRemotingCodec.INSTANCE.decode(buffer);
-        } catch (SailfishException e) {
-            if (e.code() == ExceptionCode.BAD_PACKAGE) {
-                String log = String.format("packet from remoteAddress [%s] invalid, begin to close channel to [%s], detail: %s",
-                    ctx.channel().remoteAddress().toString(), ctx.channel().remoteAddress().toString(), e.getMessage());
-                logger.error(log);
-                ChannelUtil.closeChannel(ctx.channel());
-                return null;
-            }
-            throw e;
-        } finally {
-            buffer.release();
-        }
-    }
+
+	private static final Logger logger = LoggerFactory.getLogger(RemotingDecoder.class);
+
+	public RemotingDecoder() {
+		super(RemotingConstants.DEFAULT_PAYLOAD_LENGTH, 2, 4);
+	}
+
+	// all read exceptions will be fired by exceptionCaught()
+	@Override
+	protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+		ByteBuf buffer = (ByteBuf) super.decode(ctx, in);
+		if (null == buffer) {
+			return null;
+		}
+		try {
+			return DefaultRemotingCodec.INSTANCE.decode(buffer);
+		} catch (SailfishException cause) {
+			if (cause.code() == ExceptionCode.BAD_PACKAGE) {
+				String log = String.format("packet invalid, begin to close channel[{}], detail msg: {}",
+						ctx.channel().toString(), cause.getMessage());
+				logger.error(log);
+				ChannelUtil.closeChannel(ctx.channel());
+				return null;
+			}
+			throw cause;
+		} finally {
+			buffer.release();
+		}
+	}
 }

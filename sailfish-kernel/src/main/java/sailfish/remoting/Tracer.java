@@ -75,13 +75,23 @@ public class Tracer {
 			logger.info("trace no exist for packageId[{}]", protocol.packetId());
 			return;
 		}
-		traceContext.respFuture.putResponse(protocol.body(), protocol.result());
+		traceContext.respFuture.putResponse(protocol.body(), protocol.result(), protocol.cause());
 		ConcurrentMap<Integer, Object> packetIds = singleChannelTraces.get(traceContext.channel);
 		if (CollectionUtils.isNotEmpty(packetIds)) {
 			packetIds.remove(protocol.packetId());
 		}
 	}
-
+	
+	public void remove(int packetId){
+		TraceContext traceContext = traces.remove(packetId);
+		if(null != traceContext){
+			ConcurrentMap<Integer, Object> packetIds = singleChannelTraces.get(traceContext.channel);
+			if (CollectionUtils.isNotEmpty(packetIds)) {
+				packetIds.remove(packetId);
+			}
+		}
+	}
+	
 	static class TraceContext {
 		ExchangeChannel channel;
 		ResponseFuture<byte[]> respFuture;

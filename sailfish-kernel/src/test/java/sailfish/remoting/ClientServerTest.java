@@ -127,7 +127,7 @@ public class ClientServerTest {
 
             @Override
             public Executor getExecutor() {
-                return SimpleExecutor.instance();
+                return SimpleExecutor.INSTANCE;
             }
         }, control);
 
@@ -287,7 +287,7 @@ public class ClientServerTest {
 
             @Override
             public Executor getExecutor() {
-                return SimpleExecutor.instance();
+                return SimpleExecutor.INSTANCE;
             }
         }, control);
 

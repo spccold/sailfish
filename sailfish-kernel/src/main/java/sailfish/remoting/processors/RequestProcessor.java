@@ -28,16 +28,11 @@ public interface RequestProcessor {
 
 	short opcode();
 
-	void handleRequest(byte[] requestData, Output output);
+	void handleRequest(Request request, Output output);
 
-	void onRejectedExecutionException(byte[] requestData, Output output);
+	void onRejectedExecutionException(Request request, Output output);
 
 	interface Output {
-		/**
-		 * 
-		 * @param responseData  normal data or exception stack data
-		 * @param success  
-		 */
-		void response(byte[] responseData, boolean success);
+		void response(Response response);
 	}
 }

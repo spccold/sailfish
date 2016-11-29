@@ -18,7 +18,6 @@
 package sailfish.remoting.constants;
 
 import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 
 /**
  * <a href="http://www.importnew.com/14410.html">different compression algorithm in java platform</a>
@@ -31,10 +30,9 @@ public interface RemotingConstants {
 	int COMPRESS_THRESHOLD = 4 * 1024;
 	// sailfish binary protocol magic
 	short SAILFISH_MAGIC = ByteBuffer.wrap("SH".getBytes()).getShort();
-	Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
 
 	// max frame size, 8MB
-	int DEFAULT_PAYLOAD = 8 * 1024 * 1024;
+	int DEFAULT_PAYLOAD_LENGTH = 8 * 1024 * 1024;
 
 	// milliseconds
 	int DEFAULT_CONNECT_TIMEOUT = 2000;

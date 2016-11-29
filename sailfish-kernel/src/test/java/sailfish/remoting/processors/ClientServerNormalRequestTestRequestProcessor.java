@@ -40,15 +40,14 @@ public class ClientServerNormalRequestTestRequestProcessor implements RequestPro
 	}
 
 	@Override
-	public void handleRequest(byte[] requestData, Output output) {
-		Assert.assertNotNull(requestData);
-        Assert.assertTrue(requestData.length > 0);
-        Assert.assertArrayEquals(ClientServerTest.data, requestData);
-        output.response(ClientServerTest.data, true);
+	public void handleRequest(Request request, Output output) {
+		Assert.assertNotNull(request.getRequestData());
+        Assert.assertTrue(request.getRequestData().length > 0);
+        Assert.assertArrayEquals(ClientServerTest.data, request.getRequestData());
+        output.response(new Response(true, ClientServerTest.data));
 	}
 
 	@Override
-	public void onRejectedExecutionException(byte[] requestData, Output output) {
+	public void onRejectedExecutionException(Request request, Output output) {
 	}
-
 }

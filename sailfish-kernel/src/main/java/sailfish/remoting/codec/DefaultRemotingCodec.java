@@ -31,8 +31,11 @@ import sailfish.remoting.protocol.Protocol;
  * @version $Id: DefaultRemotingCodec.java, v 0.1 2016年10月15日 下午4:52:20 jileng Exp $
  */
 public class DefaultRemotingCodec implements RemotingCodec{
+	
     public static final DefaultRemotingCodec INSTANCE = new DefaultRemotingCodec();
+    
     private DefaultRemotingCodec(){}
+    
     @Override
     public void encode(Protocol protocol, ByteBuf buffer) throws SailfishException {
         protocol.serialize(buffer);
@@ -43,14 +46,14 @@ public class DefaultRemotingCodec implements RemotingCodec{
         short magic = buffer.readShort();
         if(RemotingConstants.SAILFISH_MAGIC != magic){
             throw new SailfishException(ExceptionCode.BAD_PACKAGE,  
-                "bad package, expected magic:"+RemotingConstants.SAILFISH_MAGIC+", but actual:"+magic+", current channel will be closed!");
+                "bad packet, expected magic:"+RemotingConstants.SAILFISH_MAGIC+", but actual:"+magic+", current channel will be closed!");
         }
         
         int totalLength = buffer.readInt();
         byte compactByte = buffer.getByte(buffer.readerIndex());
         boolean request = ((compactByte & RequestProtocol.REQUEST_FLAG) != 0);
-        Protocol protocol;
         
+        Protocol protocol;
         //TODO may be replaced with RecycleProtocol in the future
         if(request){//request
             protocol = new RequestProtocol();

@@ -28,7 +28,7 @@ import sailfish.remoting.exceptions.SailfishException;
  * @version $Id: ResponseFuture.java, v 0.1 2016年10月4日 下午3:56:21 jileng Exp $
  */
 public interface ResponseFuture<T>{
-    void putResponse(T resp, byte result);
+    void putResponse(T resp, byte result, SailfishException cause);
     boolean isDone();
     void setCallback(ResponseCallback<T> callback, int timeout);
     T get() throws SailfishException, InterruptedException;

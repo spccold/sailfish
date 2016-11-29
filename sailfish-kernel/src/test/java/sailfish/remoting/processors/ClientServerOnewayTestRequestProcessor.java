@@ -39,11 +39,11 @@ public class ClientServerOnewayTestRequestProcessor implements RequestProcessor{
 	}
 
 	@Override
-	public void handleRequest(byte[] requestData, Output output) {
-		ClientServerTest.RECORDS.get(Bytes.bytes2int(requestData)).countDown();
+	public void handleRequest(Request request, Output output) {
+		ClientServerTest.RECORDS.get(Bytes.bytes2int(request.getRequestData())).countDown();
 	}
 
 	@Override
-	public void onRejectedExecutionException(byte[] requestData, Output output) {
+	public void onRejectedExecutionException(Request request, Output output) {
 	}
 }

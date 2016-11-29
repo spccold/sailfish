@@ -36,11 +36,11 @@ public class ClientServerTimeoutTestRequestProcessor implements RequestProcessor
 	}
 
 	@Override
-	public void handleRequest(byte[] requestData, Output output) {
+	public void handleRequest(Request request, Output output) {
 		//do nothing, request from remote peer will timeout
 	}
 
 	@Override
-	public void onRejectedExecutionException(byte[] requestData, Output output) {
+	public void onRejectedExecutionException(Request request, Output output) {
 	}
 }

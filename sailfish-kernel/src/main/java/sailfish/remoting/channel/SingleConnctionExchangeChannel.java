@@ -25,8 +25,8 @@ import io.netty.channel.Channel;
 import io.netty.handler.timeout.IdleStateHandler;
 import sailfish.remoting.ReconnectManager;
 import sailfish.remoting.Tracer;
-import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.constants.ChannelAttrKeys.OneTime;
+import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.protocol.Protocol;
@@ -41,22 +41,29 @@ import sailfish.remoting.utils.ParameterChecker;
  */
 public abstract class SingleConnctionExchangeChannel extends AbstractExchangeChannel {
 	private final Bootstrap reusedBootstrap;
-	
+
 	private volatile boolean reconnectting = false;
 	private final int reconnectInterval;
 
 	/**
 	 * Create a new instance
 	 * 
-	 * @param parent    			the {@link ExchangeChannelGroup} which is the parent of this instance and belongs to it
-	 * @param connectTimeout 		connect timeout in milliseconds
-	 * @param reconnectInterval 	reconnect interval in milliseconds for {@link ReconnectManager}
-	 * @param idleTimeout idle  	timeout in seconds for {@link IdleStateHandler}
-	 * @param maxIdleTimeOut 		max idle timeout in seconds for {@link ChannelEventsHandler}
-	 * @param doConnect				connect to remote peer or not when initial
+	 * @param parent
+	 *            the {@link ExchangeChannelGroup} which is the parent of this instance and belongs
+	 *            to it
+	 * @param connectTimeout
+	 *            connect timeout in milliseconds
+	 * @param reconnectInterval
+	 *            reconnect interval in milliseconds for {@link ReconnectManager}
+	 * @param idleTimeout
+	 *            idle timeout in seconds for {@link IdleStateHandler}
+	 * @param maxIdleTimeOut
+	 *            max idle timeout in seconds for {@link ChannelEventsHandler}
+	 * @param doConnect
+	 *            connect to remote peer or not when initial
 	 */
-	protected SingleConnctionExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent,
-			int reconnectInterval, boolean doConnect) throws SailfishException {
+	protected SingleConnctionExchangeChannel(Bootstrap bootstrap, ExchangeChannelGroup parent, int reconnectInterval,
+			boolean doConnect) throws SailfishException {
 		super(parent);
 		this.reusedBootstrap = bootstrap;
 		this.reconnectInterval = reconnectInterval;
@@ -64,20 +71,20 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 			this.channel = doConnect();
 		}
 	}
-	
+
 	@SuppressWarnings("deprecation")
 	@Override
 	public Channel doConnect() throws SailfishException {
 		try {
 			Channel channel = reusedBootstrap.connect().syncUninterruptibly().channel();
-		    channel.attr(OneTime.awaitNegotiate).get().await();
-		    channel.attr(OneTime.awaitNegotiate).remove();
+			channel.attr(OneTime.awaitNegotiate).get().await();
+			channel.attr(OneTime.awaitNegotiate).remove();
 			return channel;
 		} catch (Throwable cause) {
 			throw new SailfishException(cause);
 		}
 	}
-	
+
 	@Override
 	public void recover() {
 		// add reconnect task
@@ -133,8 +140,8 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 			if (CollectionUtils.isNotEmpty(pendingRequests)) {
 				for (Integer packetId : pendingRequests.keySet()) {
 					getTracer().erase(ResponseProtocol.newErrorResponse(packetId,
-							"unfinished request because of channel:" + channel.toString() + " be closed",
-							RemotingConstants.RESULT_FAIL));
+							new SailfishException(ExceptionCode.UNFINISHED_REQUEST,
+									"unfinished request because of channel:" + channel.toString() + " be closed")));
 				}
 			}
 			ChannelUtil.closeChannel(channel);

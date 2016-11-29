@@ -20,6 +20,7 @@ package sailfish.remoting.protocol;
 import java.util.Arrays;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.util.CharsetUtil;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.StrUtils;
@@ -59,6 +60,8 @@ public class ResponseProtocol implements Protocol{
     private byte compressType;
 
     private byte[] body;
+    
+    private SailfishException cause;
     
     @Override
     public void serialize(ByteBuf output) throws SailfishException {
@@ -165,10 +168,18 @@ public class ResponseProtocol implements Protocol{
 
     public void errorStack(String errorStack) {
         if(StrUtils.isNotBlank(errorStack)){
-            this.body = errorStack.getBytes(RemotingConstants.DEFAULT_CHARSET);
+            this.body = errorStack.getBytes(CharsetUtil.UTF_8);
         }
     }
    
+    public void cause(SailfishException cause){
+    	this.cause = cause;
+    }
+    
+    public SailfishException cause(){
+    	return this.cause;
+    }
+    
     private int bodyLength(){
         if(null == body){
             return 0;
@@ -198,11 +209,19 @@ public class ResponseProtocol implements Protocol{
         return heartbeat;
     }
     
-    public static ResponseProtocol newErrorResponse(int packetId, String errorStack, byte result){
+    public static ResponseProtocol newErrorResponse(int packetId, SailfishException cause){
         ResponseProtocol error = new ResponseProtocol();
         error.packetId(packetId);
+        error.cause(cause);
+        error.result(RemotingConstants.RESULT_FAIL);
+        return error;
+    }
+    
+    public static ResponseProtocol newErrorResponse(int packetId, String errorStack){
+    	ResponseProtocol error = new ResponseProtocol();
+        error.packetId(packetId);
         error.errorStack(errorStack);
-        error.result(result);
+        error.result(RemotingConstants.RESULT_FAIL);
         return error;
     }
 }

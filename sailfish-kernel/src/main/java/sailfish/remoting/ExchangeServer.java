@@ -39,7 +39,7 @@ import sailfish.remoting.handler.DefaultMsgHandler;
 import sailfish.remoting.handler.HeartbeatChannelHandler;
 import sailfish.remoting.handler.MsgHandler;
 import sailfish.remoting.handler.NegotiateChannelHandler;
-import sailfish.remoting.handler.ShareableSimpleChannelInboundHandler;
+import sailfish.remoting.handler.ConcreteRequestHandler;
 import sailfish.remoting.protocol.Protocol;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -77,12 +77,13 @@ public class ExchangeServer implements Endpoint {
 				ch.attr(ChannelAttrKeys.OneTime.idleTimeout).set(config.idleTimeout());
 				ch.attr(ChannelAttrKeys.maxIdleTimeout).set(config.maxIdleTimeout());
 				ch.attr(ChannelAttrKeys.exchangeServer).set(ExchangeServer.this);
-				pipeline.addLast(executor, RemotingEncoder.INSTANCE);
-				pipeline.addLast(executor, new RemotingDecoder());
-				pipeline.addLast(executor, new IdleStateHandler(config.idleTimeout(), 0, 0));
-				pipeline.addLast(executor, HeartbeatChannelHandler.INSTANCE);
-				pipeline.addLast(executor, NegotiateChannelHandler.INSTANCE);
-				pipeline.addLast(executor, ShareableSimpleChannelInboundHandler.INSTANCE);
+				pipeline.addLast(executor, 
+						RemotingEncoder.INSTANCE, 
+						new RemotingDecoder(), 
+						new IdleStateHandler(config.idleTimeout(), 0, 0), 
+						HeartbeatChannelHandler.INSTANCE,
+						NegotiateChannelHandler.INSTANCE,
+						ConcreteRequestHandler.INSTANCE);
 			}
 		});
 		try {

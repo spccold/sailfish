@@ -25,14 +25,12 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
-import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.exceptions.ExceptionCode;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.future.BytesResponseFuture;
 import sailfish.remoting.future.ResponseFuture;
 import sailfish.remoting.protocol.RequestProtocol;
 import sailfish.remoting.protocol.ResponseProtocol;
-import sailfish.remoting.utils.StrUtils;
 
 /**
  * @author spccold
@@ -140,7 +138,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		protocol.oneway(false);
 		protocol.body(data);
 
-		ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId());
+		ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId(), getTracer());
 		respFuture.setCallback(callback, requestControl.timeout());
 		// trace before write
 		getTracer().trace(this, protocol.packetId(), respFuture);
@@ -175,13 +173,10 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		@Override
 		public void operationComplete(ChannelFuture future) throws Exception {
 			if (!future.isSuccess()) {
-				String errorMsg = "write fail!";
-				if (null != future.cause()) {
-					errorMsg = StrUtils.exception2String(future.cause());
-				}
 				// FIXME maybe need more concrete error, like
 				// WriteOverFlowException or some other special exceptions
-				channel.getTracer().erase(ResponseProtocol.newErrorResponse(packetId, errorMsg, RemotingConstants.RESULT_FAIL));
+				channel.getTracer().erase(ResponseProtocol.newErrorResponse(packetId, 
+						new SailfishException(ExceptionCode.CHANNEL_WRITE_FAIL, "write fail", future.cause())));
 			}
 		}
 	}

@@ -52,8 +52,8 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 		deadChildren = new ExchangeChannel[connections];
 
 		if (null == config) {
-			config = new NegotiateConfig(idleTimeout, maxIdleTimeOut, id(), ChannelType.readwrite.code(), (short) connections, (short) connections,
-					(short) 0, reverseIndex);
+			config = new NegotiateConfig(idleTimeout, maxIdleTimeOut, id(), ChannelType.readwrite.code(),
+					(short) connections, (short) connections, (short) 0, reverseIndex);
 		}
 
 		Bootstrap bootstrap = null;
@@ -61,8 +61,7 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 			boolean success = false;
 			final NegotiateConfig deepCopy = config.deepCopy().index(i);
 			parentGroup = (null == parentGroup ? this : parentGroup);
-			bootstrap = configureBoostrap(address, connectTimeout, deepCopy,
-					parentGroup, loopGroup, executorGroup);
+			bootstrap = configureBoostrap(address, connectTimeout, deepCopy, parentGroup, loopGroup, executorGroup);
 			try {
 				children[i] = newChild(parentGroup, bootstrap, reconnectInterval, lazy, deepCopy.isRead());
 				success = true;
@@ -146,6 +145,6 @@ public abstract class MultiConnectionsExchangeChannelGroup extends AbstractConfi
 	 * Create a new {@link ExchangeChannel} which will later then accessible via the {@link #next()}
 	 * method.
 	 */
-	protected abstract ExchangeChannel newChild(ExchangeChannelGroup parent, Bootstrap bootstrap, int reconnectInterval, boolean lazy,
-			boolean readChannel) throws SailfishException;
+	protected abstract ExchangeChannel newChild(ExchangeChannelGroup parent, Bootstrap bootstrap, int reconnectInterval,
+			boolean lazy, boolean readChannel) throws SailfishException;
 }

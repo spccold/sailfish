@@ -27,6 +27,8 @@ public enum ExceptionCode {
     TIMEOUT,
     EXCHANGER_NOT_AVAILABLE,
     INTERRUPTED,
+    UNFINISHED_REQUEST,
+    CHANNEL_WRITE_FAIL,
     DEFAULT,
     ;
 }
