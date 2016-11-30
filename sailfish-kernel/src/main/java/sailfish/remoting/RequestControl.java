@@ -35,7 +35,19 @@ public class RequestControl {
     //wait write success or not
     private boolean sent;
 
-    public int timeout() {
+    /**
+     * {@code sent} will be ignored when {@code preferHighPerformanceWriter} is true
+     */
+    private boolean preferHighPerformanceWriter;
+    
+    public RequestControl(){
+    	this(false);
+    }
+	public RequestControl(boolean preferHighPerformanceWriter) {
+		this.preferHighPerformanceWriter = preferHighPerformanceWriter;
+	}
+
+	public int timeout() {
         return timeout;
     }
 
@@ -73,5 +85,9 @@ public class RequestControl {
 
     public void sent(boolean sent) {
         this.sent = sent;
+    }
+    
+    public boolean preferHighPerformanceWriter(){
+    	return preferHighPerformanceWriter;
     }
 }

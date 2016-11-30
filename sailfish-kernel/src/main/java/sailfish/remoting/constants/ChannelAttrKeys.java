@@ -22,6 +22,7 @@ import java.util.concurrent.CountDownLatch;
 import io.netty.util.AttributeKey;
 import sailfish.remoting.DefaultServer;
 import sailfish.remoting.channel.ExchangeChannelGroup;
+import sailfish.remoting.channel.HighPerformanceChannelWriter;
 import sailfish.remoting.configuration.NegotiateConfig;
 
 /**
@@ -29,22 +30,24 @@ import sailfish.remoting.configuration.NegotiateConfig;
  * @version $Id: ChannelAttrKeys.java, v 0.1 2016年11月6日 上午11:22:41 spccold Exp $
  */
 public interface ChannelAttrKeys {
-    //for idle handle and heart beat
+	AttributeKey<HighPerformanceChannelWriter> highPerformanceWriter = AttributeKey.valueOf("sailfish.highPerformanceWriter");
+	
+	// for idle handle and heart beat
 	AttributeKey<Byte> maxIdleTimeout = AttributeKey.valueOf("sailfish.maxIdleTimeout");
 	AttributeKey<Long> lastReadTimeMillis = AttributeKey.valueOf("sailfish.lastReadTimeMillis");
 
-	//side
+	// side
 	AttributeKey<Boolean> clientSide = AttributeKey.valueOf("sailfish.side");
-	
+
 	AttributeKey<ExchangeChannelGroup> channelGroup = AttributeKey.valueOf("sailfish.channelGroup");
 	AttributeKey<DefaultServer> exchangeServer = AttributeKey.valueOf("sailfish.exchangeServer");
 	AttributeKey<String> uuidStr = AttributeKey.valueOf("sailfish.uuidStr");
-	
-	interface OneTime{
-		//for idle handle
+
+	interface OneTime {
+		// for idle handle
 		AttributeKey<Byte> idleTimeout = AttributeKey.valueOf("sailfish.idleTimeout");
 		AttributeKey<CountDownLatch> awaitNegotiate = AttributeKey.valueOf("sailfish.awaitNegotiate");
-		
+
 		AttributeKey<NegotiateConfig> channelConfig = AttributeKey.valueOf("sailfish.channelConfig");
 	}
 }

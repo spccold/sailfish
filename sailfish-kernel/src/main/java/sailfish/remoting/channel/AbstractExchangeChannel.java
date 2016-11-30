@@ -97,6 +97,12 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
 		protocol.oneway(true);
 		protocol.body(data);
+		
+		if(requestControl.preferHighPerformanceWriter()){
+			HighPerformanceChannelWriter.write(channel, protocol);
+			return;
+		}
+		
 		if (requestControl.sent() && requestControl.timeout() > 0) {
 			ChannelFuture future = channel.writeAndFlush(protocol);
 			waitWriteDone(future, requestControl.timeout(), protocol, false);
@@ -127,12 +133,17 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		final RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
 		protocol.oneway(false);
 		protocol.body(data);
-
+		
 		ResponseFuture<byte[]> respFuture = new BytesResponseFuture(protocol.packetId(), getTracer());
 		respFuture.setCallback(callback, requestControl.timeout());
 		// trace before write
 		getTracer().trace(this, protocol.packetId(), respFuture);
-
+		
+		if(requestControl.preferHighPerformanceWriter()){
+			HighPerformanceChannelWriter.write(channel, protocol);
+			return respFuture;
+		}
+		
 		if (requestControl.sent()) {
 			ChannelFuture future = channel.writeAndFlush(protocol);
 			waitWriteDone(future, requestControl.timeout(), protocol, true);
@@ -142,7 +153,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		channel.writeAndFlush(protocol, channel.voidPromise());
 		return respFuture;
 	}
-
+	
 	private void waitWriteDone(ChannelFuture future, int timeout, RequestProtocol request, boolean needRemoveTrace)
 			throws SailfishException {
 		boolean done = future.awaitUninterruptibly(timeout);
