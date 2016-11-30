@@ -267,7 +267,7 @@ public class ClientServerTest {
             future.get(2000, TimeUnit.MILLISECONDS);
         } catch (Throwable cause) {
             Assert.assertTrue(cause instanceof SailfishException);
-            Assert.assertEquals(ExceptionCode.TIMEOUT, ((SailfishException) cause).code());
+            Assert.assertEquals(ExceptionCode.RESPONSE_TIMEOUT, ((SailfishException) cause).code());
         }
 
         //test callback
@@ -281,7 +281,7 @@ public class ClientServerTest {
             @Override
             public void handleException(Exception cause) {
                 Assert.assertTrue(cause instanceof SailfishException);
-                Assert.assertEquals(ExceptionCode.TIMEOUT, ((SailfishException) cause).code());
+                Assert.assertEquals(ExceptionCode.RESPONSE_TIMEOUT, ((SailfishException) cause).code());
                 latch.countDown();
             }
 

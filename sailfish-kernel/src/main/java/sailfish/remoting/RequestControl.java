@@ -25,6 +25,9 @@ import sailfish.remoting.utils.ParameterChecker;
  * @version $Id: RequestControl.java, v 0.1 2016年11月1日 下午2:24:47 jileng Exp $
  */
 public class RequestControl {
+	/**
+	 * response timeout or write timeout if {@code sent} is true
+	 */
     private int     timeout = 2000;
     private short   opcode;
     private byte    serializeType;

@@ -24,9 +24,9 @@ package sailfish.remoting.exceptions;
  */
 public enum ExceptionCode {
     BAD_PACKAGE,
-    TIMEOUT,
+    RESPONSE_TIMEOUT,
+    WRITE_TIMEOUT,
     EXCHANGER_NOT_AVAILABLE,
-    INTERRUPTED,
     UNFINISHED_REQUEST,
     CHANNEL_WRITE_FAIL,
     DEFAULT,

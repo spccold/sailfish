@@ -116,9 +116,13 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 				}
 			}
 		}
-		return isAvailable;
+		return isAvailable && isWritable();
 	}
 
+	private boolean isWritable(){
+		return (null != channel && channel.isWritable());
+	}
+	
 	@Override
 	public void close(int timeout) {
 		ParameterChecker.checkNotNegative(timeout, "timeout");

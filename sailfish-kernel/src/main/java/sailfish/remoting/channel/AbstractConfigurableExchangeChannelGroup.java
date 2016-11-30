@@ -85,9 +85,9 @@ public abstract class AbstractConfigurableExchangeChannelGroup extends AbstractE
 		boot.option(ChannelOption.SO_SNDBUF, 32 * 1024);
 		boot.option(ChannelOption.SO_RCVBUF, 32 * 1024);
 		// temporary settings, need more tests
-		// TODO what's happen if exceed high water without channel.isWritable?
 		boot.option(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
-		boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
+		//default is true, reduce thread context switching
+		boot.option(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, true);
 		return boot;
 	}
 

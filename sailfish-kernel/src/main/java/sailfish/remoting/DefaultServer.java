@@ -114,7 +114,8 @@ public class DefaultServer implements Server {
 		// temporary settings, need more tests
 		serverBoot.childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, new WriteBufferWaterMark(8 * 1024, 32 * 1024));
 		serverBoot.childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
-		serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, false);
+		//default is true, reduce thread context switching
+		serverBoot.childOption(ChannelOption.SINGLE_EVENTEXECUTOR_PER_GROUP, true);
 		return serverBoot;
 	}
 

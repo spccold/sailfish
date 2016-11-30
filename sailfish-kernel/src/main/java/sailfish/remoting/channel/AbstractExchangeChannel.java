@@ -22,7 +22,6 @@ import java.util.UUID;
 
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelFutureListener;
 import sailfish.remoting.RequestControl;
 import sailfish.remoting.ResponseCallback;
 import sailfish.remoting.exceptions.ExceptionCode;
@@ -40,8 +39,9 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 	/** underlying channel */
 	protected volatile Channel channel;
 	protected volatile boolean closed = false;
-	
+
 	private final ExchangeChannelGroup parent;
+
 	protected AbstractExchangeChannel(ExchangeChannelGroup parent) {
 		this.parent = parent;
 	}
@@ -63,7 +63,7 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 
 	@Override
 	public SocketAddress localAddress() {
-		if(null == channel){
+		if (null == channel) {
 			return null;
 		}
 		return channel.localAddress();
@@ -71,12 +71,12 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 
 	@Override
 	public SocketAddress remoteAdress() {
-		if(null == channel){
+		if (null == channel) {
 			return null;
 		}
 		return channel.remoteAddress();
 	}
-	
+
 	@Override
 	public boolean isAvailable() {
 		return null != channel && channel.isOpen() && channel.isActive();
@@ -86,33 +86,24 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 	public void close() {
 		close(0);
 	}
-	
+
 	@Override
 	public boolean isClosed() {
 		return closed;
 	}
-	
+
 	@Override
 	public void oneway(byte[] data, RequestControl requestControl) throws SailfishException {
 		RequestProtocol protocol = RequestProtocol.newRequest(requestControl);
 		protocol.oneway(true);
 		protocol.body(data);
-		try {
-			if (requestControl.sent()) {
-				// TODO write or writeAndFlush?
-				ChannelFuture future = channel.writeAndFlush(protocol);
-				boolean ret = future.await(requestControl.timeout());
-				if (!ret) {
-					future.cancel(true);
-					throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
-				}
-				return;
-			}
-			// reduce memory consumption
-			channel.writeAndFlush(protocol, channel.voidPromise());
-		} catch (InterruptedException cause) {
-			throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
+		if (requestControl.sent() && requestControl.timeout() > 0) {
+			ChannelFuture future = channel.writeAndFlush(protocol);
+			waitWriteDone(future, requestControl.timeout(), protocol, false);
+			return;
 		}
+		// reduce memory consumption
+		channel.writeAndFlush(protocol, channel.voidPromise());
 	}
 
 	@Override
@@ -126,9 +117,8 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		requestWithFuture(data, callback, requestControl);
 	}
 
-	
 	@Override
-	public void response(ResponseProtocol response) throws SailfishException{
+	public void response(ResponseProtocol response) throws SailfishException {
 		channel.writeAndFlush(response, channel.voidPromise());
 	}
 
@@ -142,42 +132,36 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		respFuture.setCallback(callback, requestControl.timeout());
 		// trace before write
 		getTracer().trace(this, protocol.packetId(), respFuture);
-		try {
-			if (requestControl.sent()) {
-				ChannelFuture future = channel.writeAndFlush(protocol)
-						.addListener(new SimpleChannelFutureListener(this, protocol.packetId()));
-				boolean ret = future.await(requestControl.timeout());
-				if (!ret) {
-					future.cancel(true);
-					throw new SailfishException(ExceptionCode.TIMEOUT, "oneway request timeout");
-				}
-				return respFuture;
-			}
-			channel.writeAndFlush(protocol, channel.voidPromise());
-		} catch (InterruptedException cause) {
-			throw new SailfishException(ExceptionCode.INTERRUPTED, "interrupted exceptions");
+
+		if (requestControl.sent()) {
+			ChannelFuture future = channel.writeAndFlush(protocol);
+			waitWriteDone(future, requestControl.timeout(), protocol, true);
+			return respFuture;
 		}
+
+		channel.writeAndFlush(protocol, channel.voidPromise());
 		return respFuture;
 	}
 
-	// reduce class create
-	static class SimpleChannelFutureListener implements ChannelFutureListener {
-		private final ExchangeChannel channel;
-		private final int packetId;
-
-		public SimpleChannelFutureListener(ExchangeChannel channel, int packetId) {
-			this.channel = channel;
-			this.packetId = packetId;
-		}
-
-		@Override
-		public void operationComplete(ChannelFuture future) throws Exception {
-			if (!future.isSuccess()) {
-				// FIXME maybe need more concrete error, like
-				// WriteOverFlowException or some other special exceptions
-				channel.getTracer().erase(ResponseProtocol.newErrorResponse(packetId, 
-						new SailfishException(ExceptionCode.CHANNEL_WRITE_FAIL, "write fail", future.cause())));
+	private void waitWriteDone(ChannelFuture future, int timeout, RequestProtocol request, boolean needRemoveTrace)
+			throws SailfishException {
+		boolean done = future.awaitUninterruptibly(timeout);
+		if (!done) {
+			// useless at most of time when do writeAndFlush(...) invoke
+			future.cancel(true);
+			if (needRemoveTrace) {
+				getTracer().remove(request.packetId());
 			}
+			throw new SailfishException(ExceptionCode.WRITE_TIMEOUT,
+					String.format("write to remote[%s] timeout, protocol[%s]", channel.remoteAddress(), request));
+		}
+		if (!future.isSuccess()) {
+			if (needRemoveTrace) {
+				getTracer().remove(request.packetId());
+			}
+			throw new SailfishException(ExceptionCode.CHANNEL_WRITE_FAIL,
+					String.format("write to remote[%s] fail, protocol[%s]", channel.remoteAddress(), request),
+					future.cause());
 		}
 	}
 }

@@ -88,7 +88,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
         	this.done = true;
         	removeTrace();
         	String msg = String.format("wait response for packetId[%d] timeout", packetId);
-            this.cause = new SailfishException(ExceptionCode.TIMEOUT, msg);
+            this.cause = new SailfishException(ExceptionCode.RESPONSE_TIMEOUT, msg);
             throw cause;
         }
         if(!this.successed){
@@ -144,7 +144,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
                 BytesResponseFuture.this.done = true;
                 removeTrace();
                 String msg = String.format("wait response for packetId[%d] timeout", BytesResponseFuture.this.packetId);
-                BytesResponseFuture.this.cause = new SailfishException(ExceptionCode.TIMEOUT, msg);
+                BytesResponseFuture.this.cause = new SailfishException(ExceptionCode.RESPONSE_TIMEOUT, msg);
                 BytesResponseFuture.this.callback.handleException(BytesResponseFuture.this.cause);
                 return;
             }
