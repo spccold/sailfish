@@ -116,11 +116,7 @@ public abstract class SingleConnctionExchangeChannel extends AbstractExchangeCha
 				}
 			}
 		}
-		return isAvailable && isWritable();
-	}
-
-	private boolean isWritable(){
-		return (null != channel && channel.isWritable());
+		return isAvailable && super.isWritable();
 	}
 	
 	@Override

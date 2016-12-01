@@ -39,7 +39,7 @@ public class ProtocolTest {
 
     @Test
     public void testRequestProtocol() throws SailfishException{
-        RequestProtocol send = new RequestProtocol();
+        RequestProtocol send = RequestProtocol.newInstance();
         send.body(new byte[]{1,2,3,4});
         send.compressType(CompressType.NON_COMPRESS);
         send.heartbeat(false);
@@ -53,7 +53,9 @@ public class ProtocolTest {
         send.serialize(output);
         
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
-        RequestProtocol receive = new RequestProtocol();
+        RequestProtocol receive = RequestProtocol.newInstance();
+        Assert.assertTrue(send == receive);
+        
         receive.deserialize(output, output.readInt());
         Assert.assertArrayEquals(send.body(), receive.body());
         Assert.assertTrue(receive.compressType() == CompressType.NON_COMPRESS);
@@ -77,7 +79,9 @@ public class ProtocolTest {
         send.serialize(output);
         
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
-        receive = new RequestProtocol();
+        receive = RequestProtocol.newInstance();
+        Assert.assertTrue(send == receive);
+        
         receive.deserialize(output, output.readInt());
         Assert.assertArrayEquals(send.body(), receive.body());
         Assert.assertTrue(receive.compressType() == CompressType.LZ4_COMPRESS);
@@ -91,7 +95,7 @@ public class ProtocolTest {
     
     @Test
     public void testResponseProtocol() throws SailfishException{
-        ResponseProtocol send = new ResponseProtocol();
+        ResponseProtocol send = ResponseProtocol.newInstance();
         send.body(new byte[]{1,2,3,4});
         send.compressType(CompressType.GZIP_COMPRESS);
         send.heartbeat(false);
@@ -102,7 +106,8 @@ public class ProtocolTest {
         ByteBuf output = ByteBufAllocator.DEFAULT.buffer(128);
         send.serialize(output);
         
-        ResponseProtocol receive = new ResponseProtocol();
+        ResponseProtocol receive = ResponseProtocol.newInstance();
+        Assert.assertTrue(send == receive);
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
         receive.deserialize(output, output.readInt());
         Assert.assertArrayEquals(send.body(), receive.body());
@@ -118,7 +123,8 @@ public class ProtocolTest {
         send.serialize(output);
         
         Assert.assertTrue(output.readShort() == RemotingConstants.SAILFISH_MAGIC);
-        receive = new ResponseProtocol();
+        receive = ResponseProtocol.newInstance();
+        Assert.assertTrue(send == receive);
         receive.deserialize(output, output.readInt());
         Assert.assertTrue(receive.heartbeat());
     }

@@ -21,7 +21,10 @@ import java.util.Arrays;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.util.CharsetUtil;
+import io.netty.util.Recycler;
+import sailfish.remoting.constants.CompressType;
 import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.constants.SerializeType;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.utils.StrUtils;
 
@@ -46,23 +49,52 @@ import sailfish.remoting.utils.StrUtils;
  * @version $Id: ResponseProtocol.java, v 0.1 2016年10月11日 下午8:44:48 jileng Exp $
  */
 public class ResponseProtocol implements Protocol{
+	
+	private static final Recycler<ResponseProtocol> RECYCLER = new Recycler<ResponseProtocol>(){
+		@Override
+		protected ResponseProtocol newObject(Recycler.Handle<ResponseProtocol> handle) {
+			return new ResponseProtocol(handle);
+		}
+	};
+	
     private static final int HEADER_LENGTH = 6;
     private static final int RESPONSE_FLAG = 0;
     private static final int HEARTBEAT_FLAG = 0x20;
         
+    public static ResponseProtocol newInstance(){
+    	return RECYCLER.get();
+    }
+    
+    private final Recycler.Handle<ResponseProtocol> handle;
+    
     //response direction
     private boolean heartbeat;
-    private byte serializeType;
+    private byte serializeType = SerializeType.NON_SERIALIZE;
     
     private int packetId;
     
     private byte result;
-    private byte compressType;
+    private byte compressType = CompressType.NON_COMPRESS;
 
     private byte[] body;
     
     private SailfishException cause;
     
+	public ResponseProtocol(Recycler.Handle<ResponseProtocol> handle) {
+		this.handle = handle;
+	}
+    
+	public void recycle(){
+		heartbeat = false;
+		serializeType = SerializeType.NON_SERIALIZE;
+		packetId = 0;
+		result = 0;
+		compressType = CompressType.NON_COMPRESS;
+		body = null;
+		cause = null;
+		handle.recycle(this);
+	}
+	
     @Override
     public void serialize(ByteBuf output) throws SailfishException {
         try{
@@ -91,7 +123,9 @@ public class ResponseProtocol implements Protocol{
             }
         }catch(Throwable cause){
             throw new SailfishException(cause);
-        }
+        }finally {
+			recycle();
+		}
     }
 
     @Override
@@ -204,23 +238,15 @@ public class ResponseProtocol implements Protocol{
 	}
 
 	public static ResponseProtocol newHeartbeat(){
-        ResponseProtocol heartbeat = new ResponseProtocol();
+        ResponseProtocol heartbeat = ResponseProtocol.newInstance();
         heartbeat.heartbeat(true);
         return heartbeat;
     }
     
     public static ResponseProtocol newErrorResponse(int packetId, SailfishException cause){
-        ResponseProtocol error = new ResponseProtocol();
+        ResponseProtocol error = ResponseProtocol.newInstance();
         error.packetId(packetId);
         error.cause(cause);
-        error.result(RemotingConstants.RESULT_FAIL);
-        return error;
-    }
-    
-    public static ResponseProtocol newErrorResponse(int packetId, String errorStack){
-    	ResponseProtocol error = new ResponseProtocol();
-        error.packetId(packetId);
-        error.errorStack(errorStack);
         error.result(RemotingConstants.RESULT_FAIL);
         return error;
     }

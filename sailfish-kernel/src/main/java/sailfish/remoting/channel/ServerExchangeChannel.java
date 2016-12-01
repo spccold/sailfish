@@ -55,6 +55,11 @@ public final class ServerExchangeChannel extends AbstractExchangeChannel {
 	}
 
 	@Override
+	public boolean isAvailable() {
+		return super.isAvailable() && super.isWritable();
+	}
+
+	@Override
 	public MsgHandler<Protocol> getMsgHander() {
 		return parent().getMsgHander();
 	}

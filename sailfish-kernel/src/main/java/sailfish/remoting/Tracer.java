@@ -68,11 +68,13 @@ public class Tracer {
 
 	public void erase(ResponseProtocol protocol) {
 		if (protocol.heartbeat()) {
+			protocol.recycle();
 			return;
 		}
 		TraceContext traceContext = traces.remove(protocol.packetId());
 		if (null == traceContext) {
 			logger.info("trace no exist for packageId[{}]", protocol.packetId());
+			protocol.recycle();
 			return;
 		}
 		traceContext.respFuture.putResponse(protocol.body(), protocol.result(), protocol.cause());
@@ -80,6 +82,7 @@ public class Tracer {
 		if (CollectionUtils.isNotEmpty(packetIds)) {
 			packetIds.remove(protocol.packetId());
 		}
+		protocol.recycle();
 	}
 	
 	public void remove(int packetId){

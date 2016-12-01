@@ -20,9 +20,12 @@ package sailfish.remoting.protocol;
 import java.util.Arrays;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.util.Recycler;
 import sailfish.remoting.RequestControl;
+import sailfish.remoting.constants.CompressType;
 import sailfish.remoting.constants.LangType;
 import sailfish.remoting.constants.RemotingConstants;
+import sailfish.remoting.constants.SerializeType;
 import sailfish.remoting.exceptions.SailfishException;
 import sailfish.remoting.processors.Request;
 import sailfish.remoting.utils.PacketIdGenerator;
@@ -51,24 +54,56 @@ import sailfish.remoting.utils.PacketIdGenerator;
  * @version $Id: RequestProtocol.java, v 0.1 2016年10月11日 下午8:44:48 jileng Exp $
  */
 public class RequestProtocol implements Protocol {
+	
+	private static final Recycler<RequestProtocol> RECYCLER = new Recycler<RequestProtocol>(){
+		@Override
+		protected RequestProtocol newObject(Recycler.Handle<RequestProtocol> handle) {
+			return new RequestProtocol(handle);
+		}
+	};
+	
 	private static final int HEADER_LENGTH = 8;
 	public static final int REQUEST_FLAG = 0x80;
 	private static final int ONEWAY_FLAG = 0x40;
 	private static final int HEARTBEAT_FLAG = 0x20;
 
+	
+	public static RequestProtocol newInstance(){
+		return RECYCLER.get();
+	}
+	
+	private final Recycler.Handle<RequestProtocol> handle;
+	
 	// request direction
 	private boolean heartbeat;
 	private boolean oneway;
-	private byte serializeType;
+	private byte serializeType = SerializeType.NON_SERIALIZE;
 
 	private int packetId;
 	private short opcode;
 
-	private byte compressType;
+	private byte compressType = CompressType.NON_COMPRESS;
 	private byte langType = LangType.JAVA;
 
 	private byte[] body;
 
+	
+	private RequestProtocol(Recycler.Handle<RequestProtocol> handle){
+		this.handle = handle;
+	}
+	
+	public void recycle(){
+		heartbeat = false;
+		oneway = false;
+		serializeType = SerializeType.NON_SERIALIZE;
+		packetId = 0;
+		opcode = 0;
+		compressType = CompressType.NON_COMPRESS;
+		langType = LangType.JAVA;
+		body = null;
+		handle.recycle(this);
+	}
+	
 	@Override
 	public void serialize(ByteBuf output) throws SailfishException {
 		try {
@@ -97,6 +132,8 @@ public class RequestProtocol implements Protocol {
 			}
 		} catch (Throwable cause) {
 			throw new SailfishException(cause);
+		}finally {
+			recycle();
 		}
 	}
 
@@ -223,7 +260,7 @@ public class RequestProtocol implements Protocol {
 	}
 
 	public static RequestProtocol newRequest(RequestControl requestControl) {
-		RequestProtocol protocol = new RequestProtocol();
+		RequestProtocol protocol = RequestProtocol.newInstance();
 		protocol.packetId(PacketIdGenerator.nextId());
 		protocol.opcode(requestControl.opcode());
 		protocol.compressType(requestControl.compressType());
@@ -232,7 +269,7 @@ public class RequestProtocol implements Protocol {
 	}
 
 	public static RequestProtocol newHeartbeat() {
-		RequestProtocol heartbeat = new RequestProtocol();
+		RequestProtocol heartbeat = RequestProtocol.newInstance();
 		heartbeat.packetId(PacketIdGenerator.nextId());
 		heartbeat.heartbeat(true);
 		return heartbeat;

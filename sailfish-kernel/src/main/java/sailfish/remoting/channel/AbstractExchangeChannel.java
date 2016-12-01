@@ -82,6 +82,10 @@ public abstract class AbstractExchangeChannel implements ExchangeChannel {
 		return null != channel && channel.isOpen() && channel.isActive();
 	}
 
+	protected boolean isWritable(){
+		return (null != channel && channel.isWritable());
+	}
+	
 	@Override
 	public void close() {
 		close(0);

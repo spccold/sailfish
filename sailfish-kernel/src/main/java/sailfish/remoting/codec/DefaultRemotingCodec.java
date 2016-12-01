@@ -54,11 +54,11 @@ public class DefaultRemotingCodec implements RemotingCodec{
         boolean request = ((compactByte & RequestProtocol.REQUEST_FLAG) != 0);
         
         Protocol protocol;
-        //TODO may be replaced with RecycleProtocol in the future
+        //recycle Protocol
         if(request){//request
-            protocol = new RequestProtocol();
+            protocol = RequestProtocol.newInstance();
         }else{//response
-            protocol = new ResponseProtocol();
+            protocol = ResponseProtocol.newInstance();
         }
         protocol.deserialize(buffer, totalLength);
         return protocol;

@@ -20,6 +20,7 @@ package sailfish.remoting.future;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.util.CharsetUtil;
@@ -173,7 +174,11 @@ public class BytesResponseFuture implements ResponseFuture<byte[]>{
     private void executeCallbackTask(){
         Executor executor = null != this.callback.getExecutor() ? 
             this.callback.getExecutor() : SimpleExecutor.INSTANCE;
-        executor.execute(new CallbackTask());
+        try{
+        	executor.execute(new CallbackTask());
+        }catch(RejectedExecutionException cause){
+        	SimpleExecutor.INSTANCE.execute(new CallbackTask());
+        }
     }
     
     private void removeTrace(){
