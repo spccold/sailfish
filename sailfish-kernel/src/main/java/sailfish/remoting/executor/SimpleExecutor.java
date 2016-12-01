@@ -23,53 +23,81 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.GlobalEventExecutor;
+import io.netty.util.internal.SystemPropertyUtil;
+
 /**
+ * similar implementation
+ * 
+ * <pre>
+ * 		<a href="https://github.com/eclipse/vert.x/blob/65a1050b0922de38329cdbe90c5ecd8094a93a04/
+ * 		src/main/java/io/vertx/core/impl/OrderedExecutorFactory.java">OrderedExecutorFactory In Vert.x</a>
+ * 		
+ * 		<a href=https://github.com/netty/netty/blob/eb7f751ba519cbcab47d640cd18757f09d077b55/common
+ * 		/src/main/java/io/netty/util/concurrent/GlobalEventExecutor.java">GlobalEventExecutor In Netty</a>
+ * </pre>
+ * need long-running?
  * 
  * @author spccold
  * @version $Id: SimpleExecutor.java, v 0.1 2016年11月1日 下午3:14:52 jileng Exp $
  */
-public class SimpleExecutor implements Executor, Runnable{
+public class SimpleExecutor implements Executor, Runnable {
 
 	private static final Logger logger = LoggerFactory.getLogger(SimpleExecutor.class);
-    public static final SimpleExecutor INSTANCE = new SimpleExecutor();
-    private final LinkedList<Runnable> tasks = new LinkedList<>();
-    private volatile boolean isRunning = false;
-    private SimpleExecutor(){}
-    
-    @Override
-    public void execute(Runnable task) {
-       synchronized (tasks) {
-           tasks.add(task);
-           if(!this.isRunning){
-               this.isRunning = true;
-               newThread().start();
-           }
-       }
-    }
+	
+	private static final boolean preferGlobalEventExecutor;
+	static{
+		preferGlobalEventExecutor = SystemPropertyUtil.getBoolean("sailfish.simpleExector.preferGlobalEventExecutor", true);
+		if(logger.isDebugEnabled()){
+			logger.debug("-Dsailfish.simpleExector.preferGlobalEventExecutor: {}", preferGlobalEventExecutor);
+		}
+	}
+	
+	// produce FastThreadLocalThread(can benefit from FastThreadLocal(e.g. Recycler))
+	private final DefaultThreadFactory THREADFACTORY = new DefaultThreadFactory("sailfish-simpleexecutor", true);
 
-    private Thread newThread(){
-        Thread thread = new Thread(this);
-        thread.setName("sailfish-simpleexecutor");
-        thread.setDaemon(true);
-        return thread;
-    }
-    
-    @Override
-    public void run() {
-       for(;;){
-           Runnable currentTask = null;
-           synchronized (tasks) {
-               currentTask = tasks.poll();
-               if(null == currentTask){
-                   this.isRunning = false;
-                   break;
-               }
-           }
-           try{
-               currentTask.run();
-           }catch(Throwable cause){
-               logger.error("catch exception by SimpleExecutor", cause);
-           }
-       }
-    }
+	public static final SimpleExecutor INSTANCE = new SimpleExecutor();
+	private final LinkedList<Runnable> tasks = new LinkedList<>();
+	private volatile boolean isRunning = false;
+
+	private SimpleExecutor() { }
+
+	@Override
+	public void execute(Runnable task) {
+		if(preferGlobalEventExecutor){
+			GlobalEventExecutor.INSTANCE.execute(task);
+			return;
+		}
+		synchronized (tasks) {
+			tasks.add(task);
+			if (!this.isRunning) {
+				this.isRunning = true;
+				newThread().start();
+			}
+		}
+	}
+
+	private Thread newThread() {
+		return THREADFACTORY.newThread(this);
+	}
+
+	@Override
+	public void run() {
+		for (;;) {
+			Runnable currentTask = null;
+			synchronized (tasks) {
+				currentTask = tasks.poll();
+				if (null == currentTask) {
+					this.isRunning = false;
+					break;
+				}
+			}
+			try {
+				currentTask.run();
+			} catch (Throwable cause) {
+				logger.error("catch exception by SimpleExecutor", cause);
+			}
+		}
+	}
 }
