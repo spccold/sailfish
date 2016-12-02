@@ -21,6 +21,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import io.netty.util.CharsetUtil;
 import io.netty.util.HashedWheelTimer;
 import io.netty.util.Recycler;
@@ -43,7 +46,9 @@ import sailfish.remoting.utils.ParameterChecker;
  * @version $Id: BytesResponseFuture.java, v 0.1 2016年10月4日 下午3:57:32 jileng Exp $
  */
 public class BytesResponseFuture implements ResponseFuture<byte[]> {
-
+	
+	private static final Logger logger = LoggerFactory.getLogger(BytesResponseFuture.class);
+	
 	private static final Timer TIMER = new HashedWheelTimer(
 			new DefaultThreadFactory("sailfish-callback-timeout-checker", true));
 
@@ -151,6 +156,7 @@ public class BytesResponseFuture implements ResponseFuture<byte[]> {
 		try {
 			executor.execute(CallbackTask.newInstance(this));
 		} catch (RejectedExecutionException cause) {
+			logger.error(String.format("executor[%s] reject to execute callback task, SimpleExecutor will pick task up", executor), cause);
 			SimpleExecutor.INSTANCE.execute(CallbackTask.newInstance(this));
 		}
 	}

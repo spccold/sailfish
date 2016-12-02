@@ -93,6 +93,9 @@ public class RequestProtocol implements Protocol {
 	}
 	
 	public void recycle(){
+		if(null == handle){//some objects don't need recycle
+			return;
+		}
 		heartbeat = false;
 		oneway = false;
 		serializeType = SerializeType.NON_SERIALIZE;
@@ -267,9 +270,10 @@ public class RequestProtocol implements Protocol {
 		protocol.serializeType(requestControl.serializeType());
 		return protocol;
 	}
-
+	
+	//less objects, don't need recycle
 	public static RequestProtocol newHeartbeat() {
-		RequestProtocol heartbeat = RequestProtocol.newInstance();
+		RequestProtocol heartbeat = new RequestProtocol(null);
 		heartbeat.packetId(PacketIdGenerator.nextId());
 		heartbeat.heartbeat(true);
 		return heartbeat;

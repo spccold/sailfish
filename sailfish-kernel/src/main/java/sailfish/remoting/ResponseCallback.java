@@ -19,12 +19,18 @@ package sailfish.remoting;
 
 import java.util.concurrent.Executor;
 
+import io.netty.util.concurrent.DefaultThreadFactory;
+import io.netty.util.concurrent.FastThreadLocalThread;
+
 /**
  * 
  * @author spccold
  * @version $Id: ResponseCallback.java, v 0.1 2016年10月31日 上午10:09:15 jileng Exp $
  */
 public interface ResponseCallback<T> {
+	/**
+	 * should take advantage of {@link FastThreadLocalThread} with {@link DefaultThreadFactory}
+	 */
     Executor getExecutor();
     
     void handleResponse(T resp);

@@ -85,6 +85,10 @@ public class ResponseProtocol implements Protocol{
 	}
     
 	public void recycle(){
+		if(null == handle){//some objects don't need recycle
+			return;
+		}
+		
 		heartbeat = false;
 		serializeType = SerializeType.NON_SERIALIZE;
 		packetId = 0;
@@ -237,14 +241,16 @@ public class ResponseProtocol implements Protocol{
 				+ "]";
 	}
 
+	//less objects, don't need recycle
 	public static ResponseProtocol newHeartbeat(){
-        ResponseProtocol heartbeat = ResponseProtocol.newInstance();
+        ResponseProtocol heartbeat = new ResponseProtocol(null);
         heartbeat.heartbeat(true);
         return heartbeat;
     }
     
+	//less objects, don't need recycle
     public static ResponseProtocol newErrorResponse(int packetId, SailfishException cause){
-        ResponseProtocol error = ResponseProtocol.newInstance();
+        ResponseProtocol error = new ResponseProtocol(null);
         error.packetId(packetId);
         error.cause(cause);
         error.result(RemotingConstants.RESULT_FAIL);
