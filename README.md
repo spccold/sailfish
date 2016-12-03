@@ -22,7 +22,7 @@
 
 
 ## sailfish channel mode
-![channelmode](http://photocdn.sohu.com/20161203/Img474811796.jpeg)
+![channelmode](https://github.com/spccold/sailfish/blob/master/sailfish-channelmode.png)
 
 * 多连接
     * 3个连接，分别为channel0, channel1, channel2，客户端抽象为`DefaultExchangeChannelGroup`, 服务端抽象为`ServerExchangeChannelGroup`  
