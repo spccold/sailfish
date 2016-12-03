@@ -21,7 +21,7 @@ import sailfish.remoting.channel.ChannelGroupMode;
 import sailfish.remoting.channel.DefaultExchangeChannelGroup;
 import sailfish.remoting.channel.ReadWriteExchangeChannelGroup;
 import sailfish.remoting.channel.ReadWriteServerExchangeChannelGroup;
-import sailfish.remoting.channel.ServerExchangeChannel;
+import sailfish.remoting.channel.ServerExchangeChannelGroup;
 import sailfish.remoting.constants.RemotingConstants;
 import sailfish.remoting.utils.ParameterChecker;
 
@@ -32,7 +32,7 @@ import sailfish.remoting.utils.ParameterChecker;
  *  <tr>
  *    <td ALIGN=CENTER><em>client side with {@link DefaultExchangeChannelGroup}</em></td>
  *    <td ALIGN=CENTER><em>map</em></td>
- *    <td ALIGN=CENTER><em>server side with {@link ServerExchangeChannel}</em></td>
+ *    <td ALIGN=CENTER><em>server side with {@link ServerExchangeChannelGroup}</em></td>
  *  </tr>
  *  <tr>
  *    <td>channel[0] : channel0</td>
