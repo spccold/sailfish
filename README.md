@@ -1,6 +1,6 @@
 # sailfish
 * A reliable, scalable, fast remoting module for rapid development of high performance network program
-* with so many advanced future,  I guarantee you'll like it!
+* with so many advanced features,  I guarantee you'll like it!
 
 ## notice
 * 实验室作品，未经过任何严格生产环境的检验
