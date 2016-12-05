@@ -55,5 +55,6 @@
  
 ## some articles about netty 
 * http://netty.io/wiki/using-as-a-generic-library.html
+* http://netty.io/wiki/thread-affinity.html
 * http://www.antonkharenko.com/2015/08/netty-best-practices-distilled.html
 * https://github.com/netty/netty/issues/1759
